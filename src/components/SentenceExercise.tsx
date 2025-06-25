@@ -6,25 +6,28 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useExercise } from "@/contexts/ExerciseContext";
-import type { SentenceExercise, ExerciseType } from "@/types/exercise";
+import type { SentenceExercise, SentenceExerciseSet, ExerciseType } from "@/types/exercise";
 import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
 import { ArrowLeft, Check, X, RefreshCw, AlertTriangle } from "lucide-react";
 
 interface SentenceExerciseProps {
-  exercises: SentenceExercise[];
+  exerciseSet: SentenceExerciseSet;
   exerciseType: ExerciseType;
   onComplete: () => void;
   onBack: () => void;
   title: string;
 }
 
-export function SentenceExercise({ exercises, exerciseType, onComplete, onBack, title }: SentenceExerciseProps) {
+export function SentenceExercise({ exerciseSet, exerciseType, onComplete, onBack, title }: SentenceExerciseProps) {
   const { dispatch, checkAnswer, generateExercises, state, markExerciseCompleted } = useExercise();
   const [answers, setAnswers] = useState<Record<string | number, string>>({});
   const [results, setResults] = useState<Record<string | number, ReturnType<typeof createExerciseResult>>>({});
   const [isChecking, setIsChecking] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
   const [theme, setTheme] = useState("");
+
+  // Extract exercises from the set
+  const exercises = exerciseSet.exercises;
 
   const handleAnswerChange = (questionId: string | number, value: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
@@ -79,10 +82,8 @@ export function SentenceExercise({ exercises, exerciseType, onComplete, onBack, 
       setResults(newResults);
       setHasChecked(true);
 
-      // Mark each exercise as completed in user progress
-      exercises.forEach((exercise) => {
-        markExerciseCompleted(exercise.id.toString(), exerciseType, theme || undefined);
-      });
+      // Mark the exercise set as completed in user progress (not individual exercises)
+      markExerciseCompleted(exerciseSet.id, exerciseType, theme || undefined);
     } catch (error) {
       console.error("Error checking answers:", error);
     } finally {

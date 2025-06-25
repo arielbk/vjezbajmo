@@ -1,14 +1,14 @@
 // Abstract cache provider interface for flexibility
 // Allows switching between different cache backends (Vercel KV, Redis, etc.)
 
-import { ParagraphExerciseSet, SentenceExercise, ExerciseType, CefrLevel } from "@/types/exercise";
+import { ParagraphExerciseSet, SentenceExerciseSet, ExerciseType, CefrLevel } from "@/types/exercise";
 
 export interface CachedExercise {
   id: string;
   exerciseType: ExerciseType;
   cefrLevel: CefrLevel;
   theme: string | null;
-  data: ParagraphExerciseSet | { exercises: SentenceExercise[] };
+  data: ParagraphExerciseSet | SentenceExerciseSet;
   createdAt: number;
 }
 

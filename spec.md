@@ -30,9 +30,10 @@ The application is a monolithic **Next.js** application.
     - **User Key:** Users can enter their own API key to bypass any potential limits on the site key.
 4.  **Multi-Tier Caching System:**
     - **Server-Side Exercise Pool:** Generated exercises are cached in a persistent store (Vercel KV initially, designed for easy provider switching) organized by exercise type, CEFR level, and theme.
-    - **User Progress Tracking:** Individual user's completed exercises are tracked in localStorage to avoid serving the same exercise repeatedly.
-    - **Smart Exercise Selection:** When users request exercises without specifying a theme, the system first attempts to serve from the cached pool of exercises they haven't completed yet.
+    - **User Progress Tracking:** Individual user's completed exercises are tracked in localStorage. **Manual Completion:** Users explicitly mark exercises as completed after reviewing results, preventing premature completion tracking that causes cache filtering issues.
+    - **Smart Exercise Selection:** When users request exercises without specifying a theme, the system first attempts to serve from the cached pool of exercises they haven't marked as completed yet.
     - **Cache Replenishment:** Only when users have exhausted available cached exercises does the system generate new ones, which are then added to the shared cache.
+    - **Review Completed Exercises:** Users can access and review previously completed exercises through a dedicated interface, enabling spaced repetition and progress review.
 5.  **Client-Side Session Caching:** Once exercises are served, they are cached in the client's state to minimize redundant API calls during the current session.
 6.  **Secure Answer Validation:** Solutions for **API-generated** exercises are cached on the server for secure validation. Solutions for **static** exercises are handled on the client for speed.
 7.  **Diacritic Tolerance:** The system recognizes that users may not have proper Croatian keyboard layouts. If an answer is correct except for diacritics (č, ć, đ, š, ž), it's marked as correct with a helpful warning reminder about proper Croatian spelling.
@@ -139,7 +140,7 @@ interface CheckAnswerResponse {
 - **Initial State:** App is initialized with static A2.2 exercises.
 - **Settings & Configuration (`SettingsModal.tsx`)**
 
-  - A **Settings Modal** (or drawer), accessible via a gear icon, is the central configuration hub.
+  - A ** Settings Modal** (or drawer), accessible via a gear icon, is the central configuration hub.
   - **CEFR Level:** A dropdown to select the desired CEFR level. Saved to `localStorage`.
   - **Provider Selection:** A dropdown to select "OpenAI" or "Anthropic". Saved to `localStorage`.
   - **API Key Input:** An input for the user's personal API key. Saved to `localStorage`.
@@ -148,10 +149,13 @@ interface CheckAnswerResponse {
 - **Component Structure:**
   - **`ParagraphExercise.tsx` & `SentenceExercise.tsx`**:
     - These components are responsible for displaying the exercise and handling answers.
-    - Each component will now feature its own **"Regenerate" button** (e.g., a refresh icon) near the exercise title. This button will be accompanied by a small text input field to specify an optional **theme** for the regeneration.
-    - Clicking this local button calls `/api/generate-exercise-set` for only that `exerciseType`.
-  - **`SentenceExercise.tsx` UX Update:** This component will now render a **list of all sentence exercises** on a single page, not one at a time. A single **"Check My Work"** button will be present at the bottom to validate all answers at once, creating a unified workflow consistent with the paragraph exercises.
+    - **Manual Completion Workflow:** After checking answers and reviewing results, users explicitly choose when to mark an exercise as "completed" via a dedicated button. This prevents race conditions in cache filtering and gives users control over their progress.
+    - Each component features its own **"Regenerate" button** (e.g., a refresh icon) that generates new exercises from the pool of uncompleted exercises.
+    - A small text input field allows users to specify an optional **theme** for regeneration.
+    - Clicking the regenerate button calls `/api/generate-exercise-set` for only that `exerciseType`.
+  - **`SentenceExercise.tsx` UX Update:** This component renders a **list of all sentence exercises** on a single page, not one at a time. A single **"Check My Work"** button validates all answers at once, creating a unified workflow consistent with paragraph exercises.
   - **`ResultsDisplay.tsx`:** Handles showing feedback for multiple questions simultaneously.
+  - **`CompletedExercisesView.tsx` (New):** Displays a list of previously completed exercises, allowing users to review their past work and practice spaced repetition.
 
 ### **8. LLM Integration Strategy**
 
@@ -164,10 +168,12 @@ interface CheckAnswerResponse {
 
 ### **9. Enhancements for Learning Experience**
 
-- **Unified Exercise Workflow:** Both paragraph and sentence exercises now feature a "fill-in-multiple-blanks" and "check-all-at-once" workflow, providing a consistent and efficient user experience. This includes full `Tab`/`Shift+Tab` keyboard navigation between all input fields on the page.
-- **"Review Mistakes" Mode:** After checking a set, a "Review Mistakes" button will create a new, temporary exercise set composed only of incorrectly answered questions for targeted practice.
+- **Unified Exercise Workflow:** Both paragraph and sentence exercises feature a "fill-in-multiple-blanks" and "check-all-at-once" workflow, providing a consistent and efficient user experience. This includes full `Tab`/`Shift+Tab` keyboard navigation between all input fields on the page.
+- **Manual Completion Control:** Users explicitly mark exercises as completed after reviewing results, preventing race conditions in caching and giving learners control over their progress tracking.
+- **Completed Exercise Review:** Users can access a dedicated view to review previously completed exercises, enabling spaced repetition and progress assessment.
+- **"Review Mistakes" Mode:** After checking a set, a "Review Mistakes" button creates a new, temporary exercise set composed only of incorrectly answered questions for targeted practice.
 - **"Hint" System (Future Enhancement):** A "Hint" button could make a targeted API call for a clue.
-- **Thematic Content:** Now a core feature. Users can provide a theme during regeneration to receive contextually rich exercises.
+- **Thematic Content:** Core feature allowing users to provide themes during regeneration to receive contextually rich exercises.
 - **Diacritic Learning Support:**
   - Answers that are correct except for diacritics are marked as correct to avoid frustration
   - Yellow warning badges and inline reminders help users learn proper Croatian spelling
@@ -179,3 +185,30 @@ interface CheckAnswerResponse {
 - **Dynamic Progress Bar:** For all exercise types, the progress bar reflects the completion status of input fields on the current page. Progress is calculated as: (filled fields / total fields) × 100.
 - **Real-time Updates:** Progress updates as users fill in answers, providing immediate visual feedback.
 - **Field Validation:** Empty or whitespace-only fields are not considered "filled" for progress calculation.
+
+### **11. Completion Tracking & Exercise Review System**
+
+- **Manual Completion Workflow:**
+  1. User fills in answers and clicks "Check My Work"
+  2. Results are displayed with explanations and feedback
+  3. User reviews results and decides when to mark exercise as "completed"
+  4. "Mark as Completed" button becomes available after checking answers
+  5. Completion is tracked in localStorage with exercise ID, timestamp, and score
+
+- **Completed Exercise Management:**
+  - **View Completed Exercises:** Dedicated interface showing list of completed exercises with scores and completion dates
+  - **Re-attempt Exercises:** Users can re-do completed exercises without affecting their completion status
+  - **Progress Statistics:** Display completion rates, average scores, and learning trends by exercise type
+  - **Exercise History:** Track multiple attempts at the same exercise for progress monitoring
+
+- **Cache Filtering Logic:**
+  - Only manually completed exercises are filtered out during regeneration requests
+  - Prevents race conditions where exercises are marked complete before users finish reviewing
+  - Ensures reliable cache filtering based on explicit user actions
+  - Supports both paragraph exercises (tracked by `exerciseSet.id`) and sentence exercises (tracked by `sentenceExerciseSet.id`)
+
+- **Benefits:**
+  - **User Control:** Learners decide when they've truly mastered an exercise
+  - **Spaced Repetition:** Easy access to review previously completed work
+  - **Reliable Caching:** Eliminates technical issues with automatic completion tracking
+  - **Progress Transparency:** Clear visibility into learning history and achievements

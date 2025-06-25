@@ -4,8 +4,8 @@ import React, { createContext, useContext, useReducer, useEffect } from "react";
 import {
   ExerciseType,
   CefrLevel,
-  SentenceExercise,
   ParagraphExerciseSet,
+  SentenceExerciseSet,
   ExerciseSession,
   ExerciseResult,
   CheckAnswerResponse,
@@ -20,8 +20,8 @@ import nounAdjectiveData from "@/data/noun-adjective-paragraph.json";
 
 interface ExerciseState {
   currentExerciseType: ExerciseType | null;
-  verbAspectExercises: SentenceExercise[];
-  interrogativePronounsExercises: SentenceExercise[];
+  verbAspectExercises: SentenceExerciseSet;
+  interrogativePronounsExercises: SentenceExerciseSet;
   verbTensesParagraph: ParagraphExerciseSet;
   nounAdjectiveParagraph: ParagraphExerciseSet;
   currentSession: ExerciseSession | null;
@@ -44,7 +44,7 @@ type ExerciseAction =
   | { type: "RESET_SESSION" }
   | {
       type: "SET_GENERATED_EXERCISES";
-      payload: { exerciseType: ExerciseType; data: ParagraphExerciseSet | { exercises: SentenceExercise[] } };
+      payload: { exerciseType: ExerciseType; data: ParagraphExerciseSet | SentenceExerciseSet };
     }
   | { type: "SET_GENERATING"; payload: boolean }
   | { type: "SET_ERROR"; payload: string | null }
@@ -53,8 +53,14 @@ type ExerciseAction =
 
 const initialState: ExerciseState = {
   currentExerciseType: null,
-  verbAspectExercises: verbAspectData.exercises,
-  interrogativePronounsExercises: interrogativePronounsData.exercises,
+  verbAspectExercises: {
+    id: "static-verb-aspect",
+    exercises: verbAspectData.exercises
+  },
+  interrogativePronounsExercises: {
+    id: "static-interrogative-pronouns", 
+    exercises: interrogativePronounsData.exercises
+  },
   verbTensesParagraph: verbTensesData as ParagraphExerciseSet,
   nounAdjectiveParagraph: nounAdjectiveData as ParagraphExerciseSet,
   currentSession: null,
@@ -132,11 +138,11 @@ function exerciseReducer(state: ExerciseState, action: ExerciseAction): Exercise
       } else if (exerciseType === "nounDeclension") {
         return { ...state, nounAdjectiveParagraph: data as ParagraphExerciseSet };
       } else if (exerciseType === "verbAspect") {
-        const sentenceData = data as { exercises: SentenceExercise[] };
-        return { ...state, verbAspectExercises: sentenceData.exercises };
+        const sentenceData = data as SentenceExerciseSet;
+        return { ...state, verbAspectExercises: sentenceData };
       } else if (exerciseType === "interrogativePronouns") {
-        const sentenceData = data as { exercises: SentenceExercise[] };
-        return { ...state, interrogativePronounsExercises: sentenceData.exercises };
+        const sentenceData = data as SentenceExerciseSet;
+        return { ...state, interrogativePronounsExercises: sentenceData };
       }
 
       return state;

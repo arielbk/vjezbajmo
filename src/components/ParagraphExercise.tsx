@@ -103,8 +103,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
       setResults(newResults);
       setHasChecked(true);
 
-      // Mark the exercise as completed in user progress
-      markExerciseCompleted(exerciseSet.id, exerciseType, theme || undefined);
+      // Note: Completion is now manual - user decides when to mark as completed
     } catch (error) {
       console.error("Error checking answers:", error);
     } finally {

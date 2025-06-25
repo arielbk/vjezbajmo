@@ -3,7 +3,7 @@ import { z } from "zod";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { v4 as uuidv4 } from "uuid";
-import { ParagraphExerciseSet, SentenceExercise } from "@/types/exercise";
+import { ParagraphExerciseSet, SentenceExercise, SentenceExerciseSet } from "@/types/exercise";
 import { exerciseCache } from "@/lib/exercise-cache";
 import { cacheProvider, generateCacheKey, CachedExercise } from "@/lib/cache-provider";
 
@@ -75,8 +75,24 @@ export async function POST(request: NextRequest) {
     const cachedExercises = await cacheProvider.getCachedExercises(cacheKey);
 
     // Filter out exercises the user has already completed
+    // Check against the actual exercise data ID, not the cache wrapper ID
     const completedSet = new Set(userCompletedExercises || []);
-    const availableExercises = cachedExercises.filter((exercise) => !completedSet.has(exercise.id));
+    const availableExercises = cachedExercises.filter((exercise) => {
+      // Get the actual exercise set ID from the data
+      const exerciseDataId = "id" in exercise.data ? exercise.data.id : exercise.id;
+      return !completedSet.has(exerciseDataId);
+    });
+
+    console.log("Cache filtering debug:", {
+      totalCached: cachedExercises.length,
+      completedCount: completedSet.size,
+      availableAfterFilter: availableExercises.length,
+      completedIds: Array.from(completedSet),
+      cachedIds: cachedExercises.map(ex => ({ 
+        cacheId: ex.id, 
+        dataId: "id" in ex.data ? ex.data.id : ex.id 
+      }))
+    });
 
     if (availableExercises.length > 0) {
       // Serve from cache
@@ -128,7 +144,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Helper function to cache exercise solutions for answer validation
-async function cacheExerciseSolutions(exerciseData: ParagraphExerciseSet | { exercises: SentenceExercise[] }) {
+async function cacheExerciseSolutions(exerciseData: ParagraphExerciseSet | SentenceExerciseSet) {
   if ("paragraph" in exerciseData) {
     // Paragraph exercise
     const paragraphExercise = exerciseData as ParagraphExerciseSet;
@@ -140,7 +156,7 @@ async function cacheExerciseSolutions(exerciseData: ParagraphExerciseSet | { exe
     }
   } else {
     // Sentence exercises
-    const sentenceExercise = exerciseData as { exercises: SentenceExercise[] };
+    const sentenceExercise = exerciseData as SentenceExerciseSet;
     for (const exercise of sentenceExercise.exercises) {
       await exerciseCache.set(exercise.id as string, {
         correctAnswer: exercise.correctAnswer,
@@ -393,6 +409,12 @@ function processAIResponse(content: string, exerciseType: string) {
       explanation: ex.explanation,
     }));
 
-    return NextResponse.json({ exercises });
+    // Add a set ID for consistent tracking
+    const exerciseSetWithId = {
+      id: uuidv4(),
+      exercises
+    };
+
+    return NextResponse.json(exerciseSetWithId);
   }
 }

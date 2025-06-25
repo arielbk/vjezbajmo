@@ -19,6 +19,11 @@ export interface ParagraphExerciseSet {
   }[];
 }
 
+export interface SentenceExerciseSet {
+  id: string; // Unique ID (UUID) for the entire generated set
+  exercises: SentenceExercise[];
+}
+
 export type ExerciseType = "verbTenses" | "nounDeclension" | "verbAspect" | "interrogativePronouns";
 
 export type CefrLevel = "A1" | "A2.1" | "A2.2" | "B1.1";

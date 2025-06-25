@@ -8,7 +8,7 @@ import { ExerciseSelection } from "@/components/ExerciseSelection";
 import { ParagraphExercise } from "@/components/ParagraphExercise";
 import { SentenceExercise as SentenceExerciseComponent } from "@/components/SentenceExercise";
 import { ResultsDisplay } from "@/components/ResultsDisplay";
-import type { ParagraphExerciseSet, SentenceExercise } from "@/types/exercise";
+import type { ParagraphExerciseSet, SentenceExerciseSet } from "@/types/exercise";
 import { AlertTriangle } from "lucide-react";
 
 type AppScreen = "selection" | "exercise" | "results";
@@ -108,7 +108,7 @@ export function VjezbajmoApp() {
         } else {
           return (
             <SentenceExerciseComponent
-              exercises={exerciseData as SentenceExercise[]}
+              exerciseSet={exerciseData as SentenceExerciseSet}
               exerciseType={state.currentExerciseType!}
               onComplete={handleCompleteExercise}
               onBack={handleBackToSelection}
