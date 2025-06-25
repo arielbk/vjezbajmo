@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { useExercise } from "@/contexts/ExerciseContext";
 import { ParagraphExerciseSet, ExerciseType } from "@/types/exercise";
 import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
-import { ArrowLeft, Check, X, RefreshCw } from "lucide-react";
+import { ArrowLeft, Check, X, RefreshCw, AlertTriangle } from "lucide-react";
 
 interface ParagraphExerciseProps {
   exerciseSet: ParagraphExerciseSet;
@@ -79,13 +79,16 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
         } else {
           // Handle generated exercise via API
           try {
-            const result = await checkAnswer(question.id, userAnswer);
-            const exerciseResult = createExerciseResult(
-              question.id,
+            const apiResponse = await checkAnswer(question.id, userAnswer);
+            const exerciseResult: ReturnType<typeof createExerciseResult> = {
+              questionId: question.id,
               userAnswer,
-              result.correctAnswer || question.correctAnswer,
-              result.explanation
-            );
+              correct: apiResponse.correct,
+              explanation: apiResponse.explanation,
+              correctAnswer: apiResponse.correct ? undefined : apiResponse.correctAnswer,
+              diacriticWarning: apiResponse.diacriticWarning,
+              matchedAnswer: apiResponse.matchedAnswer,
+            };
             newResults[question.id] = exerciseResult;
             dispatch({ type: "ADD_RESULT", payload: exerciseResult });
           } catch {
@@ -106,12 +109,33 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
     }
   };
 
+  const getInputStyling = (result: ReturnType<typeof createExerciseResult> | undefined) => {
+    if (!result) return "";
+    if (result.correct && result.diacriticWarning) {
+      return "border-yellow-500 bg-yellow-50";
+    }
+    if (result.correct) {
+      return "border-green-500 bg-green-50";
+    }
+    return "border-red-500 bg-red-50";
+  };
+
+  const getResultIcon = (result: ReturnType<typeof createExerciseResult> | undefined) => {
+    if (!result) return null;
+    if (result.correct && result.diacriticWarning) {
+      return <AlertTriangle className="h-4 w-4 text-yellow-600 inline" />;
+    }
+    if (result.correct) {
+      return <Check className="h-4 w-4 text-green-600 inline" />;
+    }
+    return <X className="h-4 w-4 text-red-600 inline" />;
+  };
+
   const renderParagraphWithInputs = () => {
     const paragraphParts = exerciseSet.paragraph.split(/___\d+___/);
     const inputs: React.ReactElement[] = [];
 
     exerciseSet.questions.forEach((question, index) => {
-      const isCorrect = results[question.id]?.correct;
       const hasResult = hasChecked && results[question.id];
 
       inputs.push(
@@ -124,21 +148,11 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
             value={answers[question.id] || ""}
             onChange={(e) => handleAnswerChange(question.id, e.target.value)}
             onKeyDown={(e) => handleKeyDown(e, index)}
-            className={`inline-block w-32 text-center ${
-              hasResult ? (isCorrect ? "border-green-500 bg-green-50" : "border-red-500 bg-red-50") : ""
-            }`}
+            className={`inline-block w-32 text-center ${getInputStyling(results[question.id])}`}
             placeholder={`(${question.baseForm})`}
             disabled={hasChecked}
           />
-          {hasResult && (
-            <span className="ml-1">
-              {isCorrect ? (
-                <Check className="h-4 w-4 text-green-600 inline" />
-              ) : (
-                <X className="h-4 w-4 text-red-600 inline" />
-              )}
-            </span>
-          )}
+          {hasResult && <span className="ml-1">{getResultIcon(results[question.id])}</span>}
         </span>
       );
     });
@@ -228,13 +242,26 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
                               <span className="ml-2 text-sm">
                                 Your answer: <span className="font-mono">{result.userAnswer}</span>
                                 {" → "}
-                                Correct: <span className="font-mono text-green-600">{result.correctAnswer}</span>
+                                Correct:{" "}
+                                <span className="font-mono text-green-600">
+                                  {Array.isArray(result.correctAnswer)
+                                    ? result.correctAnswer.join(" or ")
+                                    : result.correctAnswer}
+                                </span>
+                              </span>
+                            )}
+                            {result.correct && result.diacriticWarning && (
+                              <span className="ml-2 text-sm text-yellow-700">
+                                <AlertTriangle className="h-3 w-3 inline mr-1" />
+                                Correct! Remember diacritics: <span className="font-mono">{result.matchedAnswer}</span>
                               </span>
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground">{result.explanation}</p>
                         </div>
-                        {result.correct ? (
+                        {result.correct && result.diacriticWarning ? (
+                          <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                        ) : result.correct ? (
                           <Check className="h-5 w-5 text-green-600" />
                         ) : (
                           <X className="h-5 w-5 text-red-600" />

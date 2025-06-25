@@ -3,7 +3,7 @@
 export interface SentenceExercise {
   id: number | string; // number for static, string (UUID) for generated
   text: string;
-  correctAnswer: string;
+  correctAnswer: string | string[]; // Support multiple correct answers
   explanation: string;
 }
 
@@ -14,7 +14,7 @@ export interface ParagraphExerciseSet {
     id: string; // Unique ID (UUID) for each blank
     blankNumber: number;
     baseForm: string;
-    correctAnswer: string;
+    correctAnswer: string | string[]; // Support multiple correct answers
     explanation: string;
   }[];
 }
@@ -39,7 +39,9 @@ export interface CheckAnswerRequest {
 export interface CheckAnswerResponse {
   correct: boolean;
   explanation: string;
-  correctAnswer?: string;
+  correctAnswer?: string | string[];
+  diacriticWarning?: boolean; // True if correct except for diacritics
+  matchedAnswer?: string; // The specific correct answer that was matched
 }
 
 // For result display
@@ -48,7 +50,9 @@ export interface ExerciseResult {
   userAnswer: string;
   correct: boolean;
   explanation: string;
-  correctAnswer?: string;
+  correctAnswer?: string | string[];
+  diacriticWarning?: boolean; // True if correct except for diacritics
+  matchedAnswer?: string; // The specific correct answer that was matched
 }
 
 // For session management

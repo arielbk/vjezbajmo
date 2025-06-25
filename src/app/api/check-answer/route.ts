@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { normalizeAnswer } from "@/lib/exercise-utils";
+import { checkAnswer } from "@/lib/exercise-utils";
 import { exerciseCache } from "@/lib/exercise-cache";
 
 const checkAnswerSchema = z.object({
@@ -20,15 +20,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Question not found or expired" }, { status: 404 });
     }
 
-    const normalizedUserAnswer = normalizeAnswer(userAnswer);
-    const normalizedCorrectAnswer = normalizeAnswer(cachedSolution.correctAnswer);
-
-    const correct = normalizedUserAnswer === normalizedCorrectAnswer;
+    const { correct, diacriticWarning, matchedAnswer } = checkAnswer(userAnswer, cachedSolution.correctAnswer);
 
     return NextResponse.json({
       correct,
       explanation: cachedSolution.explanation,
       correctAnswer: correct ? undefined : cachedSolution.correctAnswer,
+      diacriticWarning,
+      matchedAnswer,
     });
   } catch (error) {
     console.error("Answer checking error:", error);

@@ -30,6 +30,8 @@ The application is a monolithic **Next.js** application.
     - **User Key:** Users can enter their own API key to bypass any potential limits on the site key.
 4.  **Client-Side Session Caching:** Once new exercises are generated, they are cached in the client's state to minimize redundant API calls.
 5.  **Secure Answer Validation:** Solutions for **API-generated** exercises are cached on the server for secure validation. Solutions for **static** exercises are handled on the client for speed.
+6.  **Diacritic Tolerance:** The system recognizes that users may not have proper Croatian keyboard layouts. If an answer is correct except for diacritics (č, ć, đ, š, ž), it's marked as correct with a helpful warning reminder about proper Croatian spelling.
+7.  **Multiple Correct Answers:** The system supports exercises where multiple answers are acceptable (e.g., perfective/imperfective aspect variations depending on context).
 
 ### **4. Core Features & Exercise Types**
 
@@ -57,7 +59,7 @@ The application is a monolithic **Next.js** application.
 interface SentenceExercise {
   id: number | string;
   text: string;
-  correctAnswer: string;
+  correctAnswer: string | string[]; // Support multiple correct answers
   explanation: string;
 }
 
@@ -69,9 +71,18 @@ interface ParagraphExerciseSet {
     id: string;
     blankNumber: number;
     baseForm: string;
-    correctAnswer: string;
+    correctAnswer: string | string[]; // Support multiple correct answers
     explanation: string;
   }[];
+}
+
+// Enhanced answer validation response
+interface CheckAnswerResponse {
+  correct: boolean;
+  explanation: string;
+  correctAnswer?: string | string[];
+  diacriticWarning?: boolean; // True if correct except for diacritics
+  matchedAnswer?: string; // The specific correct answer that was matched
 }
 ```
 
@@ -97,8 +108,15 @@ interface ParagraphExerciseSet {
 #### **6.2. Answer Checking Logic**
 
 - **Distinguishing Questions:** The `id` field will be used to route the check. If `typeof id === 'number'`, it's a static question checked on the client. If `typeof id === 'string'`, it's a generated question that requires a call to the `POST /api/check-answer` endpoint.
-- **`POST /api/check-answer`:** This backend route validates the `userAnswer` against the solution stored in the server-side cache, keyed by the question's UUID.
-- **Normalization:** Before any comparison (client or server), answers are normalized (lowercase, trim whitespace). Diacritics are strictly enforced.
+- **`POST /api/check-answer`:** This backend route validates the `userAnswer` against the solution stored in the server-side cache, keyed by the question's UUID. Returns enhanced feedback including diacritic warnings and the specific matched answer.
+- **Answer Normalization & Diacritic Handling:** Before any comparison (client or server), answers are normalized (lowercase, trim whitespace). The system performs two-pass validation:
+  1. **Exact Match**: Checks for perfect answers with proper diacritics
+  2. **Diacritic-Tolerant Match**: Checks answers with diacritics removed (č→c, ć→c, đ→d, š→s, ž→z)
+- **Multiple Answer Support:** Both client-side and server-side validation handle arrays of correct answers, checking user input against all possibilities.
+- **Visual Feedback Enhancement:**
+  - Correct answers with proper diacritics: Green highlighting
+  - Correct answers with diacritic issues: Yellow highlighting with helpful reminder
+  - Incorrect answers: Red highlighting with explanations
 
 ### **7. Frontend Architecture & State Management**
 
@@ -134,6 +152,11 @@ interface ParagraphExerciseSet {
 - **"Review Mistakes" Mode:** After checking a set, a "Review Mistakes" button will create a new, temporary exercise set composed only of incorrectly answered questions for targeted practice.
 - **"Hint" System (Future Enhancement):** A "Hint" button could make a targeted API call for a clue.
 - **Thematic Content:** Now a core feature. Users can provide a theme during regeneration to receive contextually rich exercises.
+- **Diacritic Learning Support:**
+  - Answers that are correct except for diacritics are marked as correct to avoid frustration
+  - Yellow warning badges and inline reminders help users learn proper Croatian spelling
+  - Separate "Diacritic Reminders" section in results shows proper spelling for educational purposes
+- **Multiple Answer Recognition:** The system intelligently handles cases where multiple forms might be correct (e.g., perfect vs. imperfect aspect based on context), providing a more realistic learning experience.
 
 ### **10. Progress Tracking & User Experience**
 

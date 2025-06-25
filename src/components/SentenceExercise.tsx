@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { useExercise } from "@/contexts/ExerciseContext";
 import type { SentenceExercise, ExerciseType } from "@/types/exercise";
 import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
-import { ArrowLeft, Check, X, RefreshCw } from "lucide-react";
+import { ArrowLeft, Check, X, RefreshCw, AlertTriangle } from "lucide-react";
 
 interface SentenceExerciseProps {
   exercises: SentenceExercise[];
@@ -55,13 +55,16 @@ export function SentenceExercise({ exercises, exerciseType, onComplete, onBack, 
         } else {
           // Handle generated exercise via API
           try {
-            const result = await checkAnswer(exercise.id as string, userAnswer);
-            const exerciseResult = createExerciseResult(
-              exercise.id,
+            const apiResponse = await checkAnswer(exercise.id as string, userAnswer);
+            const exerciseResult: ReturnType<typeof createExerciseResult> = {
+              questionId: exercise.id,
               userAnswer,
-              result.correctAnswer || exercise.correctAnswer,
-              result.explanation
-            );
+              correct: apiResponse.correct,
+              explanation: apiResponse.explanation,
+              correctAnswer: apiResponse.correct ? undefined : apiResponse.correctAnswer,
+              diacriticWarning: apiResponse.diacriticWarning,
+              matchedAnswer: apiResponse.matchedAnswer,
+            };
             newResults[exercise.id] = exerciseResult;
             dispatch({ type: "ADD_RESULT", payload: exerciseResult });
           } catch {
@@ -82,6 +85,28 @@ export function SentenceExercise({ exercises, exerciseType, onComplete, onBack, 
     }
   };
 
+  const getInputStyling = (result: ReturnType<typeof createExerciseResult> | undefined) => {
+    if (!result) return "";
+    if (result.correct && result.diacriticWarning) {
+      return "border-yellow-500 bg-yellow-50";
+    }
+    if (result.correct) {
+      return "border-green-500 bg-green-50";
+    }
+    return "border-red-500 bg-red-50";
+  };
+
+  const getResultIcon = (result: ReturnType<typeof createExerciseResult> | undefined) => {
+    if (!result) return null;
+    if (result.correct && result.diacriticWarning) {
+      return <AlertTriangle className="h-4 w-4 text-yellow-600 inline" />;
+    }
+    if (result.correct) {
+      return <Check className="h-4 w-4 text-green-600 inline" />;
+    }
+    return <X className="h-4 w-4 text-red-600 inline" />;
+  };
+
   const renderSentenceWithInput = (exercise: SentenceExercise) => {
     const parts = exercise.text.split("_____");
     const result = results[exercise.id];
@@ -95,23 +120,19 @@ export function SentenceExercise({ exercises, exerciseType, onComplete, onBack, 
             type="text"
             value={userAnswer}
             onChange={(e) => handleAnswerChange(exercise.id, e.target.value)}
-            className={`inline-block w-40 text-center ${
-              result ? (result.correct ? "border-green-500 bg-green-50" : "border-red-500 bg-red-50") : ""
-            }`}
+            className={`inline-block w-40 text-center ${getInputStyling(result)}`}
             placeholder="Your answer"
             disabled={hasChecked}
           />
-          {result && (
-            <span className="ml-1">
-              {result.correct ? (
-                <Check className="h-4 w-4 text-green-600 inline" />
-              ) : (
-                <X className="h-4 w-4 text-red-600 inline" />
-              )}
-            </span>
-          )}
+          {result && <span className="ml-1">{getResultIcon(result)}</span>}
         </span>
         <span>{parts[1] || ""}</span>
+        {result && result.correct && result.diacriticWarning && (
+          <div className="mt-1 text-sm text-yellow-700 bg-yellow-50 p-2 rounded">
+            <AlertTriangle className="h-4 w-4 inline mr-1" />
+            Correct! Remember to use proper diacritics: <strong>{result.matchedAnswer}</strong>
+          </div>
+        )}
       </div>
     );
   };

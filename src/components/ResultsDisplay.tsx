@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { useExercise } from "@/contexts/ExerciseContext";
 import { calculateScore } from "@/lib/exercise-utils";
-import { ArrowLeft, RotateCcw, Target, TrendingUp, Award } from "lucide-react";
+import { ArrowLeft, RotateCcw, Target, TrendingUp, Award, AlertTriangle } from "lucide-react";
 
 interface ResultsDisplayProps {
   onBack: () => void;
@@ -22,7 +22,9 @@ export function ResultsDisplay({ onBack, onRestart, onReviewMistakes }: ResultsD
 
   const { correct, total, percentage } = calculateScore(state.currentSession.results);
   const mistakes = state.currentSession.results.filter((r) => !r.correct);
+  const diacriticWarnings = state.currentSession.results.filter((r) => r.correct && r.diacriticWarning);
   const hasMistakes = mistakes.length > 0;
+  const hasDiacriticWarnings = diacriticWarnings.length > 0;
 
   const getScoreColor = (percentage: number) => {
     if (percentage >= 90) return "text-green-600";
@@ -121,11 +123,52 @@ export function ResultsDisplay({ onBack, onRestart, onReviewMistakes }: ResultsD
                     <div className="text-sm">
                       <span className="text-gray-600">Correct answer:</span>{" "}
                       <span className="font-mono bg-green-100 px-2 py-1 rounded text-green-800">
-                        {mistake.correctAnswer}
+                        {Array.isArray(mistake.correctAnswer)
+                          ? mistake.correctAnswer.join(" or ")
+                          : mistake.correctAnswer}
                       </span>
                     </div>
                     <div className="text-sm text-gray-600 bg-white p-2 rounded">
                       <strong>Explanation:</strong> {mistake.explanation}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {diacriticWarnings.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              Diacritic Reminders
+            </CardTitle>
+            <CardDescription>
+              These answers were correct, but remember to use the proper Croatian diacritics (č, ć, đ, š, ž).
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {diacriticWarnings.map((warning, index) => (
+                <div key={index} className="border rounded-lg p-4 bg-yellow-50">
+                  <div className="space-y-2">
+                    <div className="font-medium">Question {index + 1}</div>
+                    <div className="text-sm">
+                      <span className="text-gray-600">Your answer:</span>{" "}
+                      <span className="font-mono bg-white px-2 py-1 rounded">{warning.userAnswer}</span>
+                    </div>
+                    <div className="text-sm">
+                      <span className="text-gray-600">With proper diacritics:</span>{" "}
+                      <span className="font-mono bg-yellow-100 px-2 py-1 rounded text-yellow-800">
+                        {warning.matchedAnswer}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-600 bg-white p-2 rounded">
+                      <strong>Note:</strong> Your answer was correct! Just remember to use the proper Croatian letters
+                      next time.
                     </div>
                   </div>
                 </div>

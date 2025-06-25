@@ -29,6 +29,12 @@
       "text": "Djevojka _____ (trčati) po parku svako jutro.",
       "correctAnswer": "trči",
       "explanation": "Present tense of 'trčati' (to run) - third person singular is 'trči'."
+    },
+    {
+      "id": 6,
+      "text": "Ova pesma mi se veoma _____ (sviđati).",
+      "correctAnswer": ["sviđa", "svida"],
+      "explanation": "Present tense of 'sviđati se' (to like) - third person singular is 'sviđa'. Both spellings with and without the diacritic are accepted."
     }
   ]
 }

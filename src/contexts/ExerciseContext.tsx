@@ -8,6 +8,7 @@ import {
   ParagraphExerciseSet,
   ExerciseSession,
   ExerciseResult,
+  CheckAnswerResponse,
 } from "@/types/exercise";
 
 // Static exercise imports
@@ -165,10 +166,7 @@ const ExerciseContext = createContext<{
   dispatch: React.Dispatch<ExerciseAction>;
   generateExercises: (exerciseType: ExerciseType, theme?: string) => Promise<void>;
   regenerateAllExercises: (theme?: string) => Promise<void>;
-  checkAnswer: (
-    questionId: string,
-    userAnswer: string
-  ) => Promise<{ correct: boolean; explanation: string; correctAnswer?: string }>;
+  checkAnswer: (questionId: string, userAnswer: string) => Promise<CheckAnswerResponse>;
 } | null>(null);
 
 export function ExerciseProvider({ children }: { children: React.ReactNode }) {

@@ -2,7 +2,7 @@
 // In production, this would be replaced with Redis or similar
 
 interface CachedSolution {
-  correctAnswer: string;
+  correctAnswer: string | string[];
   explanation: string;
   timestamp: number;
 }
