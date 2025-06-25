@@ -10,6 +10,7 @@ import {
   ExerciseResult,
   CheckAnswerResponse,
 } from "@/types/exercise";
+import { userProgressManager } from "@/lib/user-progress";
 
 // Static exercise imports
 import verbAspectData from "@/data/verb-aspect-exercises.json";
@@ -47,7 +48,8 @@ type ExerciseAction =
     }
   | { type: "SET_GENERATING"; payload: boolean }
   | { type: "SET_ERROR"; payload: string | null }
-  | { type: "START_REVIEW_MISTAKES"; payload: ExerciseSession };
+  | { type: "START_REVIEW_MISTAKES"; payload: ExerciseSession }
+  | { type: "MARK_EXERCISE_COMPLETED"; payload: { exerciseId: string; exerciseType: ExerciseType; theme?: string } };
 
 const initialState: ExerciseState = {
   currentExerciseType: null,
@@ -156,6 +158,10 @@ function exerciseReducer(state: ExerciseState, action: ExerciseAction): Exercise
         },
       };
 
+    case "MARK_EXERCISE_COMPLETED":
+      // This is handled in the context provider function, not in the reducer
+      return state;
+
     default:
       return state;
   }
@@ -167,6 +173,7 @@ const ExerciseContext = createContext<{
   generateExercises: (exerciseType: ExerciseType, theme?: string) => Promise<void>;
   regenerateAllExercises: (theme?: string) => Promise<void>;
   checkAnswer: (questionId: string, userAnswer: string) => Promise<CheckAnswerResponse>;
+  markExerciseCompleted: (exerciseId: string, exerciseType: ExerciseType, theme?: string) => void;
 } | null>(null);
 
 export function ExerciseProvider({ children }: { children: React.ReactNode }) {
@@ -223,16 +230,21 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "SET_ERROR", payload: null });
 
     try {
+      // Get user's completed exercises for this type/level/theme
+      const completedExercises = userProgressManager.getCompletedExercises(exerciseType, state.cefrLevel, theme);
+
       const requestBody: {
         exerciseType: ExerciseType;
         cefrLevel: CefrLevel;
         theme?: string;
         provider?: "openai" | "anthropic";
         apiKey?: string;
+        userCompletedExercises?: string[];
       } = {
         exerciseType,
         cefrLevel: state.cefrLevel,
         theme,
+        userCompletedExercises: completedExercises,
       };
 
       // Include user's API key and provider if available
@@ -274,16 +286,21 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const promises = exerciseTypes.map(async (exerciseType) => {
+        // Get user's completed exercises for this type/level/theme
+        const completedExercises = userProgressManager.getCompletedExercises(exerciseType, state.cefrLevel, theme);
+
         const requestBody: {
           exerciseType: ExerciseType;
           cefrLevel: CefrLevel;
           theme?: string;
           provider?: "openai" | "anthropic";
           apiKey?: string;
+          userCompletedExercises?: string[];
         } = {
           exerciseType,
           cefrLevel: state.cefrLevel,
           theme,
+          userCompletedExercises: completedExercises,
         };
 
         // Include user's API key and provider if available
@@ -352,8 +369,12 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const markExerciseCompleted = (exerciseId: string, exerciseType: ExerciseType, theme?: string) => {
+    userProgressManager.markExerciseCompleted(exerciseId, exerciseType, state.cefrLevel, theme);
+  };
+
   return (
-    <ExerciseContext.Provider value={{ state, dispatch, generateExercises, regenerateAllExercises, checkAnswer }}>
+    <ExerciseContext.Provider value={{ state, dispatch, generateExercises, regenerateAllExercises, checkAnswer, markExerciseCompleted }}>
       {children}
     </ExerciseContext.Provider>
   );

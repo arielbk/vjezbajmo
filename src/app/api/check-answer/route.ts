@@ -3,6 +3,9 @@ import { z } from "zod";
 import { checkAnswer } from "@/lib/exercise-utils";
 import { exerciseCache } from "@/lib/exercise-cache";
 
+// Cache answer validation for 1 hour since solutions don't change
+export const revalidate = 3600;
+
 const checkAnswerSchema = z.object({
   questionId: z.string(),
   userAnswer: z.string(),
@@ -14,7 +17,7 @@ export async function POST(request: NextRequest) {
     const { questionId, userAnswer } = checkAnswerSchema.parse(body);
 
     // Get the cached solution
-    const cachedSolution = exerciseCache.get(questionId);
+    const cachedSolution = await exerciseCache.get(questionId);
 
     if (!cachedSolution) {
       return NextResponse.json({ error: "Question not found or expired" }, { status: 404 });

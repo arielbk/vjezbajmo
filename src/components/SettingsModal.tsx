@@ -13,7 +13,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useExercise } from "@/contexts/ExerciseContext";
-import { Settings, Key, Eye, EyeOff, RefreshCw, AlertCircle } from "lucide-react";
+import { userProgressManager } from "@/lib/user-progress";
+import { Settings, Key, Eye, EyeOff, RefreshCw, AlertCircle, Trash2 } from "lucide-react";
 import type { CefrLevel } from "@/types/exercise";
 
 export function SettingsModal() {
@@ -50,6 +51,20 @@ export function SettingsModal() {
     await regenerateAllExercises(globalTheme || undefined);
     setGlobalTheme("");
     setOpen(false);
+  };
+
+  const handleClearProgress = () => {
+    const exerciseTypes = ["verbTenses", "nounDeclension", "verbAspect", "interrogativePronouns"] as const;
+    
+    // Clear progress for all exercise types at current CEFR level
+    exerciseTypes.forEach(type => {
+      userProgressManager.clearCompletedExercises(type, state.cefrLevel);
+    });
+    
+    // Also clear overall cleanup flag to force cleanup on next session
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('vjezbajmo-cleaned');
+    }
   };
 
   const getApiKeyPlaceholder = () => {
@@ -213,6 +228,24 @@ export function SettingsModal() {
             </div>
             <p className="text-xs text-muted-foreground">
               This will generate new exercises for all categories using your selected AI provider and CEFR level.
+            </p>
+          </div>
+
+          {/* Clear Progress */}
+          <div className="space-y-3 pt-3 border-t">
+            <h4 className="text-sm font-medium">Progress Management</h4>
+            <div className="space-y-2">
+              <Button 
+                onClick={handleClearProgress} 
+                variant="outline" 
+                className="w-full gap-2 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+                Clear Completed Exercises
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              This will reset your progress and allow you to see exercises you&apos;ve already completed.
             </p>
           </div>
         </div>

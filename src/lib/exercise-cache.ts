@@ -1,5 +1,7 @@
-// Shared cache for exercise solutions
-// In production, this would be replaced with Redis or similar
+// Legacy export for backward compatibility
+// Now uses the new cache provider system
+
+import { cacheProvider } from './cache-provider';
 
 interface CachedSolution {
   correctAnswer: string | string[];
@@ -8,41 +10,33 @@ interface CachedSolution {
 }
 
 class ExerciseCache {
-  private cache = new Map<string, CachedSolution>();
+  async set(questionId: string, solution: Omit<CachedSolution, "timestamp">) {
+    await cacheProvider.setCachedSolution(questionId, solution);
+  }
 
-  set(questionId: string, solution: Omit<CachedSolution, "timestamp">) {
-    this.cache.set(questionId, {
+  async get(questionId: string): Promise<CachedSolution | undefined> {
+    const solution = await cacheProvider.getCachedSolution(questionId);
+    if (!solution) return undefined;
+    
+    return {
       ...solution,
-      timestamp: Date.now(),
-    });
+      timestamp: Date.now(), // Mock timestamp for backward compatibility
+    };
   }
 
-  get(questionId: string): CachedSolution | undefined {
-    return this.cache.get(questionId);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  delete(_questionId: string): boolean {
+    // Note: The new cache provider doesn't expose delete method
+    // Solutions expire automatically
+    console.warn('Delete operation not supported in new cache provider');
+    return false;
   }
 
-  delete(questionId: string): boolean {
-    return this.cache.delete(questionId);
-  }
-
-  // Clean up old entries (older than 1 hour)
+  // Clean up old entries (now handled by cache provider)
   cleanup() {
-    const oneHourAgo = Date.now() - 60 * 60 * 1000;
-    for (const [key, value] of this.cache.entries()) {
-      if (value.timestamp < oneHourAgo) {
-        this.cache.delete(key);
-      }
-    }
+    console.warn('Cleanup is now handled automatically by the cache provider');
   }
 }
 
-// Singleton instance
+// Singleton instance for backward compatibility
 export const exerciseCache = new ExerciseCache();
-
-// Set up periodic cleanup
-if (typeof window === "undefined") {
-  // Only run cleanup on server
-  setInterval(() => {
-    exerciseCache.cleanup();
-  }, 5 * 60 * 1000); // Check every 5 minutes
-}

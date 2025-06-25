@@ -5,14 +5,19 @@ import Anthropic from "@anthropic-ai/sdk";
 import { v4 as uuidv4 } from "uuid";
 import { ParagraphExerciseSet, SentenceExercise } from "@/types/exercise";
 import { exerciseCache } from "@/lib/exercise-cache";
+import { cacheProvider, generateCacheKey, CachedExercise } from "@/lib/cache-provider";
 
-// Validation schema
+// Cache static exercise generation for 1 hour
+export const revalidate = 3600;
+
+// Validation schema - now includes userCompletedExercises
 const generateExerciseSchema = z.object({
   exerciseType: z.enum(["verbTenses", "nounDeclension", "verbAspect", "interrogativePronouns"]),
   cefrLevel: z.enum(["A1", "A2.1", "A2.2", "B1.1"]),
   provider: z.enum(["openai", "anthropic"]).optional(),
   apiKey: z.string().optional(),
   theme: z.string().optional(),
+  userCompletedExercises: z.array(z.string()).optional(),
 });
 
 // Interfaces for AI responses
@@ -44,7 +49,7 @@ interface AISentenceResponse {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { exerciseType, cefrLevel, provider, apiKey, theme } = generateExerciseSchema.parse(body);
+    const { exerciseType, cefrLevel, provider, apiKey, theme, userCompletedExercises } = generateExerciseSchema.parse(body);
 
     // Determine which API key and provider to use
     const effectiveApiKey = apiKey || process.env.SITE_API_KEY;
@@ -57,20 +62,59 @@ export async function POST(request: NextRequest) {
       exerciseType,
       cefrLevel,
       theme,
+      userCompletedCount: userCompletedExercises?.length || 0,
     });
 
     if (!effectiveApiKey) {
       return NextResponse.json({ error: "No API key available" }, { status: 400 });
     }
 
-    // Route to appropriate provider
-    if (effectiveProvider === "openai") {
-      return await generateWithOpenAI(exerciseType, cefrLevel, effectiveApiKey, theme);
-    } else if (effectiveProvider === "anthropic") {
-      return await generateWithAnthropic(exerciseType, cefrLevel, effectiveApiKey, theme);
+    // Try to serve from cache first
+    const cacheKey = generateCacheKey(exerciseType, cefrLevel, theme);
+    const cachedExercises = await cacheProvider.getCachedExercises(cacheKey);
+    
+    // Filter out exercises the user has already completed
+    const completedSet = new Set(userCompletedExercises || []);
+    const availableExercises = cachedExercises.filter(exercise => !completedSet.has(exercise.id));
+
+    if (availableExercises.length > 0) {
+      // Serve from cache
+      console.log(`Serving from cache: ${availableExercises.length} available exercises`);
+      const selectedExercise = availableExercises[Math.floor(Math.random() * availableExercises.length)];
+      
+      // Cache the solutions for answer validation
+      await cacheExerciseSolutions(selectedExercise.data);
+      
+      return NextResponse.json(selectedExercise.data);
     }
 
-    return NextResponse.json({ error: "Invalid provider" }, { status: 400 });
+    // No suitable cached exercises, generate new ones
+    console.log("No suitable cached exercises found, generating new ones");
+
+    // Route to appropriate provider
+    let response;
+    if (effectiveProvider === "openai") {
+      response = await generateWithOpenAI(exerciseType, cefrLevel, effectiveApiKey, theme);
+    } else if (effectiveProvider === "anthropic") {
+      response = await generateWithAnthropic(exerciseType, cefrLevel, effectiveApiKey, theme);
+    } else {
+      return NextResponse.json({ error: "Invalid provider" }, { status: 400 });
+    }
+
+    // Cache the newly generated exercise
+    const responseData = await response.json();
+    const cachedExercise: CachedExercise = {
+      id: uuidv4(),
+      exerciseType,
+      cefrLevel,
+      theme: theme || null,
+      data: responseData,
+      createdAt: Date.now(),
+    };
+
+    await cacheProvider.setCachedExercise(cacheKey, cachedExercise);
+    
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error("Exercise generation error:", error);
 
@@ -79,6 +123,29 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ error: "Failed to generate exercises" }, { status: 500 });
+  }
+}
+
+// Helper function to cache exercise solutions for answer validation
+async function cacheExerciseSolutions(exerciseData: ParagraphExerciseSet | { exercises: SentenceExercise[] }) {
+  if ('paragraph' in exerciseData) {
+    // Paragraph exercise
+    const paragraphExercise = exerciseData as ParagraphExerciseSet;
+    for (const question of paragraphExercise.questions) {
+      await exerciseCache.set(question.id, {
+        correctAnswer: question.correctAnswer,
+        explanation: question.explanation,
+      });
+    }
+  } else {
+    // Sentence exercises
+    const sentenceExercise = exerciseData as { exercises: SentenceExercise[] };
+    for (const exercise of sentenceExercise.exercises) {
+      await exerciseCache.set(exercise.id as string, {
+        correctAnswer: exercise.correctAnswer,
+        explanation: exercise.explanation,
+      });
+    }
   }
 }
 
@@ -300,7 +367,7 @@ function processAIResponse(content: string, exerciseType: string) {
     throw new Error("Invalid JSON response from AI");
   }
 
-  // Generate UUIDs and cache solutions
+  // Generate UUIDs for questions/exercises
   if (exerciseType === "verbTenses" || exerciseType === "nounDeclension") {
     const aiData = exerciseData as AIParagraphResponse;
     const exerciseSet: ParagraphExerciseSet = {
@@ -315,14 +382,6 @@ function processAIResponse(content: string, exerciseType: string) {
       })),
     };
 
-    // Cache solutions
-    exerciseSet.questions.forEach((q) => {
-      exerciseCache.set(q.id, {
-        correctAnswer: q.correctAnswer,
-        explanation: q.explanation,
-      });
-    });
-
     return NextResponse.json(exerciseSet);
   } else {
     const aiData = exerciseData as AISentenceResponse;
@@ -332,14 +391,6 @@ function processAIResponse(content: string, exerciseType: string) {
       correctAnswer: ex.correctAnswer,
       explanation: ex.explanation,
     }));
-
-    // Cache solutions
-    exercises.forEach((ex) => {
-      exerciseCache.set(ex.id as string, {
-        correctAnswer: ex.correctAnswer,
-        explanation: ex.explanation,
-      });
-    });
 
     return NextResponse.json({ exercises });
   }

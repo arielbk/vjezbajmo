@@ -19,7 +19,7 @@ interface ParagraphExerciseProps {
 }
 
 export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBack, title }: ParagraphExerciseProps) {
-  const { dispatch, checkAnswer, generateExercises, state } = useExercise();
+  const { dispatch, checkAnswer, generateExercises, state, markExerciseCompleted } = useExercise();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [results, setResults] = useState<Record<string, ReturnType<typeof createExerciseResult>>>({});
   const [isChecking, setIsChecking] = useState(false);
@@ -102,6 +102,9 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
 
       setResults(newResults);
       setHasChecked(true);
+      
+      // Mark the exercise as completed in user progress
+      markExerciseCompleted(exerciseSet.id, exerciseType, theme || undefined);
     } catch (error) {
       console.error("Error checking answers:", error);
     } finally {
@@ -197,106 +200,113 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
           <CardHeader>
             <CardTitle className="text-xl sm:text-2xl">{title}</CardTitle>
           </CardHeader>
-        <CardContent className="space-y-4 sm:space-y-6">
-          <div className="bg-muted/30 p-4 sm:p-6 rounded-lg">{renderParagraphWithInputs()}</div>
+          <CardContent className="space-y-4 sm:space-y-6">
+            <div className="bg-muted/30 p-4 sm:p-6 rounded-lg">{renderParagraphWithInputs()}</div>
 
-          {!hasChecked ? (
-            <div className="text-center">
-              <Button onClick={handleCheckAnswers} disabled={isChecking || Object.keys(answers).length === 0} size="lg">
-                {isChecking ? "Checking..." : "Check My Work"}
-              </Button>
-              <p className="text-sm text-muted-foreground mt-2">Use Tab to navigate between fields</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
+            {!hasChecked ? (
               <div className="text-center">
-                <Button onClick={onComplete} size="lg">
-                  Continue
-                </Button>
-              </div>
-
-              <div className="space-y-3">
-                <h3 className="font-semibold">Explanations:</h3>
-                {exerciseSet.questions.map((question, index) => {
-                  const result = results[question.id];
-                  if (!result) return null;
-
-                  return (
-                    <div key={question.id} className="border rounded-lg p-3">
-                      <div className="flex items-start gap-2">
-                        <span className="font-medium text-sm flex-shrink-0 min-w-[1.5rem] sm:min-w-[2rem]">#{index + 1}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="mb-1">
-                            <span className="font-medium">{question.baseForm}</span>
-                            {!result.correct && (
-                              <span className="ml-2 text-sm">
-                                Your answer: <span className="font-mono">{result.userAnswer}</span>
-                                {" → "}
-                                Correct:{" "}
-                                <span className="font-mono text-green-600">
-                                  {Array.isArray(result.correctAnswer)
-                                    ? result.correctAnswer.join(" or ")
-                                    : result.correctAnswer}
-                                </span>
-                              </span>
-                            )}
-                            {result.correct && result.diacriticWarning && (
-                              <span className="ml-2 text-sm text-yellow-700">
-                                <AlertTriangle className="h-3 w-3 inline mr-1" />
-                                Correct! Remember diacritics: <span className="font-mono">{result.matchedAnswer}</span>
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">{result.explanation}</p>
-                        </div>
-                        {result.correct && result.diacriticWarning ? (
-                          <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                        ) : result.correct ? (
-                          <Check className="h-5 w-5 text-green-600" />
-                        ) : (
-                          <X className="h-5 w-5 text-red-600" />
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      
-      {/* Separate Generate New Exercise section */}
-      {!hasChecked && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center space-y-3">
-              <p className="text-sm text-muted-foreground">Want a different exercise?</p>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-center gap-2">
-                <Input
-                  type="text"
-                  placeholder="Optional theme..."
-                  value={theme}
-                  onChange={(e) => setTheme(e.target.value)}
-                  className="w-full sm:w-40"
-                  disabled={state.isGenerating}
-                />
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleRegenerateExercise} 
-                  disabled={state.isGenerating}
-                  className="w-full sm:w-auto"
+                <Button
+                  onClick={handleCheckAnswers}
+                  disabled={isChecking || Object.keys(answers).length === 0}
+                  size="lg"
                 >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${state.isGenerating ? "animate-spin" : ""}`} />
-                  Generate New Exercise
+                  {isChecking ? "Checking..." : "Check My Work"}
                 </Button>
+                <p className="text-sm text-muted-foreground mt-2">Use Tab to navigate between fields</p>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <Button onClick={onComplete} size="lg">
+                    Continue
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="font-semibold">Explanations:</h3>
+                  {exerciseSet.questions.map((question, index) => {
+                    const result = results[question.id];
+                    if (!result) return null;
+
+                    return (
+                      <div key={question.id} className="border rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          <span className="font-medium text-sm flex-shrink-0 min-w-[1.5rem] sm:min-w-[2rem]">
+                            #{index + 1}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="mb-1">
+                              <span className="font-medium">{question.baseForm}</span>
+                              {!result.correct && (
+                                <span className="ml-2 text-sm">
+                                  Your answer: <span className="font-mono">{result.userAnswer}</span>
+                                  {" → "}
+                                  Correct:{" "}
+                                  <span className="font-mono text-green-600">
+                                    {Array.isArray(result.correctAnswer)
+                                      ? result.correctAnswer.join(" or ")
+                                      : result.correctAnswer}
+                                  </span>
+                                </span>
+                              )}
+                              {result.correct && result.diacriticWarning && (
+                                <span className="ml-2 text-sm text-yellow-700">
+                                  <AlertTriangle className="h-3 w-3 inline mr-1" />
+                                  Correct! Remember diacritics:{" "}
+                                  <span className="font-mono">{result.matchedAnswer}</span>
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">{result.explanation}</p>
+                          </div>
+                          {result.correct && result.diacriticWarning ? (
+                            <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                          ) : result.correct ? (
+                            <Check className="h-5 w-5 text-green-600" />
+                          ) : (
+                            <X className="h-5 w-5 text-red-600" />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
-      )}
-    </div>
+
+        {/* Separate Generate New Exercise section */}
+        {!hasChecked && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center space-y-3">
+                <p className="text-sm text-muted-foreground">Want a different exercise?</p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-center gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Optional theme..."
+                    value={theme}
+                    onChange={(e) => setTheme(e.target.value)}
+                    className="w-full sm:w-40"
+                    disabled={state.isGenerating}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRegenerateExercise}
+                    disabled={state.isGenerating}
+                    className="w-full sm:w-auto"
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${state.isGenerating ? "animate-spin" : ""}`} />
+                    Generate New Exercise
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </>
   );
 }

@@ -28,10 +28,15 @@ The application is a monolithic **Next.js** application.
 3.  **Tiered API Access:**
     - **Default (Site Key):** If a user does not provide their own API key, the app will use a site-wide key configured via server-side environment variables (`SITE_API_KEY`, `SITE_API_PROVIDER`). This provides a free-to-try experience.
     - **User Key:** Users can enter their own API key to bypass any potential limits on the site key.
-4.  **Client-Side Session Caching:** Once new exercises are generated, they are cached in the client's state to minimize redundant API calls.
-5.  **Secure Answer Validation:** Solutions for **API-generated** exercises are cached on the server for secure validation. Solutions for **static** exercises are handled on the client for speed.
-6.  **Diacritic Tolerance:** The system recognizes that users may not have proper Croatian keyboard layouts. If an answer is correct except for diacritics (č, ć, đ, š, ž), it's marked as correct with a helpful warning reminder about proper Croatian spelling.
-7.  **Multiple Correct Answers:** The system supports exercises where multiple answers are acceptable (e.g., perfective/imperfective aspect variations depending on context).
+4.  **Multi-Tier Caching System:** 
+    - **Server-Side Exercise Pool:** Generated exercises are cached in a persistent store (Vercel KV initially, designed for easy provider switching) organized by exercise type, CEFR level, and theme.
+    - **User Progress Tracking:** Individual user's completed exercises are tracked in localStorage to avoid serving the same exercise repeatedly.
+    - **Smart Exercise Selection:** When users request exercises without specifying a theme, the system first attempts to serve from the cached pool of exercises they haven't completed yet.
+    - **Cache Replenishment:** Only when users have exhausted available cached exercises does the system generate new ones, which are then added to the shared cache.
+5.  **Client-Side Session Caching:** Once exercises are served, they are cached in the client's state to minimize redundant API calls during the current session.
+6.  **Secure Answer Validation:** Solutions for **API-generated** exercises are cached on the server for secure validation. Solutions for **static** exercises are handled on the client for speed.
+7.  **Diacritic Tolerance:** The system recognizes that users may not have proper Croatian keyboard layouts. If an answer is correct except for diacritics (č, ć, đ, š, ž), it's marked as correct with a helpful warning reminder about proper Croatian spelling.
+8.  **Multiple Correct Answers:** The system supports exercises where multiple answers are acceptable (e.g., perfective/imperfective aspect variations depending on context).
 
 ### **4. Core Features & Exercise Types**
 
@@ -50,7 +55,8 @@ The application is a monolithic **Next.js** application.
 - **Testing:** **Vitest** (Unit/Integration), **Playwright** (End-to-End)
 - **Schema Validation:** **Zod**
 - **LLM Providers:** **OpenAI API**, **Anthropic API**
-- **Server-Side Cache:** A short-lived, key-value store (e.g., Redis, Upstash)
+- **Server-Side Cache:** **Vercel KV** (initially, designed for easy provider switching)
+- **Client-Side Storage:** **localStorage** for user progress and settings
 
 ### **6. Data Models & API Design**
 
@@ -88,7 +94,7 @@ interface CheckAnswerResponse {
 
 #### **6.1. `POST /api/generate-exercise-set`**
 
-- **Logic:** Called by both the global and local "Regenerate" buttons.
+- **Logic:** Called by both the global and local "Regenerate" buttons. Implements intelligent caching to serve pre-generated exercises when possible.
 - **Request Body:**
   ```json
   {
@@ -96,9 +102,19 @@ interface CheckAnswerResponse {
     "cefrLevel": "A1" | "A2.1" | "A2.2" | "B1.1",
     "provider"?: "openai" | "anthropic", // Optional. If absent, backend uses site provider.
     "apiKey"?: "string",               // Optional. If absent, backend uses site key.
-    "theme"?: "string"                  // Optional. For generating themed content.
+    "theme"?: "string",                 // Optional. For generating themed content.
+    "userCompletedExercises"?: "string[]" // Optional. Array of exercise IDs user has completed.
   }
   ```
+- **Backend Caching Logic:**
+  1. **Cache Key Construction:** `${exerciseType}:${cefrLevel}:${theme || 'default'}`
+  2. **Cache Lookup:** Check if cached exercises exist for the given parameters
+  3. **User Progress Filtering:** Filter out exercises the user has already completed (based on `userCompletedExercises`)
+  4. **Intelligent Serving:**
+     - If suitable cached exercises exist and user hasn't completed them all, serve from cache
+     - If no suitable cached exercises or user has completed all available ones, generate new exercises
+     - New exercises are added to the cache for future users
+  5. **Fallback Handling:** If cache is unavailable, fall back to direct generation
 - **Backend Logic:**
   1.  When a request is received, the backend checks if `apiKey` and `provider` are present.
   2.  If they are, it uses the user-provided credentials for the outbound LLM call. The user's key is **never stored**.

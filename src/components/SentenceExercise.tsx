@@ -19,7 +19,7 @@ interface SentenceExerciseProps {
 }
 
 export function SentenceExercise({ exercises, exerciseType, onComplete, onBack, title }: SentenceExerciseProps) {
-  const { dispatch, checkAnswer, generateExercises, state } = useExercise();
+  const { dispatch, checkAnswer, generateExercises, state, markExerciseCompleted } = useExercise();
   const [answers, setAnswers] = useState<Record<string | number, string>>({});
   const [results, setResults] = useState<Record<string | number, ReturnType<typeof createExerciseResult>>>({});
   const [isChecking, setIsChecking] = useState(false);
@@ -78,6 +78,11 @@ export function SentenceExercise({ exercises, exerciseType, onComplete, onBack, 
 
       setResults(newResults);
       setHasChecked(true);
+      
+      // Mark each exercise as completed in user progress
+      exercises.forEach(exercise => {
+        markExerciseCompleted(exercise.id.toString(), exerciseType, theme || undefined);
+      });
     } catch (error) {
       console.error("Error checking answers:", error);
     } finally {
@@ -157,7 +162,8 @@ export function SentenceExercise({ exercises, exerciseType, onComplete, onBack, 
           </Button>
           {hasChecked && (
             <div className="text-sm text-muted-foreground">
-              Final Score: {correctAnswers}/{exercises.length} ({Math.round((correctAnswers / exercises.length) * 100)}%)
+              Final Score: {correctAnswers}/{exercises.length} ({Math.round((correctAnswers / exercises.length) * 100)}
+              %)
             </div>
           )}
         </div>
@@ -166,99 +172,99 @@ export function SentenceExercise({ exercises, exerciseType, onComplete, onBack, 
           <CardHeader>
             <CardTitle className="text-xl sm:text-2xl">{title}</CardTitle>
           </CardHeader>
-        <CardContent className="space-y-6 sm:space-y-8">
-          {exercises.map((exercise, index) => (
-            <div key={exercise.id} className="space-y-3 sm:space-y-4">
-              <div className="flex items-start gap-2 sm:gap-3">
-                <span className="text-sm font-medium text-muted-foreground mt-1 min-w-[1.5rem] sm:min-w-[2rem] flex-shrink-0">
-                  {index + 1}.
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="bg-muted/30 p-3 sm:p-4 rounded-lg">{renderSentenceWithInput(exercise)}</div>
+          <CardContent className="space-y-6 sm:space-y-8">
+            {exercises.map((exercise, index) => (
+              <div key={exercise.id} className="space-y-3 sm:space-y-4">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-sm font-medium text-muted-foreground mt-1 min-w-[1.5rem] sm:min-w-[2rem] flex-shrink-0">
+                    {index + 1}.
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="bg-muted/30 p-3 sm:p-4 rounded-lg">{renderSentenceWithInput(exercise)}</div>
 
-                  {hasChecked && results[exercise.id] && (
-                    <div className="mt-3 border rounded-lg p-3">
-                      <div className="flex items-start gap-2">
-                        {results[exercise.id].correct ? (
-                          <Check className="h-5 w-5 text-green-600 mt-0.5" />
-                        ) : (
-                          <X className="h-5 w-5 text-red-600 mt-0.5" />
-                        )}
-                        <div className="flex-1">
-                          {!results[exercise.id].correct && (
-                            <div className="mb-2 text-sm">
-                              Your answer: <span className="font-mono">{results[exercise.id].userAnswer}</span>
-                              {" → "}
-                              Correct:{" "}
-                              <span className="font-mono text-green-600">{results[exercise.id].correctAnswer}</span>
-                            </div>
+                    {hasChecked && results[exercise.id] && (
+                      <div className="mt-3 border rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          {results[exercise.id].correct ? (
+                            <Check className="h-5 w-5 text-green-600 mt-0.5" />
+                          ) : (
+                            <X className="h-5 w-5 text-red-600 mt-0.5" />
                           )}
-                          <p className="text-sm text-muted-foreground">{results[exercise.id].explanation}</p>
+                          <div className="flex-1">
+                            {!results[exercise.id].correct && (
+                              <div className="mb-2 text-sm">
+                                Your answer: <span className="font-mono">{results[exercise.id].userAnswer}</span>
+                                {" → "}
+                                Correct:{" "}
+                                <span className="font-mono text-green-600">{results[exercise.id].correctAnswer}</span>
+                              </div>
+                            )}
+                            <p className="text-sm text-muted-foreground">{results[exercise.id].explanation}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <div className="pt-4 border-t">
+              {!hasChecked ? (
+                <div className="text-center">
+                  <Button onClick={handleCheckAllAnswers} disabled={isChecking || !allAnswered} size="lg">
+                    {isChecking ? "Checking..." : "Check My Work"}
+                  </Button>
+                  {!allAnswered && (
+                    <p className="text-sm text-muted-foreground mt-2">Please answer all questions before checking.</p>
                   )}
                 </div>
-              </div>
-            </div>
-          ))}
-
-          <div className="pt-4 border-t">
-            {!hasChecked ? (
-              <div className="text-center">
-                <Button onClick={handleCheckAllAnswers} disabled={isChecking || !allAnswered} size="lg">
-                  {isChecking ? "Checking..." : "Check My Work"}
-                </Button>
-                {!allAnswered && (
-                  <p className="text-sm text-muted-foreground mt-2">Please answer all questions before checking.</p>
-                )}
-              </div>
-            ) : (
-              <div className="text-center space-y-4">
-                <div className="text-lg font-semibold">
-                  Exercise Complete! Final Score: {correctAnswers}/{exercises.length} (
-                  {Math.round((correctAnswers / exercises.length) * 100)}%)
+              ) : (
+                <div className="text-center space-y-4">
+                  <div className="text-lg font-semibold">
+                    Exercise Complete! Final Score: {correctAnswers}/{exercises.length} (
+                    {Math.round((correctAnswers / exercises.length) * 100)}%)
+                  </div>
+                  <Button onClick={onComplete} size="lg">
+                    Finish Exercise
+                  </Button>
                 </div>
-                <Button onClick={onComplete} size="lg">
-                  Finish Exercise
-                </Button>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Separate Generate New Questions section */}
-      {!hasChecked && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center space-y-3">
-              <p className="text-sm text-muted-foreground">Want different questions?</p>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-center gap-2">
-                <Input
-                  type="text"
-                  placeholder="Optional theme..."
-                  value={theme}
-                  onChange={(e) => setTheme(e.target.value)}
-                  className="w-full sm:w-40"
-                  disabled={state.isGenerating}
-                />
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleRegenerateExercise} 
-                  disabled={state.isGenerating}
-                  className="w-full sm:w-auto"
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${state.isGenerating ? "animate-spin" : ""}`} />
-                  Generate New Questions
-                </Button>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>
-      )}
-    </div>
+
+        {/* Separate Generate New Questions section */}
+        {!hasChecked && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center space-y-3">
+                <p className="text-sm text-muted-foreground">Want different questions?</p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-center gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Optional theme..."
+                    value={theme}
+                    onChange={(e) => setTheme(e.target.value)}
+                    className="w-full sm:w-40"
+                    disabled={state.isGenerating}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRegenerateExercise}
+                    disabled={state.isGenerating}
+                    className="w-full sm:w-auto"
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${state.isGenerating ? "animate-spin" : ""}`} />
+                    Generate New Questions
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </>
   );
 }
