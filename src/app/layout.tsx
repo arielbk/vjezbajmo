@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   title: "Vježbajmo Hrvatski - Croatian Grammar Practice",
   description: "Practice Croatian grammar with dynamic exercises",
   viewport: "width=device-width, initial-scale=1",
+  themeColor: "#eff6ff", // blue-50 for Safari status bar
 };
 
 export default function RootLayout({

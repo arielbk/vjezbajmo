@@ -122,14 +122,14 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, onBack
     const userAnswer = answers[exercise.id] || "";
 
     return (
-      <div className="text-base sm:text-lg leading-relaxed">
+      <div className="text-sm sm:text-base lg:text-lg leading-relaxed">
         <span>{parts[0]}</span>
-        <span className="inline-block mx-1">
+        <span className="inline-block mx-0.5 sm:mx-1">
           <Input
             type="text"
             value={userAnswer}
             onChange={(e) => handleAnswerChange(exercise.id, e.target.value)}
-            className={`inline-block w-32 sm:w-40 text-center ${getInputStyling(result)}`}
+            className={`inline-block w-24 sm:w-32 lg:w-40 text-center ${getInputStyling(result)}`}
             placeholder="Your answer"
             disabled={hasChecked}
           />
@@ -137,7 +137,7 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, onBack
         </span>
         <span>{parts[1] || ""}</span>
         {result && result.correct && result.diacriticWarning && (
-          <div className="mt-1 text-sm text-yellow-700 bg-yellow-50 p-2 rounded">
+          <div className="mt-1 text-sm text-yellow-700 bg-yellow-50 p-1.5 sm:p-2 rounded">
             <AlertTriangle className="h-4 w-4 inline mr-1" />
             Correct! Remember to use proper diacritics: <strong>{result.matchedAnswer}</strong>
           </div>
@@ -158,36 +158,36 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, onBack
         <Progress value={progress} className="w-full h-1 rounded-none border-none bg-transparent" />
       </div>
 
-      <div className="max-w-4xl mx-auto space-y-6 pt-4">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 pt-4 px-2 sm:px-4">
         <div className="flex items-center justify-between">
           <Button variant="outline" onClick={onBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Selection
           </Button>
           {hasChecked && (
-            <div className="text-sm text-muted-foreground">
+            <div className="text-xs sm:text-sm text-muted-foreground">
               Final Score: {correctAnswers}/{exercises.length} ({Math.round((correctAnswers / exercises.length) * 100)}
               %)
             </div>
           )}
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl sm:text-2xl">{title}</CardTitle>
+        <Card className="mx-0 sm:mx-auto">
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-lg sm:text-xl lg:text-2xl">{title}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6 sm:space-y-8">
+          <CardContent className="space-y-4 sm:space-y-8 px-3 sm:px-6">
             {exercises.map((exercise, index) => (
-              <div key={exercise.id} className="space-y-3 sm:space-y-4">
+              <div key={exercise.id} className="space-y-2 sm:space-y-4">
                 <div className="flex items-start gap-2 sm:gap-3">
-                  <span className="text-sm font-medium text-muted-foreground mt-1 min-w-[1.5rem] sm:min-w-[2rem] flex-shrink-0">
+                  <span className="text-sm font-medium text-muted-foreground mt-1 min-w-[1.2rem] sm:min-w-[2rem] flex-shrink-0">
                     {index + 1}.
                   </span>
                   <div className="flex-1 min-w-0">
-                    <div className="bg-muted/30 p-3 sm:p-4 rounded-lg">{renderSentenceWithInput(exercise)}</div>
+                    <div className="bg-muted/30 p-2 sm:p-4 rounded-lg">{renderSentenceWithInput(exercise)}</div>
 
                     {hasChecked && results[exercise.id] && (
-                      <div className="mt-3 border rounded-lg p-3">
+                      <div className="mt-2 sm:mt-3 border rounded-lg p-2 sm:p-3">
                         <div className="flex items-start gap-2">
                           {results[exercise.id].correct ? (
                             <Check className="h-5 w-5 text-green-600 mt-0.5" />

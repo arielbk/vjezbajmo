@@ -116,7 +116,24 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    @apply bg-blue-50;
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-blue-50;
+    @apply text-foreground;
+  }
+}
+
+/* Safari mobile theme color */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
   }
 }

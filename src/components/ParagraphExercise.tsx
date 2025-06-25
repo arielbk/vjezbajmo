@@ -137,7 +137,9 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
   };
 
   const renderParagraphWithInputs = () => {
-    const paragraphParts = exerciseSet.paragraph.split(/___\d+___/);
+    // Remove the bracketed base forms from the paragraph since we show them in input placeholders
+    const cleanParagraph = exerciseSet.paragraph.replace(/\s*\([^)]+\)/g, '');
+    const paragraphParts = cleanParagraph.split(/___\d+___/);
     const inputs: React.ReactElement[] = [];
 
     exerciseSet.questions.forEach((question, index) => {
@@ -153,8 +155,8 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
             value={answers[question.id] || ""}
             onChange={(e) => handleAnswerChange(question.id, e.target.value)}
             onKeyDown={(e) => handleKeyDown(e, index)}
-            className={`inline-block w-28 sm:w-32 text-center ${getInputStyling(results[question.id])}`}
-            placeholder={`(${question.baseForm})`}
+            className={`inline-block w-20 sm:w-28 lg:w-32 text-center ${getInputStyling(results[question.id])}`}
+            placeholder={question.baseForm}
             disabled={hasChecked}
           />
           {hasResult && <span className="ml-1">{getResultIcon(results[question.id])}</span>}
@@ -170,7 +172,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
       }
     }
 
-    return <div className="text-base sm:text-lg leading-relaxed">{result}</div>;
+    return <div className="text-sm sm:text-base lg:text-lg leading-relaxed">{result}</div>;
   };
 
   const correctAnswers = Object.values(results).filter((r) => r.correct).length;
@@ -185,25 +187,25 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
         <Progress value={progress} className="w-full h-1 rounded-none border-none bg-transparent" />
       </div>
 
-      <div className="max-w-4xl mx-auto space-y-6 pt-4">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 pt-4 px-2 sm:px-4">
         <div className="flex items-center justify-between">
           <Button variant="outline" onClick={onBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Selection
           </Button>
           {hasChecked && (
-            <div className="text-sm text-muted-foreground">
+            <div className="text-xs sm:text-sm text-muted-foreground">
               Score: {correctAnswers}/{totalQuestions} ({Math.round(progress)}%)
             </div>
           )}
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl sm:text-2xl">{title}</CardTitle>
+        <Card className="mx-0 sm:mx-auto">
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-lg sm:text-xl lg:text-2xl">{title}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 sm:space-y-6">
-            <div className="bg-muted/30 p-4 sm:p-6 rounded-lg">{renderParagraphWithInputs()}</div>
+          <CardContent className="space-y-3 sm:space-y-6 px-3 sm:px-6">
+            <div className="bg-muted/30 p-3 sm:p-6 rounded-lg">{renderParagraphWithInputs()}</div>
 
             {!hasChecked ? (
               <div className="text-center">
@@ -230,7 +232,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
                     if (!result) return null;
 
                     return (
-                      <div key={question.id} className="border rounded-lg p-3">
+                      <div key={question.id} className="border rounded-lg p-2 sm:p-3">
                         <div className="flex items-start gap-2">
                           <span className="font-medium text-sm flex-shrink-0 min-w-[1.5rem] sm:min-w-[2rem]">
                             #{index + 1}
