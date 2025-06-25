@@ -102,7 +102,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
 
       setResults(newResults);
       setHasChecked(true);
-      
+
       // Mark the exercise as completed in user progress
       markExerciseCompleted(exerciseSet.id, exerciseType, theme || undefined);
     } catch (error) {
@@ -212,7 +212,6 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
                 >
                   {isChecking ? "Checking..." : "Check My Work"}
                 </Button>
-                <p className="text-sm text-muted-foreground mt-2">Use Tab to navigate between fields</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -279,7 +278,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
         {/* Separate Generate New Exercise section */}
         {!hasChecked && (
           <Card>
-            <CardContent className="pt-6">
+            <CardContent>
               <div className="text-center space-y-3">
                 <p className="text-sm text-muted-foreground">Want a different exercise?</p>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-center gap-2">

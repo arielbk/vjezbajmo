@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import React from "react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -26,7 +26,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
   }
 
   retry = () => {
@@ -44,31 +44,26 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 }
 
 const DefaultErrorFallback: React.FC<{ error?: Error; retry: () => void }> = ({ error, retry }) => {
-  const isNetworkError = error?.message.toLowerCase().includes('network') || 
-                        error?.message.toLowerCase().includes('fetch');
-  
+  const isNetworkError =
+    error?.message.toLowerCase().includes("network") || error?.message.toLowerCase().includes("fetch");
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
       <AlertTriangle className="h-12 w-12 text-yellow-500 mb-4" />
       <h2 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h2>
-      
+
       <Alert className="mb-4 max-w-md">
         <AlertDescription>
-          {isNetworkError 
+          {isNetworkError
             ? "We're having trouble connecting to our servers. Please check your internet connection and try again."
-            : "An unexpected error occurred. Don't worry, your progress is saved."
-          }
+            : "An unexpected error occurred. Don't worry, your progress is saved."}
         </AlertDescription>
       </Alert>
 
-      {error && process.env.NODE_ENV === 'development' && (
+      {error && process.env.NODE_ENV === "development" && (
         <details className="mb-4 max-w-md">
-          <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-900">
-            Technical details
-          </summary>
-          <pre className="mt-2 p-2 bg-gray-100 rounded text-xs overflow-auto">
-            {error.stack}
-          </pre>
+          <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-900">Technical details</summary>
+          <pre className="mt-2 p-2 bg-gray-100 rounded text-xs overflow-auto">{error.stack}</pre>
         </details>
       )}
 
@@ -77,10 +72,7 @@ const DefaultErrorFallback: React.FC<{ error?: Error; retry: () => void }> = ({ 
           <RefreshCw className="h-4 w-4" />
           Try Again
         </Button>
-        <Button 
-          variant="outline" 
-          onClick={() => window.location.reload()}
-        >
+        <Button variant="outline" onClick={() => window.location.reload()}>
           Refresh Page
         </Button>
       </div>

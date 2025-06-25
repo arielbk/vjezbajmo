@@ -49,7 +49,8 @@ interface AISentenceResponse {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { exerciseType, cefrLevel, provider, apiKey, theme, userCompletedExercises } = generateExerciseSchema.parse(body);
+    const { exerciseType, cefrLevel, provider, apiKey, theme, userCompletedExercises } =
+      generateExerciseSchema.parse(body);
 
     // Determine which API key and provider to use
     const effectiveApiKey = apiKey || process.env.SITE_API_KEY;
@@ -72,19 +73,19 @@ export async function POST(request: NextRequest) {
     // Try to serve from cache first
     const cacheKey = generateCacheKey(exerciseType, cefrLevel, theme);
     const cachedExercises = await cacheProvider.getCachedExercises(cacheKey);
-    
+
     // Filter out exercises the user has already completed
     const completedSet = new Set(userCompletedExercises || []);
-    const availableExercises = cachedExercises.filter(exercise => !completedSet.has(exercise.id));
+    const availableExercises = cachedExercises.filter((exercise) => !completedSet.has(exercise.id));
 
     if (availableExercises.length > 0) {
       // Serve from cache
       console.log(`Serving from cache: ${availableExercises.length} available exercises`);
       const selectedExercise = availableExercises[Math.floor(Math.random() * availableExercises.length)];
-      
+
       // Cache the solutions for answer validation
       await cacheExerciseSolutions(selectedExercise.data);
-      
+
       return NextResponse.json(selectedExercise.data);
     }
 
@@ -113,7 +114,7 @@ export async function POST(request: NextRequest) {
     };
 
     await cacheProvider.setCachedExercise(cacheKey, cachedExercise);
-    
+
     return NextResponse.json(responseData);
   } catch (error) {
     console.error("Exercise generation error:", error);
@@ -128,7 +129,7 @@ export async function POST(request: NextRequest) {
 
 // Helper function to cache exercise solutions for answer validation
 async function cacheExerciseSolutions(exerciseData: ParagraphExerciseSet | { exercises: SentenceExercise[] }) {
-  if ('paragraph' in exerciseData) {
+  if ("paragraph" in exerciseData) {
     // Paragraph exercise
     const paragraphExercise = exerciseData as ParagraphExerciseSet;
     for (const question of paragraphExercise.questions) {

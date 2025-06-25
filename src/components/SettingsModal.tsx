@@ -55,15 +55,15 @@ export function SettingsModal() {
 
   const handleClearProgress = () => {
     const exerciseTypes = ["verbTenses", "nounDeclension", "verbAspect", "interrogativePronouns"] as const;
-    
+
     // Clear progress for all exercise types at current CEFR level
-    exerciseTypes.forEach(type => {
+    exerciseTypes.forEach((type) => {
       userProgressManager.clearCompletedExercises(type, state.cefrLevel);
     });
-    
+
     // Also clear overall cleanup flag to force cleanup on next session
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('vjezbajmo-cleaned');
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("vjezbajmo-cleaned");
     }
   };
 
@@ -235,9 +235,9 @@ export function SettingsModal() {
           <div className="space-y-3 pt-3 border-t">
             <h4 className="text-sm font-medium">Progress Management</h4>
             <div className="space-y-2">
-              <Button 
-                onClick={handleClearProgress} 
-                variant="outline" 
+              <Button
+                onClick={handleClearProgress}
+                variant="outline"
                 className="w-full gap-2 text-destructive hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />

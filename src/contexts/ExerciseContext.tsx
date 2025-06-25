@@ -374,7 +374,9 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ExerciseContext.Provider value={{ state, dispatch, generateExercises, regenerateAllExercises, checkAnswer, markExerciseCompleted }}>
+    <ExerciseContext.Provider
+      value={{ state, dispatch, generateExercises, regenerateAllExercises, checkAnswer, markExerciseCompleted }}
+    >
       {children}
     </ExerciseContext.Provider>
   );

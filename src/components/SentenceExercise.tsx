@@ -78,9 +78,9 @@ export function SentenceExercise({ exercises, exerciseType, onComplete, onBack, 
 
       setResults(newResults);
       setHasChecked(true);
-      
+
       // Mark each exercise as completed in user progress
-      exercises.forEach(exercise => {
+      exercises.forEach((exercise) => {
         markExerciseCompleted(exercise.id.toString(), exerciseType, theme || undefined);
       });
     } catch (error) {

@@ -16,11 +16,14 @@ export interface CacheProvider {
   // Exercise caching
   getCachedExercises(key: string): Promise<CachedExercise[]>;
   setCachedExercise(key: string, exercise: CachedExercise): Promise<void>;
-  
+
   // Solution caching (for answer validation)
   getCachedSolution(questionId: string): Promise<{ correctAnswer: string | string[]; explanation: string } | null>;
-  setCachedSolution(questionId: string, solution: { correctAnswer: string | string[]; explanation: string }): Promise<void>;
-  
+  setCachedSolution(
+    questionId: string,
+    solution: { correctAnswer: string | string[]; explanation: string }
+  ): Promise<void>;
+
   // Cleanup old entries
   cleanup?(): Promise<void>;
 }
@@ -40,23 +43,28 @@ class InMemoryCache implements CacheProvider {
     this.exercises.set(key, existing);
   }
 
-  async getCachedSolution(questionId: string): Promise<{ correctAnswer: string | string[]; explanation: string } | null> {
+  async getCachedSolution(
+    questionId: string
+  ): Promise<{ correctAnswer: string | string[]; explanation: string } | null> {
     const solution = this.solutions.get(questionId);
     if (!solution) return null;
-    
+
     // Check if solution is older than 1 hour
     if (Date.now() - solution.timestamp > 60 * 60 * 1000) {
       this.solutions.delete(questionId);
       return null;
     }
-    
+
     return {
       correctAnswer: solution.correctAnswer,
       explanation: solution.explanation,
     };
   }
 
-  async setCachedSolution(questionId: string, solution: { correctAnswer: string | string[]; explanation: string }): Promise<void> {
+  async setCachedSolution(
+    questionId: string,
+    solution: { correctAnswer: string | string[]; explanation: string }
+  ): Promise<void> {
     this.solutions.set(questionId, {
       ...solution,
       timestamp: Date.now(),
@@ -85,10 +93,10 @@ class VercelKVCache implements CacheProvider {
 
   private async initializeKV() {
     try {
-      const { kv } = await import('@vercel/kv');
+      const { kv } = await import("@vercel/kv");
       return kv;
     } catch {
-      console.warn('Vercel KV not available, falling back to in-memory cache');
+      console.warn("Vercel KV not available, falling back to in-memory cache");
       return null;
     }
   }
@@ -103,12 +111,12 @@ class VercelKVCache implements CacheProvider {
   async getCachedExercises(key: string): Promise<CachedExercise[]> {
     const kv = await this.getKV();
     if (!kv) return [];
-    
+
     try {
       const exercises = await kv.get(`exercises:${key}`);
       return exercises || [];
     } catch (error) {
-      console.error('Failed to get cached exercises:', error);
+      console.error("Failed to get cached exercises:", error);
       return [];
     }
   }
@@ -116,40 +124,45 @@ class VercelKVCache implements CacheProvider {
   async setCachedExercise(key: string, exercise: CachedExercise): Promise<void> {
     const kv = await this.getKV();
     if (!kv) return;
-    
+
     try {
       const existing = await this.getCachedExercises(key);
       existing.push(exercise);
-      
+
       // Store with 7-day expiration
       await kv.set(`exercises:${key}`, existing, { ex: 7 * 24 * 60 * 60 });
     } catch (error) {
-      console.error('Failed to cache exercise:', error);
+      console.error("Failed to cache exercise:", error);
     }
   }
 
-  async getCachedSolution(questionId: string): Promise<{ correctAnswer: string | string[]; explanation: string } | null> {
+  async getCachedSolution(
+    questionId: string
+  ): Promise<{ correctAnswer: string | string[]; explanation: string } | null> {
     const kv = await this.getKV();
     if (!kv) return null;
-    
+
     try {
       const solution = await kv.get(`solution:${questionId}`);
       return solution;
     } catch (error) {
-      console.error('Failed to get cached solution:', error);
+      console.error("Failed to get cached solution:", error);
       return null;
     }
   }
 
-  async setCachedSolution(questionId: string, solution: { correctAnswer: string | string[]; explanation: string }): Promise<void> {
+  async setCachedSolution(
+    questionId: string,
+    solution: { correctAnswer: string | string[]; explanation: string }
+  ): Promise<void> {
     const kv = await this.getKV();
     if (!kv) return;
-    
+
     try {
       // Store with 1-hour expiration
       await kv.set(`solution:${questionId}`, solution, { ex: 60 * 60 });
     } catch (error) {
-      console.error('Failed to cache solution:', error);
+      console.error("Failed to cache solution:", error);
     }
   }
 }
@@ -160,7 +173,7 @@ export function createCacheProvider(): CacheProvider {
   if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
     return new VercelKVCache();
   }
-  
+
   // Fallback to in-memory cache
   return new InMemoryCache();
 }
@@ -170,5 +183,5 @@ export const cacheProvider = createCacheProvider();
 
 // Utility function to generate cache key
 export function generateCacheKey(exerciseType: ExerciseType, cefrLevel: CefrLevel, theme?: string): string {
-  return `${exerciseType}:${cefrLevel}:${theme || 'default'}`;
+  return `${exerciseType}:${cefrLevel}:${theme || "default"}`;
 }

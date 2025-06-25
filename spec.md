@@ -28,7 +28,7 @@ The application is a monolithic **Next.js** application.
 3.  **Tiered API Access:**
     - **Default (Site Key):** If a user does not provide their own API key, the app will use a site-wide key configured via server-side environment variables (`SITE_API_KEY`, `SITE_API_PROVIDER`). This provides a free-to-try experience.
     - **User Key:** Users can enter their own API key to bypass any potential limits on the site key.
-4.  **Multi-Tier Caching System:** 
+4.  **Multi-Tier Caching System:**
     - **Server-Side Exercise Pool:** Generated exercises are cached in a persistent store (Vercel KV initially, designed for easy provider switching) organized by exercise type, CEFR level, and theme.
     - **User Progress Tracking:** Individual user's completed exercises are tracked in localStorage to avoid serving the same exercise repeatedly.
     - **Smart Exercise Selection:** When users request exercises without specifying a theme, the system first attempts to serve from the cached pool of exercises they haven't completed yet.

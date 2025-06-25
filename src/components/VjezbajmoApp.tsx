@@ -137,8 +137,10 @@ export function VjezbajmoApp() {
         {/* Header with app title and settings */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Vježbajmo</h1>
-            <p className="text-gray-600">Croatian Language Practice</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-1">
+              <span className="mr-2 rounded-full bg-white inline-grid place-items-center w-12 h-12">🇭🇷</span>Vježbajmo
+            </h1>
+            <p className="text-gray-500">Croatian Language Practice</p>
           </div>
           <SettingsModal />
         </div>
