@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     // Try to serve from cache first
     const cacheKey = generateCacheKey(exerciseType, cefrLevel, theme);
     console.log("Generated cache key:", cacheKey);
-    
+
     const cachedExercises = await cacheProvider.getCachedExercises(cacheKey);
     console.log("Raw cached exercises:", cachedExercises.length);
 
@@ -85,14 +85,14 @@ export async function POST(request: NextRequest) {
       // Get the actual exercise set ID from the data - this should always be the data.id
       const exerciseDataId = exercise.data.id;
       const isCompleted = completedSet.has(exerciseDataId);
-      
+
       console.log("Filtering exercise:", {
         cacheId: exercise.id,
         dataId: exerciseDataId,
         isCompleted,
-        completedSet: Array.from(completedSet)
+        completedSet: Array.from(completedSet),
       });
-      
+
       return !isCompleted;
     });
 
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
       cacheKey,
       exerciseType,
       cefrLevel,
-      theme: theme || "default"
+      theme: theme || "default",
     });
 
     await cacheProvider.setCachedExercise(cacheKey, cachedExercise);
@@ -281,7 +281,7 @@ Return JSON in this exact format:
       { role: "system", content: systemPrompt },
       { role: "user", content: prompt },
     ],
-    temperature: 0.7,
+    temperature: 2,
     max_tokens: 1500,
   });
 
@@ -381,7 +381,7 @@ Return JSON in this exact format:
     const message = await anthropic.messages.create({
       model: "claude-3-5-sonnet-latest",
       max_tokens: 1500,
-      temperature: 0.7,
+      temperature: 1,
       system: systemPrompt,
       messages: [
         {
