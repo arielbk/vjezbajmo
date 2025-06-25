@@ -189,6 +189,7 @@ interface CheckAnswerResponse {
 ### **11. Completion Tracking & Exercise Review System**
 
 - **Manual Completion Workflow:**
+
   1. User fills in answers and clicks "Check My Work"
   2. Results are displayed with explanations and feedback
   3. User reviews results and decides when to mark exercise as "completed"
@@ -196,12 +197,14 @@ interface CheckAnswerResponse {
   5. Completion is tracked in localStorage with exercise ID, timestamp, and score
 
 - **Completed Exercise Management:**
+
   - **View Completed Exercises:** Dedicated interface showing list of completed exercises with scores and completion dates
   - **Re-attempt Exercises:** Users can re-do completed exercises without affecting their completion status
   - **Progress Statistics:** Display completion rates, average scores, and learning trends by exercise type
   - **Exercise History:** Track multiple attempts at the same exercise for progress monitoring
 
 - **Cache Filtering Logic:**
+
   - Only manually completed exercises are filtered out during regeneration requests
   - Prevents race conditions where exercises are marked complete before users finish reviewing
   - Ensures reliable cache filtering based on explicit user actions

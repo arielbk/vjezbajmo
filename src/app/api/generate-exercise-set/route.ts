@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
       cefrLevel,
       theme,
       userCompletedCount: userCompletedExercises?.length || 0,
+      userCompletedIds: userCompletedExercises,
     });
 
     if (!effectiveApiKey) {
@@ -72,15 +73,27 @@ export async function POST(request: NextRequest) {
 
     // Try to serve from cache first
     const cacheKey = generateCacheKey(exerciseType, cefrLevel, theme);
+    console.log("Generated cache key:", cacheKey);
+    
     const cachedExercises = await cacheProvider.getCachedExercises(cacheKey);
+    console.log("Raw cached exercises:", cachedExercises.length);
 
     // Filter out exercises the user has already completed
     // Check against the actual exercise data ID, not the cache wrapper ID
     const completedSet = new Set(userCompletedExercises || []);
     const availableExercises = cachedExercises.filter((exercise) => {
-      // Get the actual exercise set ID from the data
-      const exerciseDataId = "id" in exercise.data ? exercise.data.id : exercise.id;
-      return !completedSet.has(exerciseDataId);
+      // Get the actual exercise set ID from the data - this should always be the data.id
+      const exerciseDataId = exercise.data.id;
+      const isCompleted = completedSet.has(exerciseDataId);
+      
+      console.log("Filtering exercise:", {
+        cacheId: exercise.id,
+        dataId: exerciseDataId,
+        isCompleted,
+        completedSet: Array.from(completedSet)
+      });
+      
+      return !isCompleted;
     });
 
     console.log("Cache filtering debug:", {
@@ -88,16 +101,22 @@ export async function POST(request: NextRequest) {
       completedCount: completedSet.size,
       availableAfterFilter: availableExercises.length,
       completedIds: Array.from(completedSet),
-      cachedIds: cachedExercises.map(ex => ({ 
-        cacheId: ex.id, 
-        dataId: "id" in ex.data ? ex.data.id : ex.id 
-      }))
+      cachedIds: cachedExercises.map((ex) => ({
+        cacheId: ex.id,
+        dataId: ex.data.id,
+      })),
     });
 
     if (availableExercises.length > 0) {
       // Serve from cache
       console.log(`Serving from cache: ${availableExercises.length} available exercises`);
       const selectedExercise = availableExercises[Math.floor(Math.random() * availableExercises.length)];
+
+      console.log("Selected cached exercise:", {
+        cacheId: selectedExercise.id,
+        dataId: selectedExercise.data.id,
+        exerciseType: selectedExercise.exerciseType,
+      });
 
       // Cache the solutions for answer validation
       await cacheExerciseSolutions(selectedExercise.data);
@@ -106,7 +125,7 @@ export async function POST(request: NextRequest) {
     }
 
     // No suitable cached exercises, generate new ones
-    console.log("No suitable cached exercises found, generating new ones");
+    console.log("No suitable cached exercises found, generating new ones...");
 
     // Route to appropriate provider
     let response;
@@ -129,7 +148,17 @@ export async function POST(request: NextRequest) {
       createdAt: Date.now(),
     };
 
+    console.log("Caching new exercise:", {
+      cacheId: cachedExercise.id,
+      dataId: responseData.id,
+      cacheKey,
+      exerciseType,
+      cefrLevel,
+      theme: theme || "default"
+    });
+
     await cacheProvider.setCachedExercise(cacheKey, cachedExercise);
+    console.log("Exercise cached successfully");
 
     return NextResponse.json(responseData);
   } catch (error) {
@@ -412,7 +441,7 @@ function processAIResponse(content: string, exerciseType: string) {
     // Add a set ID for consistent tracking
     const exerciseSetWithId = {
       id: uuidv4(),
-      exercises
+      exercises,
     };
 
     return NextResponse.json(exerciseSetWithId);

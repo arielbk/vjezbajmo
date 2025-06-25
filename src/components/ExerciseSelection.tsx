@@ -4,7 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useExercise } from "@/contexts/ExerciseContext";
 import { ExerciseType } from "@/types/exercise";
-import { BookOpen, MessageSquare, FileText, HelpCircle } from "lucide-react";
+import { BookOpen, MessageSquare, FileText, HelpCircle, History } from "lucide-react";
+
+interface ExerciseSelectionProps {
+  onViewCompleted: () => void;
+}
 
 const exerciseTypes: Array<{
   type: ExerciseType;
@@ -43,7 +47,7 @@ const exerciseTypes: Array<{
   },
 ];
 
-export function ExerciseSelection() {
+export function ExerciseSelection({ onViewCompleted }: ExerciseSelectionProps) {
   const { dispatch } = useExercise();
 
   const handleStartExercise = (exerciseType: ExerciseType) => {
@@ -70,6 +74,14 @@ export function ExerciseSelection() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* View Completed Exercises Button */}
+      <div className="flex justify-center mt-10">
+        <Button variant="outline" onClick={onViewCompleted} className="flex items-center gap-2">
+          <History className="h-4 w-4" />
+          View Completed Exercises
+        </Button>
       </div>
     </div>
   );

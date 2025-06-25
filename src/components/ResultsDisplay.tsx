@@ -5,16 +5,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { useExercise } from "@/contexts/ExerciseContext";
 import { calculateScore } from "@/lib/exercise-utils";
-import { ArrowLeft, RotateCcw, Target, TrendingUp, Award, AlertTriangle } from "lucide-react";
+import { ArrowLeft, RotateCcw, Target, TrendingUp, Award, AlertTriangle, CheckCircle } from "lucide-react";
+import { useState } from "react";
 
 interface ResultsDisplayProps {
   onBack: () => void;
   onRestart: () => void;
   onReviewMistakes: () => void;
+  onNextExercise?: () => void;
 }
 
-export function ResultsDisplay({ onBack, onRestart, onReviewMistakes }: ResultsDisplayProps) {
-  const { state } = useExercise();
+export function ResultsDisplay({ onBack, onRestart, onReviewMistakes, onNextExercise }: ResultsDisplayProps) {
+  const { state, markExerciseCompleted } = useExercise();
+  const [isCompleted, setIsCompleted] = useState(false);
 
   if (!state.currentSession) {
     return null;
@@ -25,6 +28,30 @@ export function ResultsDisplay({ onBack, onRestart, onReviewMistakes }: ResultsD
   const diacriticWarnings = state.currentSession.results.filter((r) => r.correct && r.diacriticWarning);
   const hasMistakes = mistakes.length > 0;
   const hasDiacriticWarnings = diacriticWarnings.length > 0;
+
+  // Get the current exercise data to extract the exercise ID
+  const getCurrentExerciseData = () => {
+    switch (state.currentExerciseType) {
+      case "verbTenses":
+        return state.verbTensesParagraph;
+      case "nounDeclension":
+        return state.nounAdjectiveParagraph;
+      case "verbAspect":
+        return state.verbAspectExercises;
+      case "interrogativePronouns":
+        return state.interrogativePronounsExercises;
+      default:
+        return null;
+    }
+  };
+
+  const handleMarkCompleted = () => {
+    const exerciseData = getCurrentExerciseData();
+    if (exerciseData && state.currentExerciseType) {
+      markExerciseCompleted(exerciseData.id, state.currentExerciseType);
+      setIsCompleted(true);
+    }
+  };
 
   const getScoreColor = (percentage: number) => {
     if (percentage >= 90) return "text-green-600";
@@ -60,7 +87,12 @@ export function ResultsDisplay({ onBack, onRestart, onReviewMistakes }: ResultsD
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">{getScoreIcon(percentage)}</div>
           <CardTitle className="text-2xl">Exercise Complete!</CardTitle>
-          <CardDescription>{getScoreDescription(percentage)}</CardDescription>
+          <CardDescription>
+            {isCompleted 
+              ? "Exercise marked as completed! You can now get a new exercise." 
+              : getScoreDescription(percentage)
+            }
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center space-y-4">
@@ -86,11 +118,39 @@ export function ResultsDisplay({ onBack, onRestart, onReviewMistakes }: ResultsD
             </div>
           </div>
 
+          {!isCompleted && (
+            <div className="text-center mb-4 p-3 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-700">
+                <strong>Ready for a new challenge?</strong> Mark this exercise as completed to track your progress and get fresh exercises.
+              </p>
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row gap-2 justify-center">
             <Button onClick={onRestart} size="lg">
               <RotateCcw className="h-4 w-4 mr-2" />
               Try Again
             </Button>
+
+            {!isCompleted && (
+              <Button onClick={handleMarkCompleted} size="lg" variant="default">
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Mark as Completed
+              </Button>
+            )}
+
+            {isCompleted && onNextExercise && (
+              <Button onClick={onNextExercise} size="lg" variant="default">
+                Next Exercise
+              </Button>
+            )}
+
+            {isCompleted && !onNextExercise && (
+              <Button disabled size="lg" variant="outline">
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Completed ✓
+              </Button>
+            )}
 
             {hasMistakes && (
               <Button variant="outline" onClick={onReviewMistakes} size="lg">

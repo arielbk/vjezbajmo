@@ -30,6 +30,7 @@ interface ExerciseState {
   cefrLevel: CefrLevel;
   isGenerating: boolean;
   error: string | null;
+  recentlyServedExercises: Record<ExerciseType, string[]>; // Track recently served exercise IDs per type
 }
 
 type ExerciseAction =
@@ -55,11 +56,11 @@ const initialState: ExerciseState = {
   currentExerciseType: null,
   verbAspectExercises: {
     id: "static-verb-aspect",
-    exercises: verbAspectData.exercises
+    exercises: verbAspectData.exercises,
   },
   interrogativePronounsExercises: {
-    id: "static-interrogative-pronouns", 
-    exercises: interrogativePronounsData.exercises
+    id: "static-interrogative-pronouns",
+    exercises: interrogativePronounsData.exercises,
   },
   verbTensesParagraph: verbTensesData as ParagraphExerciseSet,
   nounAdjectiveParagraph: nounAdjectiveData as ParagraphExerciseSet,
@@ -69,6 +70,12 @@ const initialState: ExerciseState = {
   cefrLevel: "A2.2", // Default CEFR level as per spec
   isGenerating: false,
   error: null,
+  recentlyServedExercises: {
+    verbTenses: [],
+    nounDeclension: [],
+    verbAspect: [],
+    interrogativePronouns: [],
+  },
 };
 
 function exerciseReducer(state: ExerciseState, action: ExerciseAction): ExerciseState {

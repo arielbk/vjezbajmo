@@ -40,6 +40,9 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
   };
 
   const handleRegenerateExercise = async () => {
+    // Auto-complete current exercise when generating a new one
+    markExerciseCompleted(exerciseSet.id, exerciseType);
+    
     await generateExercises(exerciseType, theme || undefined);
     setTheme("");
     // Reset all state for the new exercises

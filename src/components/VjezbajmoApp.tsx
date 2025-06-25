@@ -1,20 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useExercise } from "@/contexts/ExerciseContext";
-import { SettingsModal } from "@/components/SettingsModal";
 import { ExerciseSelection } from "@/components/ExerciseSelection";
 import { ParagraphExercise } from "@/components/ParagraphExercise";
-import { SentenceExercise as SentenceExerciseComponent } from "@/components/SentenceExercise";
 import { ResultsDisplay } from "@/components/ResultsDisplay";
+import { SentenceExercise as SentenceExerciseComponent } from "@/components/SentenceExercise";
+import { CompletedExercisesView } from "@/components/CompletedExercisesView";
+import { SettingsModal } from "@/components/SettingsModal";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useExercise } from "@/contexts/ExerciseContext";
 import type { ParagraphExerciseSet, SentenceExerciseSet } from "@/types/exercise";
 import { AlertTriangle } from "lucide-react";
+import { useEffect, useState } from "react";
 
-type AppScreen = "selection" | "exercise" | "results";
+type AppScreen = "selection" | "exercise" | "results" | "completed";
 
 export function VjezbajmoApp() {
-  const { state, dispatch } = useExercise();
+  const { state, dispatch, generateExercises } = useExercise();
   const [currentScreen, setCurrentScreen] = useState<AppScreen>("selection");
 
   // Automatically navigate to exercise screen when a session starts
@@ -34,10 +35,28 @@ export function VjezbajmoApp() {
     setCurrentScreen("selection");
   };
 
+  const handleViewCompletedExercises = () => {
+    setCurrentScreen("completed");
+  };
+
   const handleRestartExercise = () => {
     if (state.currentExerciseType) {
       dispatch({ type: "START_SESSION", payload: { exerciseType: state.currentExerciseType } });
       setCurrentScreen("exercise");
+    }
+  };
+
+  const handleNextExercise = async () => {
+    if (state.currentExerciseType) {
+      try {
+        // Generate a new exercise for the same type
+        await generateExercises(state.currentExerciseType);
+        // Start new session and navigate to exercise
+        dispatch({ type: "START_SESSION", payload: { exerciseType: state.currentExerciseType } });
+        setCurrentScreen("exercise");
+      } catch (error) {
+        console.error("Failed to generate next exercise:", error);
+      }
     }
   };
 
@@ -81,7 +100,7 @@ export function VjezbajmoApp() {
   const renderContent = () => {
     switch (currentScreen) {
       case "selection":
-        return <ExerciseSelection />;
+        return <ExerciseSelection onViewCompleted={handleViewCompletedExercises} />;
 
       case "exercise":
         const exerciseData = getCurrentExerciseData();
@@ -123,8 +142,12 @@ export function VjezbajmoApp() {
             onBack={handleBackToSelection}
             onRestart={handleRestartExercise}
             onReviewMistakes={handleReviewMistakes}
+            onNextExercise={handleNextExercise}
           />
         );
+
+      case "completed":
+        return <CompletedExercisesView onBack={handleBackToSelection} />;
 
       default:
         return null;
@@ -136,11 +159,12 @@ export function VjezbajmoApp() {
       <div className="container mx-auto px-4 py-8">
         {/* Header with app title and settings */}
         <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-1">
-              <span className="mr-2 rounded-full bg-white inline-grid place-items-center w-12 h-12">🇭🇷</span>Vježbajmo
-            </h1>
-            <p className="text-gray-500">Croatian Language Practice</p>
+          <div className="flex items-center justify-between mb-6">
+            <span className="mr-2 rounded-full bg-white inline-grid place-items-center w-12 h-12 text-4xl">🇭🇷</span>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Vježbajmo</h1>
+              <p className="text-gray-500">Croatian Language Practice</p>
+            </div>
           </div>
           <SettingsModal />
         </div>
