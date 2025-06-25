@@ -139,7 +139,7 @@ export function ResultsDisplay({ onBack, onRestart, onReviewMistakes }: ResultsD
         </Card>
       )}
 
-      {diacriticWarnings.length > 0 && (
+      {hasDiacriticWarnings && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
