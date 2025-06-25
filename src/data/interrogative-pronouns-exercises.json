@@ -2,33 +2,33 @@
   "exercises": [
     {
       "id": 6,
-      "text": "_____ je tvoja najdraža boja?",
-      "correctAnswer": "Koja",
-      "explanation": "Use 'Koja' (which - feminine singular) to ask about feminine nouns like 'boja' (color)."
+      "text": "Ovo su tenisice u _____ ću ići na Inmusic Festival.",
+      "correctAnswer": "kojima",
+      "explanation": "Use 'kojima' (locative plural) - 'in which' referring to tennis shoes (tenisice)."
     },
     {
       "id": 7,
-      "text": "_____ si ti?",
-      "correctAnswer": "Tko",
-      "explanation": "Use 'Tko' (who) to ask about a person's identity."
+      "text": "Zagreb je grad u _____ teče rijeka Sava.",
+      "correctAnswer": "kojem",
+      "explanation": "Use 'kojem' (locative masculine singular) - 'in which' referring to the city (grad)."
     },
     {
       "id": 8,
-      "text": "_____ govoriš jezike?",
-      "correctAnswer": "Koje",
-      "explanation": "Use 'Koje' (which - masculine plural) for the plural masculine noun 'jezici' (languages)."
+      "text": "Volim piti kavu s ljudima s _____ ne moram puno pričati.",
+      "correctAnswer": "kojima",
+      "explanation": "Use 'kojima' (instrumental plural) - 'with whom' referring to people (ljudima)."
     },
     {
       "id": 9,
-      "text": "_____ voliš više - kavu ili čaj?",
-      "correctAnswer": "Što",
-      "explanation": "Use 'Što' (what) when asking about things or making a choice between objects."
+      "text": "Nažalost, ne sviđa mi se knjiga _____ si kupila mami za rođendan – dosadna je!",
+      "correctAnswer": "koju",
+      "explanation": "Use 'koju' (accusative feminine singular) - 'which' as direct object referring to book (knjiga)."
     },
     {
       "id": 10,
-      "text": "_____ te čini sretnim?",
-      "correctAnswer": "Što",
-      "explanation": "Use 'Što' (what) when asking about abstract things that affect someone."
+      "text": "Bruce Springsteen je pjevač _____ uvijek nosi traperice.",
+      "correctAnswer": "koji",
+      "explanation": "Use 'koji' (nominative masculine singular) - 'who' as subject referring to singer (pjevač)."
     }
   ]
 }

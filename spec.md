@@ -36,7 +36,7 @@ The application is a monolithic **Next.js** application.
 1.  **Verb Tenses in Text (Paragraph Completion)**
 2.  **Noun & Adjective Declension (Paragraph Completion)**
 3.  **Verb Aspect (Isolated Sentences)**
-4.  **Interrogative Pronouns (Isolated Sentences)**
+4.  **Interrogative Pronouns (Mid-sentence Fill-ins)** - Focus on koji/koja/koje forms in context
 
 ### **5. Technology Stack**
 
@@ -134,3 +134,9 @@ interface ParagraphExerciseSet {
 - **"Review Mistakes" Mode:** After checking a set, a "Review Mistakes" button will create a new, temporary exercise set composed only of incorrectly answered questions for targeted practice.
 - **"Hint" System (Future Enhancement):** A "Hint" button could make a targeted API call for a clue.
 - **Thematic Content:** Now a core feature. Users can provide a theme during regeneration to receive contextually rich exercises.
+
+### **10. Progress Tracking & User Experience**
+
+- **Dynamic Progress Bar:** For all exercise types, the progress bar reflects the completion status of input fields on the current page. Progress is calculated as: (filled fields / total fields) × 100.
+- **Real-time Updates:** Progress updates as users fill in answers, providing immediate visual feedback.
+- **Field Validation:** Empty or whitespace-only fields are not considered "filled" for progress calculation.

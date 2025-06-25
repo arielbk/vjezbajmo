@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Vježbajmo Hrvatski - Croatian Grammar Practice",
-  description: "Practice Croatian grammar with dynamic exercises at A2.2 CEFR level",
+  description: "Practice Croatian grammar with dynamic exercises",
 };
 
 export default function RootLayout({

@@ -156,7 +156,8 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
 
   const correctAnswers = Object.values(results).filter((r) => r.correct).length;
   const totalQuestions = exerciseSet.questions.length;
-  const progress = hasChecked ? (correctAnswers / totalQuestions) * 100 : 0;
+  const filledAnswers = exerciseSet.questions.filter((q) => answers[q.id] && answers[q.id].trim() !== "").length;
+  const progress = hasChecked ? (correctAnswers / totalQuestions) * 100 : (filledAnswers / totalQuestions) * 100;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">

@@ -117,7 +117,8 @@ export function SentenceExercise({ exercises, exerciseType, onComplete, onBack, 
   };
 
   const correctAnswers = Object.values(results).filter((r) => r.correct).length;
-  const progress = hasChecked ? 100 : 0;
+  const filledAnswers = exercises.filter((ex) => answers[ex.id] && answers[ex.id].trim() !== "").length;
+  const progress = hasChecked ? 100 : (filledAnswers / exercises.length) * 100;
   const allAnswered = exercises.every((ex) => answers[ex.id] && answers[ex.id].trim() !== "");
 
   return (

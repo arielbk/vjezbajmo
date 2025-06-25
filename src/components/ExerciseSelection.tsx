@@ -37,7 +37,7 @@ const exerciseTypes: Array<{
   {
     type: "interrogativePronouns",
     title: "Interrogative Pronouns",
-    description: "Fill in blanks with the correct form of koji, koja, koje, tko, što.",
+    description: "Fill in blanks with the correct form of koji, koja, koje in context.",
     icon: <HelpCircle className="h-5 w-5" />,
     isParagraph: false,
   },
