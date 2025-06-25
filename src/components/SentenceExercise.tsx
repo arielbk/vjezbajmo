@@ -113,14 +113,14 @@ export function SentenceExercise({ exercises, exerciseType, onComplete, onBack, 
     const userAnswer = answers[exercise.id] || "";
 
     return (
-      <div className="text-lg leading-relaxed">
+      <div className="text-base sm:text-lg leading-relaxed">
         <span>{parts[0]}</span>
         <span className="inline-block mx-1">
           <Input
             type="text"
             value={userAnswer}
             onChange={(e) => handleAnswerChange(exercise.id, e.target.value)}
-            className={`inline-block w-40 text-center ${getInputStyling(result)}`}
+            className={`inline-block w-32 sm:w-40 text-center ${getInputStyling(result)}`}
             placeholder="Your answer"
             disabled={hasChecked}
           />
@@ -143,46 +143,38 @@ export function SentenceExercise({ exercises, exerciseType, onComplete, onBack, 
   const allAnswered = exercises.every((ex) => answers[ex.id] && answers[ex.id].trim() !== "");
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <Button variant="outline" onClick={onBack}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Selection
-        </Button>
-        {hasChecked && (
-          <div className="text-sm text-muted-foreground">
-            Final Score: {correctAnswers}/{exercises.length} ({Math.round((correctAnswers / exercises.length) * 100)}%)
-          </div>
-        )}
+    <>
+      {/* Fixed progress bar at top of viewport - nprogress style */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <Progress value={progress} className="w-full h-1 rounded-none border-none bg-transparent" />
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>{title}</CardTitle>
-            <div className="flex items-center gap-2">
-              <Input
-                type="text"
-                placeholder="Optional theme..."
-                value={theme}
-                onChange={(e) => setTheme(e.target.value)}
-                className="w-40"
-                disabled={state.isGenerating}
-              />
-              <Button variant="outline" size="sm" onClick={handleRegenerateExercise} disabled={state.isGenerating}>
-                <RefreshCw className={`h-4 w-4 ${state.isGenerating ? "animate-spin" : ""}`} />
-              </Button>
+      <div className="max-w-4xl mx-auto space-y-6 pt-4">
+        <div className="flex items-center justify-between">
+          <Button variant="outline" onClick={onBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Selection
+          </Button>
+          {hasChecked && (
+            <div className="text-sm text-muted-foreground">
+              Final Score: {correctAnswers}/{exercises.length} ({Math.round((correctAnswers / exercises.length) * 100)}%)
             </div>
-          </div>
-          <Progress value={progress} className="w-full" />
-        </CardHeader>
-        <CardContent className="space-y-8">
+          )}
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl sm:text-2xl">{title}</CardTitle>
+          </CardHeader>
+        <CardContent className="space-y-6 sm:space-y-8">
           {exercises.map((exercise, index) => (
-            <div key={exercise.id} className="space-y-4">
-              <div className="flex items-start gap-3">
-                <span className="text-sm font-medium text-muted-foreground mt-1 min-w-[2rem]">{index + 1}.</span>
-                <div className="flex-1">
-                  <div className="bg-muted/30 p-4 rounded-lg">{renderSentenceWithInput(exercise)}</div>
+            <div key={exercise.id} className="space-y-3 sm:space-y-4">
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="text-sm font-medium text-muted-foreground mt-1 min-w-[1.5rem] sm:min-w-[2rem] flex-shrink-0">
+                  {index + 1}.
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="bg-muted/30 p-3 sm:p-4 rounded-lg">{renderSentenceWithInput(exercise)}</div>
 
                   {hasChecked && results[exercise.id] && (
                     <div className="mt-3 border rounded-lg p-3">
@@ -235,6 +227,38 @@ export function SentenceExercise({ exercises, exerciseType, onComplete, onBack, 
           </div>
         </CardContent>
       </Card>
+      
+      {/* Separate Generate New Questions section */}
+      {!hasChecked && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center space-y-3">
+              <p className="text-sm text-muted-foreground">Want different questions?</p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-center gap-2">
+                <Input
+                  type="text"
+                  placeholder="Optional theme..."
+                  value={theme}
+                  onChange={(e) => setTheme(e.target.value)}
+                  className="w-full sm:w-40"
+                  disabled={state.isGenerating}
+                />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleRegenerateExercise} 
+                  disabled={state.isGenerating}
+                  className="w-full sm:w-auto"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${state.isGenerating ? "animate-spin" : ""}`} />
+                  Generate New Questions
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
+    </>
   );
 }
