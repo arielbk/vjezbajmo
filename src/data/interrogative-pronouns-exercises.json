@@ -1,0 +1,34 @@
+{
+  "exercises": [
+    {
+      "id": 6,
+      "text": "_____ je tvoja najdraža boja?",
+      "correctAnswer": "Koja",
+      "explanation": "Use 'Koja' (which - feminine singular) to ask about feminine nouns like 'boja' (color)."
+    },
+    {
+      "id": 7,
+      "text": "_____ si ti?",
+      "correctAnswer": "Tko",
+      "explanation": "Use 'Tko' (who) to ask about a person's identity."
+    },
+    {
+      "id": 8,
+      "text": "_____ govoriš jezike?",
+      "correctAnswer": "Koje",
+      "explanation": "Use 'Koje' (which - masculine plural) for the plural masculine noun 'jezici' (languages)."
+    },
+    {
+      "id": 9,
+      "text": "_____ voliš više - kavu ili čaj?",
+      "correctAnswer": "Što",
+      "explanation": "Use 'Što' (what) when asking about things or making a choice between objects."
+    },
+    {
+      "id": 10,
+      "text": "_____ te čini sretnim?",
+      "correctAnswer": "Što",
+      "explanation": "Use 'Što' (what) when asking about abstract things that affect someone."
+    }
+  ]
+}

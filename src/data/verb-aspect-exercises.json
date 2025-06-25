@@ -1,0 +1,34 @@
+{
+  "exercises": [
+    {
+      "id": 1,
+      "text": "Marko _____ (ići) u školu svaki dan.",
+      "correctAnswer": "ide",
+      "explanation": "Present tense of 'ići' (to go) - third person singular is 'ide'."
+    },
+    {
+      "id": 2,
+      "text": "Ana _____ (čitati) knjige prije spavanja.",
+      "correctAnswer": "čita",
+      "explanation": "Present tense of 'čitati' (to read) - third person singular is 'čita'."
+    },
+    {
+      "id": 3,
+      "text": "Jučer sam _____ (vidjeti) Petra u gradu.",
+      "correctAnswer": "vidio",
+      "explanation": "Past tense of 'vidjeti' (to see) - first person singular masculine is 'vidio'."
+    },
+    {
+      "id": 4,
+      "text": "Sutra ću _____ (kupiti) novi automobil.",
+      "correctAnswer": "kupiti",
+      "explanation": "Future tense construction - 'ću' + infinitive 'kupiti' (to buy)."
+    },
+    {
+      "id": 5,
+      "text": "Djevojka _____ (trčati) po parku svako jutro.",
+      "correctAnswer": "trči",
+      "explanation": "Present tense of 'trčati' (to run) - third person singular is 'trči'."
+    }
+  ]
+}
