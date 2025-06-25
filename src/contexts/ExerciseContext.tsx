@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from "react";
 import {
   ExerciseType,
+  CefrLevel,
   SentenceExercise,
   ParagraphExerciseSet,
   ExerciseSession,
@@ -23,6 +24,8 @@ interface ExerciseState {
   nounAdjectiveParagraph: ParagraphExerciseSet;
   currentSession: ExerciseSession | null;
   apiKey: string | null;
+  selectedProvider: "openai" | "anthropic";
+  cefrLevel: CefrLevel;
   isGenerating: boolean;
   error: string | null;
 }
@@ -31,6 +34,8 @@ type ExerciseAction =
   | { type: "SET_EXERCISE_TYPE"; payload: ExerciseType }
   | { type: "SET_API_KEY"; payload: string }
   | { type: "CLEAR_API_KEY" }
+  | { type: "SET_PROVIDER"; payload: "openai" | "anthropic" }
+  | { type: "SET_CEFR_LEVEL"; payload: CefrLevel }
   | { type: "START_SESSION"; payload: { exerciseType: ExerciseType } }
   | { type: "ADD_RESULT"; payload: ExerciseResult }
   | { type: "COMPLETE_SESSION" }
@@ -51,6 +56,8 @@ const initialState: ExerciseState = {
   nounAdjectiveParagraph: nounAdjectiveData as ParagraphExerciseSet,
   currentSession: null,
   apiKey: null,
+  selectedProvider: "openai",
+  cefrLevel: "A2.2", // Default CEFR level as per spec
   isGenerating: false,
   error: null,
 };
@@ -65,6 +72,12 @@ function exerciseReducer(state: ExerciseState, action: ExerciseAction): Exercise
 
     case "CLEAR_API_KEY":
       return { ...state, apiKey: null };
+
+    case "SET_PROVIDER":
+      return { ...state, selectedProvider: action.payload };
+
+    case "SET_CEFR_LEVEL":
+      return { ...state, cefrLevel: action.payload };
 
     case "START_SESSION":
       return {
@@ -111,14 +124,14 @@ function exerciseReducer(state: ExerciseState, action: ExerciseAction): Exercise
     case "SET_GENERATED_EXERCISES":
       const { exerciseType, data } = action.payload;
 
-      if (exerciseType === "verb-tenses") {
+      if (exerciseType === "verbTenses") {
         return { ...state, verbTensesParagraph: data as ParagraphExerciseSet };
-      } else if (exerciseType === "noun-adjective-declension") {
+      } else if (exerciseType === "nounDeclension") {
         return { ...state, nounAdjectiveParagraph: data as ParagraphExerciseSet };
-      } else if (exerciseType === "verb-aspect") {
+      } else if (exerciseType === "verbAspect") {
         const sentenceData = data as { exercises: SentenceExercise[] };
         return { ...state, verbAspectExercises: sentenceData.exercises };
-      } else if (exerciseType === "interrogative-pronouns") {
+      } else if (exerciseType === "interrogativePronouns") {
         const sentenceData = data as { exercises: SentenceExercise[] };
         return { ...state, interrogativePronounsExercises: sentenceData.exercises };
       }
@@ -151,6 +164,7 @@ const ExerciseContext = createContext<{
   state: ExerciseState;
   dispatch: React.Dispatch<ExerciseAction>;
   generateExercises: (exerciseType: ExerciseType, theme?: string) => Promise<void>;
+  regenerateAllExercises: (theme?: string) => Promise<void>;
   checkAnswer: (
     questionId: string,
     userAnswer: string
@@ -160,11 +174,26 @@ const ExerciseContext = createContext<{
 export function ExerciseProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(exerciseReducer, initialState);
 
-  // Load API key from localStorage on mount
+  // Load API key, provider, and CEFR level from localStorage on mount
   useEffect(() => {
     const savedApiKey = localStorage.getItem("vjezbajmo-api-key");
     if (savedApiKey) {
       dispatch({ type: "SET_API_KEY", payload: savedApiKey });
+    }
+
+    const savedProvider = localStorage.getItem("vjezbajmo-provider");
+    if (savedProvider === "openai" || savedProvider === "anthropic") {
+      dispatch({ type: "SET_PROVIDER", payload: savedProvider });
+    }
+
+    const savedCefrLevel = localStorage.getItem("vjezbajmo-cefr-level");
+    if (
+      savedCefrLevel === "A1" ||
+      savedCefrLevel === "A2.1" ||
+      savedCefrLevel === "A2.2" ||
+      savedCefrLevel === "B1.1"
+    ) {
+      dispatch({ type: "SET_CEFR_LEVEL", payload: savedCefrLevel });
     }
   }, []);
 
@@ -177,23 +206,49 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state.apiKey]);
 
-  const generateExercises = async (exerciseType: ExerciseType, theme?: string) => {
-    if (!state.apiKey) {
-      dispatch({ type: "SET_ERROR", payload: "API key required for generating exercises" });
-      return;
-    }
+  // Save provider and CEFR level to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem("vjezbajmo-provider", state.selectedProvider);
+  }, [state.selectedProvider]);
 
+  useEffect(() => {
+    localStorage.setItem("vjezbajmo-cefr-level", state.cefrLevel);
+  }, [state.cefrLevel]);
+
+  // Save CEFR level to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem("vjezbajmo-cefr-level", state.cefrLevel);
+  }, [state.cefrLevel]);
+
+  const generateExercises = async (exerciseType: ExerciseType, theme?: string) => {
     dispatch({ type: "SET_GENERATING", payload: true });
     dispatch({ type: "SET_ERROR", payload: null });
 
     try {
+      const requestBody: {
+        exerciseType: ExerciseType;
+        cefrLevel: CefrLevel;
+        theme?: string;
+        provider?: "openai" | "anthropic";
+        apiKey?: string;
+      } = {
+        exerciseType,
+        cefrLevel: state.cefrLevel,
+        theme,
+      };
+
+      // Include user's API key and provider if available
+      if (state.apiKey) {
+        requestBody.apiKey = state.apiKey;
+        requestBody.provider = state.selectedProvider;
+      }
+
       const response = await fetch("/api/generate-exercise-set", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-openai-api-key": state.apiKey,
         },
-        body: JSON.stringify({ exerciseType, theme }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -203,6 +258,64 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
 
       const data = await response.json();
       dispatch({ type: "SET_GENERATED_EXERCISES", payload: { exerciseType, data } });
+    } catch (error) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: error instanceof Error ? error.message : "Failed to generate exercises",
+      });
+    } finally {
+      dispatch({ type: "SET_GENERATING", payload: false });
+    }
+  };
+
+  const regenerateAllExercises = async (theme?: string) => {
+    const exerciseTypes: ExerciseType[] = ["verbTenses", "nounDeclension", "verbAspect", "interrogativePronouns"];
+
+    dispatch({ type: "SET_GENERATING", payload: true });
+    dispatch({ type: "SET_ERROR", payload: null });
+
+    try {
+      const promises = exerciseTypes.map(async (exerciseType) => {
+        const requestBody: {
+          exerciseType: ExerciseType;
+          cefrLevel: CefrLevel;
+          theme?: string;
+          provider?: "openai" | "anthropic";
+          apiKey?: string;
+        } = {
+          exerciseType,
+          cefrLevel: state.cefrLevel,
+          theme,
+        };
+
+        // Include user's API key and provider if available
+        if (state.apiKey) {
+          requestBody.apiKey = state.apiKey;
+          requestBody.provider = state.selectedProvider;
+        }
+
+        const response = await fetch("/api/generate-exercise-set", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Failed to generate ${exerciseType}: ${errorData.error || "Unknown error"}`);
+        }
+
+        const data = await response.json();
+        return { exerciseType, data };
+      });
+
+      const results = await Promise.all(promises);
+
+      results.forEach(({ exerciseType, data }) => {
+        dispatch({ type: "SET_GENERATED_EXERCISES", payload: { exerciseType, data } });
+      });
     } catch (error) {
       dispatch({
         type: "SET_ERROR",
@@ -242,7 +355,7 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ExerciseContext.Provider value={{ state, dispatch, generateExercises, checkAnswer }}>
+    <ExerciseContext.Provider value={{ state, dispatch, generateExercises, regenerateAllExercises, checkAnswer }}>
       {children}
     </ExerciseContext.Provider>
   );

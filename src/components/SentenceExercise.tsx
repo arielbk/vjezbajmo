@@ -6,93 +6,79 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useExercise } from "@/contexts/ExerciseContext";
-import type { SentenceExercise } from "@/types/exercise";
+import type { SentenceExercise, ExerciseType } from "@/types/exercise";
 import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
-import { ArrowLeft, Check, X, ChevronRight } from "lucide-react";
+import { ArrowLeft, Check, X, RefreshCw } from "lucide-react";
 
 interface SentenceExerciseProps {
   exercises: SentenceExercise[];
+  exerciseType: ExerciseType;
   onComplete: () => void;
   onBack: () => void;
   title: string;
 }
 
-export function SentenceExercise({ exercises, onComplete, onBack, title }: SentenceExerciseProps) {
-  const { dispatch, checkAnswer } = useExercise();
-  const [currentIndex, setCurrentIndex] = useState(0);
+export function SentenceExercise({ exercises, exerciseType, onComplete, onBack, title }: SentenceExerciseProps) {
+  const { dispatch, checkAnswer, generateExercises, state } = useExercise();
   const [answers, setAnswers] = useState<Record<string | number, string>>({});
   const [results, setResults] = useState<Record<string | number, ReturnType<typeof createExerciseResult>>>({});
   const [isChecking, setIsChecking] = useState(false);
+  const [hasChecked, setHasChecked] = useState(false);
+  const [theme, setTheme] = useState("");
 
-  const currentExercise = exercises[currentIndex];
-  const hasAnswered = currentExercise && answers[currentExercise.id] !== undefined;
-  const hasResult = currentExercise && results[currentExercise.id] !== undefined;
-  const isLastExercise = currentIndex === exercises.length - 1;
-  const allCompleted = exercises.every((ex) => results[ex.id] !== undefined);
-
-  const handleAnswerChange = (value: string) => {
-    if (currentExercise) {
-      setAnswers((prev) => ({ ...prev, [currentExercise.id]: value }));
-    }
+  const handleAnswerChange = (questionId: string | number, value: string) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
-  const handleCheckAnswer = async () => {
-    if (!currentExercise || !hasAnswered) return;
+  const handleRegenerateExercise = async () => {
+    await generateExercises(exerciseType, theme || undefined);
+    setTheme("");
+    // Reset all state for the new exercises
+    setAnswers({});
+    setResults({});
+    setHasChecked(false);
+  };
 
+  const handleCheckAllAnswers = async () => {
     setIsChecking(true);
-    const userAnswer = answers[currentExercise.id];
+    const newResults: Record<string | number, ReturnType<typeof createExerciseResult>> = {};
 
     try {
-      if (isStaticExercise(currentExercise.id)) {
-        // Handle static exercise locally
-        const result = createExerciseResult(
-          currentExercise.id,
-          userAnswer,
-          currentExercise.correctAnswer,
-          currentExercise.explanation
-        );
-        setResults((prev) => ({ ...prev, [currentExercise.id]: result }));
-        dispatch({ type: "ADD_RESULT", payload: result });
-      } else {
-        // Handle generated exercise via API
-        try {
-          const result = await checkAnswer(currentExercise.id as string, userAnswer);
-          const exerciseResult = createExerciseResult(
-            currentExercise.id,
-            userAnswer,
-            result.correctAnswer || currentExercise.correctAnswer,
-            result.explanation
-          );
-          setResults((prev) => ({ ...prev, [currentExercise.id]: exerciseResult }));
-          dispatch({ type: "ADD_RESULT", payload: exerciseResult });
-        } catch {
-          // Fallback to local checking if API fails
-          const result = createExerciseResult(
-            currentExercise.id,
-            userAnswer,
-            currentExercise.correctAnswer,
-            currentExercise.explanation
-          );
-          setResults((prev) => ({ ...prev, [currentExercise.id]: result }));
+      for (const exercise of exercises) {
+        const userAnswer = answers[exercise.id] || "";
+
+        if (isStaticExercise(exercise.id)) {
+          // Handle static exercise locally
+          const result = createExerciseResult(exercise.id, userAnswer, exercise.correctAnswer, exercise.explanation);
+          newResults[exercise.id] = result;
           dispatch({ type: "ADD_RESULT", payload: result });
+        } else {
+          // Handle generated exercise via API
+          try {
+            const result = await checkAnswer(exercise.id as string, userAnswer);
+            const exerciseResult = createExerciseResult(
+              exercise.id,
+              userAnswer,
+              result.correctAnswer || exercise.correctAnswer,
+              result.explanation
+            );
+            newResults[exercise.id] = exerciseResult;
+            dispatch({ type: "ADD_RESULT", payload: exerciseResult });
+          } catch {
+            // Fallback to local checking if API fails
+            const result = createExerciseResult(exercise.id, userAnswer, exercise.correctAnswer, exercise.explanation);
+            newResults[exercise.id] = result;
+            dispatch({ type: "ADD_RESULT", payload: result });
+          }
         }
       }
+
+      setResults(newResults);
+      setHasChecked(true);
     } catch (error) {
-      console.error("Error checking answer:", error);
+      console.error("Error checking answers:", error);
     } finally {
       setIsChecking(false);
-    }
-  };
-
-  const handleNext = () => {
-    if (currentIndex < exercises.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex((prev) => prev - 1);
     }
   };
 
@@ -108,13 +94,12 @@ export function SentenceExercise({ exercises, onComplete, onBack, title }: Sente
           <Input
             type="text"
             value={userAnswer}
-            onChange={(e) => handleAnswerChange(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !hasResult && handleCheckAnswer()}
+            onChange={(e) => handleAnswerChange(exercise.id, e.target.value)}
             className={`inline-block w-40 text-center ${
               result ? (result.correct ? "border-green-500 bg-green-50" : "border-red-500 bg-red-50") : ""
             }`}
             placeholder="Your answer"
-            disabled={hasResult}
+            disabled={hasChecked}
           />
           {result && (
             <span className="ml-1">
@@ -132,12 +117,8 @@ export function SentenceExercise({ exercises, onComplete, onBack, title }: Sente
   };
 
   const correctAnswers = Object.values(results).filter((r) => r.correct).length;
-  const totalAnswered = Object.keys(results).length;
-  const progress = (totalAnswered / exercises.length) * 100;
-
-  if (!currentExercise) {
-    return null;
-  }
+  const progress = hasChecked ? 100 : 0;
+  const allAnswered = exercises.every((ex) => answers[ex.id] && answers[ex.id].trim() !== "");
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -146,88 +127,92 @@ export function SentenceExercise({ exercises, onComplete, onBack, title }: Sente
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Selection
         </Button>
-        <div className="text-sm text-muted-foreground">
-          Question {currentIndex + 1} of {exercises.length}
-          {totalAnswered > 0 && (
-            <span className="ml-2">
-              Score: {correctAnswers}/{totalAnswered}
-            </span>
-          )}
-        </div>
+        {hasChecked && (
+          <div className="text-sm text-muted-foreground">
+            Final Score: {correctAnswers}/{exercises.length} ({Math.round((correctAnswers / exercises.length) * 100)}%)
+          </div>
+        )}
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>{title}</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>{title}</CardTitle>
+            <div className="flex items-center gap-2">
+              <Input
+                type="text"
+                placeholder="Optional theme..."
+                value={theme}
+                onChange={(e) => setTheme(e.target.value)}
+                className="w-40"
+                disabled={state.isGenerating}
+              />
+              <Button variant="outline" size="sm" onClick={handleRegenerateExercise} disabled={state.isGenerating}>
+                <RefreshCw className={`h-4 w-4 ${state.isGenerating ? "animate-spin" : ""}`} />
+              </Button>
+            </div>
+          </div>
           <Progress value={progress} className="w-full" />
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="bg-muted/30 p-6 rounded-lg">{renderSentenceWithInput(currentExercise)}</div>
+        <CardContent className="space-y-8">
+          {exercises.map((exercise, index) => (
+            <div key={exercise.id} className="space-y-4">
+              <div className="flex items-start gap-3">
+                <span className="text-sm font-medium text-muted-foreground mt-1 min-w-[2rem]">{index + 1}.</span>
+                <div className="flex-1">
+                  <div className="bg-muted/30 p-4 rounded-lg">{renderSentenceWithInput(exercise)}</div>
 
-          {!hasResult ? (
-            <div className="text-center">
-              <Button onClick={handleCheckAnswer} disabled={isChecking || !hasAnswered} size="lg">
-                {isChecking ? "Checking..." : "Check Answer"}
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="border rounded-lg p-4">
-                <div className="flex items-start gap-2 mb-2">
-                  {results[currentExercise.id].correct ? (
-                    <Check className="h-5 w-5 text-green-600 mt-0.5" />
-                  ) : (
-                    <X className="h-5 w-5 text-red-600 mt-0.5" />
-                  )}
-                  <div className="flex-1">
-                    {!results[currentExercise.id].correct && (
-                      <div className="mb-2 text-sm">
-                        Your answer: <span className="font-mono">{results[currentExercise.id].userAnswer}</span>
-                        {" → "}
-                        Correct:{" "}
-                        <span className="font-mono text-green-600">{results[currentExercise.id].correctAnswer}</span>
+                  {hasChecked && results[exercise.id] && (
+                    <div className="mt-3 border rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        {results[exercise.id].correct ? (
+                          <Check className="h-5 w-5 text-green-600 mt-0.5" />
+                        ) : (
+                          <X className="h-5 w-5 text-red-600 mt-0.5" />
+                        )}
+                        <div className="flex-1">
+                          {!results[exercise.id].correct && (
+                            <div className="mb-2 text-sm">
+                              Your answer: <span className="font-mono">{results[exercise.id].userAnswer}</span>
+                              {" → "}
+                              Correct:{" "}
+                              <span className="font-mono text-green-600">{results[exercise.id].correctAnswer}</span>
+                            </div>
+                          )}
+                          <p className="text-sm text-muted-foreground">{results[exercise.id].explanation}</p>
+                        </div>
                       </div>
-                    )}
-                    <p className="text-sm text-muted-foreground">{results[currentExercise.id].explanation}</p>
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
+          ))}
 
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={handlePrevious} disabled={currentIndex === 0}>
-                  Previous
+          <div className="pt-4 border-t">
+            {!hasChecked ? (
+              <div className="text-center">
+                <Button onClick={handleCheckAllAnswers} disabled={isChecking || !allAnswered} size="lg">
+                  {isChecking ? "Checking..." : "Check My Work"}
                 </Button>
-
-                {isLastExercise ? (
-                  <Button onClick={onComplete}>Complete Exercise</Button>
-                ) : (
-                  <Button onClick={handleNext}>
-                    Next
-                    <ChevronRight className="h-4 w-4 ml-2" />
-                  </Button>
+                {!allAnswered && (
+                  <p className="text-sm text-muted-foreground mt-2">Please answer all questions before checking.</p>
                 )}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="text-center space-y-4">
+                <div className="text-lg font-semibold">
+                  Exercise Complete! Final Score: {correctAnswers}/{exercises.length} (
+                  {Math.round((correctAnswers / exercises.length) * 100)}%)
+                </div>
+                <Button onClick={onComplete} size="lg">
+                  Finish Exercise
+                </Button>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
-
-      {allCompleted && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold mb-2">Exercise Complete!</h3>
-              <p className="text-muted-foreground mb-4">
-                Final Score: {correctAnswers}/{exercises.length} (
-                {Math.round((correctAnswers / exercises.length) * 100)}%)
-              </p>
-              <Button onClick={onComplete} size="lg">
-                Finish
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

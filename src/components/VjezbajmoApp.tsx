@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useExercise } from "@/contexts/ExerciseContext";
-import { ApiKeyManager } from "@/components/ApiKeyManager";
+import { SettingsModal } from "@/components/SettingsModal";
 import { ExerciseSelection } from "@/components/ExerciseSelection";
 import { ParagraphExercise } from "@/components/ParagraphExercise";
 import { SentenceExercise as SentenceExerciseComponent } from "@/components/SentenceExercise";
@@ -50,13 +50,13 @@ export function VjezbajmoApp() {
 
   const getCurrentExerciseData = () => {
     switch (state.currentExerciseType) {
-      case "verb-tenses":
+      case "verbTenses":
         return state.verbTensesParagraph;
-      case "noun-adjective-declension":
+      case "nounDeclension":
         return state.nounAdjectiveParagraph;
-      case "verb-aspect":
+      case "verbAspect":
         return state.verbAspectExercises;
-      case "interrogative-pronouns":
+      case "interrogativePronouns":
         return state.interrogativePronounsExercises;
       default:
         return null;
@@ -65,13 +65,13 @@ export function VjezbajmoApp() {
 
   const getExerciseTitle = () => {
     switch (state.currentExerciseType) {
-      case "verb-tenses":
+      case "verbTenses":
         return "Verb Tenses in Text";
-      case "noun-adjective-declension":
+      case "nounDeclension":
         return "Noun & Adjective Declension";
-      case "verb-aspect":
+      case "verbAspect":
         return "Verb Aspect";
-      case "interrogative-pronouns":
+      case "interrogativePronouns":
         return "Interrogative Pronouns";
       default:
         return "Exercise";
@@ -95,10 +95,12 @@ export function VjezbajmoApp() {
           );
         }
 
-        if (state.currentExerciseType === "verb-tenses" || state.currentExerciseType === "noun-adjective-declension") {
+        if (state.currentExerciseType === "verbTenses" || state.currentExerciseType === "nounDeclension") {
           return (
             <ParagraphExercise
               exerciseSet={exerciseData as ParagraphExerciseSet}
+              exerciseType={state.currentExerciseType}
+              title={getExerciseTitle()}
               onComplete={handleCompleteExercise}
               onBack={handleBackToSelection}
             />
@@ -107,6 +109,7 @@ export function VjezbajmoApp() {
           return (
             <SentenceExerciseComponent
               exercises={exerciseData as SentenceExercise[]}
+              exerciseType={state.currentExerciseType!}
               onComplete={handleCompleteExercise}
               onBack={handleBackToSelection}
               title={getExerciseTitle()}
@@ -131,7 +134,14 @@ export function VjezbajmoApp() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
-        {currentScreen === "selection" && <ApiKeyManager />}
+        {/* Header with app title and settings */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Vježbajmo</h1>
+            <p className="text-gray-600">Croatian Language Practice</p>
+          </div>
+          <SettingsModal />
+        </div>
 
         {state.error && (
           <Alert className="mb-6" variant="destructive">

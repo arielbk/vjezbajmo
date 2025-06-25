@@ -6,22 +6,25 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useExercise } from "@/contexts/ExerciseContext";
-import { ParagraphExerciseSet } from "@/types/exercise";
-import { checkStaticAnswer, createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
-import { ArrowLeft, Check, X } from "lucide-react";
+import { ParagraphExerciseSet, ExerciseType } from "@/types/exercise";
+import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
+import { ArrowLeft, Check, X, RefreshCw } from "lucide-react";
 
 interface ParagraphExerciseProps {
   exerciseSet: ParagraphExerciseSet;
+  exerciseType: ExerciseType;
   onComplete: () => void;
   onBack: () => void;
+  title: string;
 }
 
-export function ParagraphExercise({ exerciseSet, onComplete, onBack }: ParagraphExerciseProps) {
-  const { dispatch, checkAnswer } = useExercise();
+export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBack, title }: ParagraphExerciseProps) {
+  const { dispatch, checkAnswer, generateExercises, state } = useExercise();
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [results, setResults] = useState<Record<string, any>>({});
+  const [results, setResults] = useState<Record<string, ReturnType<typeof createExerciseResult>>>({});
   const [isChecking, setIsChecking] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
+  const [theme, setTheme] = useState("");
   const inputRefs = useRef<Record<string, HTMLInputElement>>({});
 
   // Auto-focus first input on mount
@@ -34,6 +37,15 @@ export function ParagraphExercise({ exerciseSet, onComplete, onBack }: Paragraph
 
   const handleAnswerChange = (questionId: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
+  };
+
+  const handleRegenerateExercise = async () => {
+    await generateExercises(exerciseType, theme || undefined);
+    setTheme("");
+    // Reset all state for the new exercises
+    setAnswers({});
+    setResults({});
+    setHasChecked(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, currentIndex: number) => {
@@ -53,7 +65,7 @@ export function ParagraphExercise({ exerciseSet, onComplete, onBack }: Paragraph
 
   const handleCheckAnswers = async () => {
     setIsChecking(true);
-    const newResults: Record<string, any> = {};
+    const newResults: Record<string, ReturnType<typeof createExerciseResult>> = {};
 
     try {
       for (const question of exerciseSet.questions) {
@@ -76,7 +88,7 @@ export function ParagraphExercise({ exerciseSet, onComplete, onBack }: Paragraph
             );
             newResults[question.id] = exerciseResult;
             dispatch({ type: "ADD_RESULT", payload: exerciseResult });
-          } catch (error) {
+          } catch {
             // Fallback to local checking if API fails
             const result = createExerciseResult(question.id, userAnswer, question.correctAnswer, question.explanation);
             newResults[question.id] = result;
@@ -96,7 +108,7 @@ export function ParagraphExercise({ exerciseSet, onComplete, onBack }: Paragraph
 
   const renderParagraphWithInputs = () => {
     const paragraphParts = exerciseSet.paragraph.split(/___\d+___/);
-    const inputs: JSX.Element[] = [];
+    const inputs: React.ReactElement[] = [];
 
     exerciseSet.questions.forEach((question, index) => {
       const isCorrect = results[question.id]?.correct;
@@ -131,7 +143,7 @@ export function ParagraphExercise({ exerciseSet, onComplete, onBack }: Paragraph
       );
     });
 
-    const result: JSX.Element[] = [];
+    const result: React.ReactElement[] = [];
     for (let i = 0; i < paragraphParts.length; i++) {
       result.push(<span key={`text-${i}`}>{paragraphParts[i]}</span>);
       if (inputs[i]) {
@@ -162,7 +174,22 @@ export function ParagraphExercise({ exerciseSet, onComplete, onBack }: Paragraph
 
       <Card>
         <CardHeader>
-          <CardTitle>Complete the Text</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>{title}</CardTitle>
+            <div className="flex items-center gap-2">
+              <Input
+                type="text"
+                placeholder="Optional theme..."
+                value={theme}
+                onChange={(e) => setTheme(e.target.value)}
+                className="w-40"
+                disabled={state.isGenerating}
+              />
+              <Button variant="outline" size="sm" onClick={handleRegenerateExercise} disabled={state.isGenerating}>
+                <RefreshCw className={`h-4 w-4 ${state.isGenerating ? "animate-spin" : ""}`} />
+              </Button>
+            </div>
+          </div>
           <Progress value={progress} className="w-full" />
         </CardHeader>
         <CardContent className="space-y-6">

@@ -19,10 +19,15 @@ export interface ParagraphExerciseSet {
   }[];
 }
 
-export type ExerciseType = "verb-tenses" | "noun-adjective-declension" | "verb-aspect" | "interrogative-pronouns";
+export type ExerciseType = "verbTenses" | "nounDeclension" | "verbAspect" | "interrogativePronouns";
+
+export type CefrLevel = "A1" | "A2.1" | "A2.2" | "B1.1";
 
 export interface GenerateExerciseRequest {
   exerciseType: ExerciseType;
+  cefrLevel: CefrLevel;
+  provider?: "openai" | "anthropic"; // Optional - falls back to site provider
+  apiKey?: string; // Optional - falls back to site key
   theme?: string;
 }
 
@@ -46,9 +51,10 @@ export interface ExerciseResult {
   correctAnswer?: string;
 }
 
+// For session management
 export interface ExerciseSession {
   exerciseType: ExerciseType;
   results: ExerciseResult[];
   completed: boolean;
-  mistakeQuestions: (SentenceExercise | ParagraphExerciseSet["questions"][0])[];
+  mistakeQuestions: (string | number)[];
 }
