@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ExerciseProvider } from "@/contexts/ExerciseContext";
+import { AppHeader } from "@/components/AppHeader";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,7 +29,14 @@ export default function RootLayout({
   return (
     <html lang="hr">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ExerciseProvider>{children}</ExerciseProvider>
+        <ExerciseProvider>
+          <div className="min-h-screen">
+            <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+              <AppHeader />
+              {children}
+            </div>
+          </div>
+        </ExerciseProvider>
       </body>
     </html>
   );

@@ -8,17 +8,16 @@ import { Progress } from "@/components/ui/progress";
 import { useExercise } from "@/contexts/ExerciseContext";
 import { ParagraphExerciseSet, ExerciseType } from "@/types/exercise";
 import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
-import { ArrowLeft, Check, X, RefreshCw, AlertTriangle } from "lucide-react";
+import { Check, X, RefreshCw, AlertTriangle } from "lucide-react";
 
 interface ParagraphExerciseProps {
   exerciseSet: ParagraphExerciseSet;
   exerciseType: ExerciseType;
   onComplete: () => void;
-  onBack: () => void;
   title: string;
 }
 
-export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBack, title }: ParagraphExerciseProps) {
+export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title }: ParagraphExerciseProps) {
   const { dispatch, checkAnswer, generateExercises, state, markExerciseCompleted } = useExercise();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [results, setResults] = useState<Record<string, ReturnType<typeof createExerciseResult>>>({});
@@ -26,6 +25,13 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
   const [hasChecked, setHasChecked] = useState(false);
   const [theme, setTheme] = useState("");
   const inputRefs = useRef<Record<string, HTMLInputElement>>({});
+
+  // Initialize answers from previous session in review mode
+  useEffect(() => {
+    if (state.currentSession?.isReviewMode && state.currentSession?.previousAnswers) {
+      setAnswers(state.currentSession.previousAnswers);
+    }
+  }, [state.currentSession]);
 
   // Auto-focus first input on mount
   useEffect(() => {
@@ -185,17 +191,13 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
       </div>
 
       <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 pt-4 px-2 sm:px-4">
-        <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Selection
-          </Button>
-          {hasChecked && (
+        {hasChecked && (
+          <div className="flex justify-end">
             <div className="text-xs sm:text-sm text-muted-foreground">
               Score: {correctAnswers}/{totalQuestions} ({Math.round(progress)}%)
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         <Card className="mx-0 sm:mx-auto">
           <CardHeader className="pb-3 sm:pb-6">
@@ -205,34 +207,80 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
             <div className="bg-muted/30 p-3 sm:p-6 rounded-lg">{renderParagraphWithInputs()}</div>
 
             {!hasChecked ? (
-              <div className="text-center">
-                <Button
-                  onClick={handleCheckAnswers}
-                  disabled={isChecking || Object.keys(answers).length === 0}
-                  size="lg"
-                >
-                  {isChecking ? "Checking..." : "Check My Work"}
-                </Button>
-              </div>
-            ) : (
               <div className="space-y-4">
                 <div className="text-center">
                   <Button
-                    onClick={() => {
-                      // Mark exercise as completed with score data
-                      markExerciseCompleted(
-                        exerciseSet.id,
-                        exerciseType,
-                        theme || undefined,
-                        { correct: correctAnswers, total: totalQuestions },
-                        title
-                      );
-                      onComplete();
-                    }}
+                    onClick={handleCheckAnswers}
+                    disabled={isChecking || Object.keys(answers).length === 0}
                     size="lg"
                   >
-                    Continue
+                    {isChecking ? "Checking..." : "Check My Work"}
                   </Button>
+                </div>
+
+                {state.currentSession?.isReviewMode && (
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground">
+                      You&apos;re reviewing your previous answers. You can modify them and check again.
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setAnswers({});
+                        setResults({});
+                        setHasChecked(false);
+                      }}
+                      size="sm"
+                      className="mt-2"
+                    >
+                      Clear All Answers
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-center space-y-2">
+                  {state.currentSession?.isReviewMode ? (
+                    <>
+                      <p className="text-sm text-muted-foreground">
+                        Review complete! You can practice again or go back to see your results.
+                      </p>
+                      <div className="flex justify-center gap-2">
+                        <Button
+                          onClick={() => {
+                            setAnswers(state.currentSession?.previousAnswers || {});
+                            setResults({});
+                            setHasChecked(false);
+                          }}
+                          variant="outline"
+                          size="lg"
+                        >
+                          Try Again
+                        </Button>
+                        <Button onClick={onComplete} size="lg">
+                          Back to Results
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <Button
+                      onClick={() => {
+                        // Mark exercise as completed with score data
+                        markExerciseCompleted(
+                          exerciseSet.id,
+                          exerciseType,
+                          theme || undefined,
+                          { correct: correctAnswers, total: totalQuestions },
+                          title
+                        );
+                        onComplete();
+                      }}
+                      size="lg"
+                    >
+                      Continue
+                    </Button>
+                  )}
                 </div>
 
                 <div className="space-y-3">

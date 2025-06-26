@@ -39,7 +39,10 @@ type ExerciseAction =
   | { type: "CLEAR_API_KEY" }
   | { type: "SET_PROVIDER"; payload: "openai" | "anthropic" }
   | { type: "SET_CEFR_LEVEL"; payload: CefrLevel }
-  | { type: "START_SESSION"; payload: { exerciseType: ExerciseType } }
+  | {
+      type: "START_SESSION";
+      payload: { exerciseType: ExerciseType; previousAnswers?: Record<string, string>; isReviewMode?: boolean };
+    }
   | { type: "ADD_RESULT"; payload: ExerciseResult }
   | { type: "COMPLETE_SESSION" }
   | { type: "RESET_SESSION" }
@@ -49,8 +52,9 @@ type ExerciseAction =
     }
   | { type: "SET_GENERATING"; payload: boolean }
   | { type: "SET_ERROR"; payload: string | null }
-  | { type: "START_REVIEW_MISTAKES"; payload: ExerciseSession }
-  | { type: "MARK_EXERCISE_COMPLETED"; payload: { exerciseId: string; exerciseType: ExerciseType; theme?: string } };
+  | { type: "START_REVIEW_MISTAKES"; payload: { session: ExerciseSession; previousAnswers: Record<string, string> } }
+  | { type: "MARK_EXERCISE_COMPLETED"; payload: { exerciseId: string; exerciseType: ExerciseType; theme?: string } }
+  | { type: "STORE_SESSION_ANSWERS"; payload: Record<string, string> };
 
 const initialState: ExerciseState = {
   currentExerciseType: null,
@@ -103,6 +107,8 @@ function exerciseReducer(state: ExerciseState, action: ExerciseAction): Exercise
           results: [],
           completed: false,
           mistakeQuestions: [],
+          previousAnswers: action.payload.previousAnswers,
+          isReviewMode: action.payload.isReviewMode || false,
         },
         error: null,
       };
@@ -164,10 +170,22 @@ function exerciseReducer(state: ExerciseState, action: ExerciseAction): Exercise
       return {
         ...state,
         currentSession: {
-          exerciseType: action.payload.exerciseType,
+          exerciseType: action.payload.session.exerciseType,
           results: [],
           completed: false,
-          mistakeQuestions: action.payload.mistakeQuestions,
+          mistakeQuestions: action.payload.session.mistakeQuestions,
+          previousAnswers: action.payload.previousAnswers,
+          isReviewMode: true,
+        },
+      };
+
+    case "STORE_SESSION_ANSWERS":
+      if (!state.currentSession) return state;
+      return {
+        ...state,
+        currentSession: {
+          ...state.currentSession,
+          previousAnswers: action.payload,
         },
       };
 
@@ -193,6 +211,8 @@ const ExerciseContext = createContext<{
     scoreData?: { correct: number; total: number },
     title?: string
   ) => void;
+  storeSessionAnswers: (answers: Record<string, string>) => void;
+  startReviewMistakesSession: (previousAnswers: Record<string, string>) => void;
 } | null>(null);
 
 export function ExerciseProvider({ children }: { children: React.ReactNode }) {
@@ -398,9 +418,34 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
     userProgressManager.markExerciseCompleted(exerciseId, exerciseType, state.cefrLevel, theme, scoreData, title);
   };
 
+  const storeSessionAnswers = (answers: Record<string, string>) => {
+    dispatch({ type: "STORE_SESSION_ANSWERS", payload: answers });
+  };
+
+  const startReviewMistakesSession = (previousAnswers: Record<string, string>) => {
+    if (state.currentSession) {
+      dispatch({
+        type: "START_REVIEW_MISTAKES",
+        payload: {
+          session: state.currentSession,
+          previousAnswers,
+        },
+      });
+    }
+  };
+
   return (
     <ExerciseContext.Provider
-      value={{ state, dispatch, generateExercises, regenerateAllExercises, checkAnswer, markExerciseCompleted }}
+      value={{
+        state,
+        dispatch,
+        generateExercises,
+        regenerateAllExercises,
+        checkAnswer,
+        markExerciseCompleted,
+        storeSessionAnswers,
+        startReviewMistakesSession,
+      }}
     >
       {children}
     </ExerciseContext.Provider>

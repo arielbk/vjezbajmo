@@ -66,6 +66,8 @@ export interface ExerciseSession {
   results: ExerciseResult[];
   completed: boolean;
   mistakeQuestions: (string | number)[];
+  previousAnswers?: Record<string, string>; // Store previous answers for review/retry
+  isReviewMode?: boolean; // Track if session is in review mode
 }
 
 // For enhanced completion tracking
@@ -82,6 +84,7 @@ export interface CompletedExerciseRecord {
   theme?: string;
   attemptNumber: number; // Track multiple attempts at same exercise
   title?: string; // Optional title for better display
+  bestScore?: number; // Track highest percentage achieved
 }
 
 // For exercise performance analytics

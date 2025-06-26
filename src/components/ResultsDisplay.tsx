@@ -5,8 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { useExercise } from "@/contexts/ExerciseContext";
 import { calculateScore } from "@/lib/exercise-utils";
-import { ArrowLeft, RotateCcw, Target, TrendingUp, Award, AlertTriangle, CheckCircle } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, RotateCcw, Target, TrendingUp, Award, AlertTriangle, ArrowRight } from "lucide-react";
 
 interface ResultsDisplayProps {
   onBack: () => void;
@@ -17,7 +16,6 @@ interface ResultsDisplayProps {
 
 export function ResultsDisplay({ onBack, onRestart, onReviewMistakes, onNextExercise }: ResultsDisplayProps) {
   const { state, markExerciseCompleted } = useExercise();
-  const [isCompleted, setIsCompleted] = useState(false);
 
   if (!state.currentSession) {
     return null;
@@ -45,11 +43,36 @@ export function ResultsDisplay({ onBack, onRestart, onReviewMistakes, onNextExer
     }
   };
 
-  const handleMarkCompleted = () => {
+  const handleNextExercise = async () => {
+    // Automatically mark as completed and proceed to next exercise
     const exerciseData = getCurrentExerciseData();
     if (exerciseData && state.currentExerciseType) {
-      markExerciseCompleted(exerciseData.id, state.currentExerciseType);
-      setIsCompleted(true);
+      markExerciseCompleted(
+        exerciseData.id,
+        state.currentExerciseType,
+        undefined, // theme
+        { correct, total }, // scoreData
+        getExerciseTitle(state.currentExerciseType)
+      );
+    }
+
+    if (onNextExercise) {
+      await onNextExercise();
+    }
+  };
+
+  const getExerciseTitle = (exerciseType: string) => {
+    switch (exerciseType) {
+      case "verbTenses":
+        return "Verb Tenses in Text";
+      case "nounDeclension":
+        return "Noun & Adjective Declension";
+      case "verbAspect":
+        return "Verb Aspect";
+      case "interrogativePronouns":
+        return "Interrogative Pronouns";
+      default:
+        return "Exercise";
     }
   };
 
@@ -76,23 +99,11 @@ export function ResultsDisplay({ onBack, onRestart, onReviewMistakes, onNextExer
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <Button variant="outline" onClick={onBack}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Selection
-        </Button>
-      </div>
-
       <Card>
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">{getScoreIcon(percentage)}</div>
           <CardTitle className="text-2xl">Exercise Complete!</CardTitle>
-          <CardDescription>
-            {isCompleted 
-              ? "Exercise marked as completed! You can now get a new exercise." 
-              : getScoreDescription(percentage)
-            }
-          </CardDescription>
+          <CardDescription>{getScoreDescription(percentage)}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center space-y-4">
@@ -118,37 +129,16 @@ export function ResultsDisplay({ onBack, onRestart, onReviewMistakes, onNextExer
             </div>
           </div>
 
-          {!isCompleted && (
-            <div className="text-center mb-4 p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-700">
-                <strong>Ready for a new challenge?</strong> Mark this exercise as completed to track your progress and get fresh exercises.
-              </p>
-            </div>
-          )}
-
           <div className="flex flex-col sm:flex-row gap-2 justify-center">
-            <Button onClick={onRestart} size="lg">
+            <Button onClick={onRestart} size="lg" variant="outline">
               <RotateCcw className="h-4 w-4 mr-2" />
               Try Again
             </Button>
 
-            {!isCompleted && (
-              <Button onClick={handleMarkCompleted} size="lg" variant="default">
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Mark as Completed
-              </Button>
-            )}
-
-            {isCompleted && onNextExercise && (
-              <Button onClick={onNextExercise} size="lg" variant="default">
+            {onNextExercise && (
+              <Button onClick={handleNextExercise} size="lg" variant="default">
+                <ArrowRight className="h-4 w-4 mr-2" />
                 Next Exercise
-              </Button>
-            )}
-
-            {isCompleted && !onNextExercise && (
-              <Button disabled size="lg" variant="outline">
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Completed ✓
               </Button>
             )}
 

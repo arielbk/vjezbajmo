@@ -138,9 +138,15 @@ interface CheckAnswerResponse {
 ### **7. Frontend Architecture & State Management**
 
 - **Initial State:** App is initialized with static A2.2 exercises.
+- **Global Layout & Navigation:**
+
+  - **Unified Header:** A consistent header appears on all pages containing the app logo (Croatian flag 🇭🇷), app name "Vježbajmo", tagline "Croatian Language Practice", and settings button.
+  - **Navigation Pattern:** The entire header (logo, name, tagline) is clickable and navigates to the home page, eliminating the need for individual "Back to Selection" buttons throughout the app.
+  - **Clean UI:** This creates a cleaner, more intuitive navigation experience where users always know how to return to the main exercise selection.
+
 - **Settings & Configuration (`SettingsModal.tsx`)**
 
-  - A ** Settings Modal** (or drawer), accessible via a gear icon, is the central configuration hub.
+  - A **Settings Modal** (or drawer), accessible via a gear icon in the header, is the central configuration hub.
   - **CEFR Level:** A dropdown to select the desired CEFR level. Saved to `localStorage`.
   - **Provider Selection:** A dropdown to select "OpenAI" or "Anthropic". Saved to `localStorage`.
   - **API Key Input:** An input for the user's personal API key. Saved to `localStorage`.
@@ -149,12 +155,12 @@ interface CheckAnswerResponse {
 - **Component Structure:**
   - **`ParagraphExercise.tsx` & `SentenceExercise.tsx`**:
     - These components are responsible for displaying the exercise and handling answers.
-    - **Manual Completion Workflow:** After checking answers and reviewing results, users explicitly choose when to mark an exercise as "completed" via a dedicated button. This prevents race conditions in cache filtering and gives users control over their progress.
+    - **Automatic Completion Workflow:** After checking answers and reviewing results, exercises are automatically marked as "completed" when users click "Next Exercise". This streamlines the learning flow.
     - Each component features its own **"Regenerate" button** (e.g., a refresh icon) that generates new exercises from the pool of uncompleted exercises.
     - A small text input field allows users to specify an optional **theme** for regeneration.
     - Clicking the regenerate button calls `/api/generate-exercise-set` for only that `exerciseType`.
   - **`SentenceExercise.tsx` UX Update:** This component renders a **list of all sentence exercises** on a single page, not one at a time. A single **"Check My Work"** button validates all answers at once, creating a unified workflow consistent with paragraph exercises.
-  - **`ResultsDisplay.tsx`:** Handles showing feedback for multiple questions simultaneously.
+  - **`ResultsDisplay.tsx`:** Handles showing feedback for multiple questions simultaneously with improved completion flow.
   - **`CompletedExercisesView.tsx` (New):** Displays a list of previously completed exercises, allowing users to review their past work and practice spaced repetition.
 
 ### **8. LLM Integration Strategy**
@@ -169,9 +175,12 @@ interface CheckAnswerResponse {
 ### **9. Enhancements for Learning Experience**
 
 - **Unified Exercise Workflow:** Both paragraph and sentence exercises feature a "fill-in-multiple-blanks" and "check-all-at-once" workflow, providing a consistent and efficient user experience. This includes full `Tab`/`Shift+Tab` keyboard navigation between all input fields on the page.
-- **Manual Completion Control:** Users explicitly mark exercises as completed after reviewing results, preventing race conditions in caching and giving learners control over their progress tracking.
+- **Streamlined Completion Flow:** Exercises are automatically marked as completed when users proceed to the next exercise, creating a more natural learning progression without manual intervention.
+- **Enhanced Review System:**
+  - **"Review Mistakes" Mode:** After checking a set, users can review mistakes in a focused mode where only incorrectly answered questions are shown.
+  - **Answer Pre-filling:** When reviewing mistakes, the system preserves user's previous answers for context and allows modification without starting completely fresh.
+  - **Smart Reset Options:** "Try Again" functionality marks exercises as incomplete for retry while preserving performance history for progress tracking.
 - **Completed Exercise Review:** Users can access a dedicated view to review previously completed exercises, enabling spaced repetition and progress assessment.
-- **"Review Mistakes" Mode:** After checking a set, a "Review Mistakes" button creates a new, temporary exercise set composed only of incorrectly answered questions for targeted practice.
 - **"Hint" System (Future Enhancement):** A "Hint" button could make a targeted API call for a clue.
 - **Thematic Content:** Core feature allowing users to provide themes during regeneration to receive contextually rich exercises.
 - **Diacritic Learning Support:**
@@ -188,18 +197,24 @@ interface CheckAnswerResponse {
 
 ### **11. Completion Tracking & Exercise Review System**
 
-- **Enhanced Manual Completion Workflow:**
+- **Enhanced Automatic Completion Workflow:**
 
   1. User fills in answers and clicks "Check My Work"
   2. Results are displayed with explanations and feedback
-  3. User reviews results and decides when to mark exercise as "completed"
-  4. "Mark as Completed" button becomes available after checking answers
+  3. User reviews results and can click "Next Exercise" to proceed
+  4. Exercise is automatically marked as "completed" when proceeding to next exercise
   5. Completion is tracked in localStorage with comprehensive performance data:
      - Exercise ID and type
      - Timestamp of completion
      - Detailed score data (correct answers, total questions, percentage)
      - Time spent on exercise (optional future enhancement)
      - CEFR level and theme (if applicable)
+
+- **Enhanced Review & Retry System:**
+
+  - **Answer Preservation:** When reviewing mistakes or retrying exercises, user's previous answers are pre-filled to provide context and avoid complete restart.
+  - **Smart Try Again:** "Try Again" functionality marks exercises as incomplete for retry while preserving best performance score in history.
+  - **Focused Mistake Review:** "Review Mistakes" mode shows only incorrectly answered questions with previous answers pre-filled for easy correction.
 
 - **Enhanced Completed Exercise Management:**
 
@@ -238,21 +253,31 @@ interface CompletedExerciseRecord {
   cefrLevel: CefrLevel;
   theme?: string;
   attemptNumber: number; // Track multiple attempts at same exercise
+  bestScore?: number; // Track highest percentage achieved
+}
+
+interface ExerciseSession {
+  exerciseType: ExerciseType;
+  results: ExerciseResult[];
+  completed: boolean;
+  mistakeQuestions: any[];
+  previousAnswers?: Record<string, string>; // Store previous answers for review/retry
 }
 ```
 
 - **Cache Filtering Logic:**
 
-  - Only manually completed exercises are filtered out during regeneration requests
-  - Prevents race conditions where exercises are marked complete before users finish reviewing
-  - Ensures reliable cache filtering based on explicit user actions
+  - Only automatically completed exercises (when users proceed to next exercise) are filtered out during regeneration requests
+  - Streamlined completion tracking eliminates race conditions
+  - Ensures reliable cache filtering based on natural user progression
   - Supports both paragraph exercises (tracked by `exerciseSet.id`) and sentence exercises (tracked by `sentenceExerciseSet.id`)
   - Enhanced filtering considers performance scores for intelligent exercise serving
 
 - **Benefits:**
-  - **User Control:** Learners decide when they've truly mastered an exercise
+  - **Streamlined Flow:** Natural progression from exercise completion to next exercise without manual completion steps
+  - **Answer Continuity:** Pre-filled answers in review modes prevent frustrating restarts and provide learning context
+  - **Flexible Retry:** Easy re-attempts that preserve learning history while allowing improvement tracking
+  - **Performance History:** Comprehensive tracking of best scores and attempt history for motivation
   - **Spaced Repetition:** Easy access to review previously completed work with performance context
   - **Progress Tracking:** Detailed performance metrics help users identify strengths and weaknesses
-  - **Reliable Caching:** Eliminates technical issues with automatic completion tracking
   - **Learning Analytics:** Comprehensive data helps users optimize their learning strategy
-  - **Motivation:** Clear progress visualization encourages continued learning

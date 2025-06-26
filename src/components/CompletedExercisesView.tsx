@@ -6,14 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { userProgressManager } from "@/lib/user-progress";
 import { CompletedExerciseRecord, ExerciseType } from "@/types/exercise";
-import { ArrowLeft, Trophy, Target, TrendingUp, Calendar, RefreshCw } from "lucide-react";
+import { Trophy, Target, TrendingUp, Calendar, RefreshCw } from "lucide-react";
 
 interface CompletedExercisesViewProps {
-  onBack: () => void;
+  onBack?: () => void; // Keep optional for backward compatibility but won't be used
   onRetryExercise?: (exerciseType: ExerciseType, exerciseId: string) => void;
 }
 
-export function CompletedExercisesView({ onBack, onRetryExercise }: CompletedExercisesViewProps) {
+export function CompletedExercisesView({ onRetryExercise }: CompletedExercisesViewProps) {
   const [completedRecords, setCompletedRecords] = useState<CompletedExerciseRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState<ExerciseType | "all">("all");
@@ -77,12 +77,6 @@ export function CompletedExercisesView({ onBack, onRetryExercise }: CompletedExe
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto space-y-6 pt-4 px-2 sm:px-4">
-        <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-        </div>
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
           <p className="mt-2 text-sm text-muted-foreground">Loading your exercise history...</p>
@@ -94,10 +88,6 @@ export function CompletedExercisesView({ onBack, onRetryExercise }: CompletedExe
   return (
     <div className="max-w-4xl mx-auto space-y-6 pt-4 px-2 sm:px-4">
       <div className="flex items-center justify-between">
-        <Button variant="outline" onClick={onBack}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Selection
-        </Button>
         <h1 className="text-xl sm:text-2xl font-bold">Exercise History</h1>
       </div>
 

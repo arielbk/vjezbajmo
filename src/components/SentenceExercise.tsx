@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,17 +8,16 @@ import { Progress } from "@/components/ui/progress";
 import { useExercise } from "@/contexts/ExerciseContext";
 import type { SentenceExercise, SentenceExerciseSet, ExerciseType } from "@/types/exercise";
 import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
-import { ArrowLeft, Check, X, RefreshCw, AlertTriangle } from "lucide-react";
+import { Check, X, RefreshCw, AlertTriangle } from "lucide-react";
 
 interface SentenceExerciseProps {
   exerciseSet: SentenceExerciseSet;
   exerciseType: ExerciseType;
   onComplete: () => void;
-  onBack: () => void;
   title: string;
 }
 
-export function SentenceExercise({ exerciseSet, exerciseType, onComplete, onBack, title }: SentenceExerciseProps) {
+export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title }: SentenceExerciseProps) {
   const { dispatch, checkAnswer, generateExercises, state, markExerciseCompleted } = useExercise();
   const [answers, setAnswers] = useState<Record<string | number, string>>({});
   const [results, setResults] = useState<Record<string | number, ReturnType<typeof createExerciseResult>>>({});
@@ -28,6 +27,13 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, onBack
 
   // Extract exercises from the set
   const exercises = exerciseSet.exercises;
+
+  // Initialize answers from previous session in review mode
+  useEffect(() => {
+    if (state.currentSession?.isReviewMode && state.currentSession?.previousAnswers) {
+      setAnswers(state.currentSession.previousAnswers);
+    }
+  }, [state.currentSession]);
 
   const handleAnswerChange = (questionId: string | number, value: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
@@ -156,18 +162,14 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, onBack
       </div>
 
       <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 pt-4 px-2 sm:px-4">
-        <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Selection
-          </Button>
-          {hasChecked && (
+        {hasChecked && (
+          <div className="flex justify-end">
             <div className="text-xs sm:text-sm text-muted-foreground">
               Final Score: {correctAnswers}/{exercises.length} ({Math.round((correctAnswers / exercises.length) * 100)}
               %)
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         <Card className="mx-0 sm:mx-auto">
           <CardHeader className="pb-3 sm:pb-6">
@@ -212,36 +214,88 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, onBack
 
             <div className="pt-4 border-t">
               {!hasChecked ? (
-                <div className="text-center">
-                  <Button onClick={handleCheckAllAnswers} disabled={isChecking || !allAnswered} size="lg">
-                    {isChecking ? "Checking..." : "Check My Work"}
-                  </Button>
-                  {!allAnswered && (
-                    <p className="text-sm text-muted-foreground mt-2">Please answer all questions before checking.</p>
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <Button onClick={handleCheckAllAnswers} disabled={isChecking || !allAnswered} size="lg">
+                      {isChecking ? "Checking..." : "Check My Work"}
+                    </Button>
+                    {!allAnswered && (
+                      <p className="text-sm text-muted-foreground mt-2">Please answer all questions before checking.</p>
+                    )}
+                  </div>
+
+                  {state.currentSession?.isReviewMode && (
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground">
+                        You&apos;re reviewing your previous answers. You can modify them and check again.
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setAnswers({});
+                          setResults({});
+                          setHasChecked(false);
+                        }}
+                        size="sm"
+                        className="mt-2"
+                      >
+                        Clear All Answers
+                      </Button>
+                    </div>
                   )}
                 </div>
               ) : (
                 <div className="text-center space-y-4">
-                  <div className="text-lg font-semibold">
-                    Exercise Complete! Final Score: {correctAnswers}/{exercises.length} (
-                    {Math.round((correctAnswers / exercises.length) * 100)}%)
-                  </div>
-                  <Button
-                    onClick={() => {
-                      // Mark exercise as completed with score data
-                      markExerciseCompleted(
-                        exerciseSet.id,
-                        exerciseType,
-                        theme || undefined,
-                        { correct: correctAnswers, total: exercises.length },
-                        title
-                      );
-                      onComplete();
-                    }}
-                    size="lg"
-                  >
-                    Finish Exercise
-                  </Button>
+                  {state.currentSession?.isReviewMode ? (
+                    <>
+                      <div className="text-lg font-semibold">
+                        Review Complete! Final Score: {correctAnswers}/{exercises.length} (
+                        {Math.round((correctAnswers / exercises.length) * 100)}%)
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Review complete! You can practice again or go back to see your results.
+                      </p>
+                      <div className="flex justify-center gap-2">
+                        <Button
+                          onClick={() => {
+                            setAnswers(state.currentSession?.previousAnswers || {});
+                            setResults({});
+                            setHasChecked(false);
+                          }}
+                          variant="outline"
+                          size="lg"
+                        >
+                          Try Again
+                        </Button>
+                        <Button onClick={onComplete} size="lg">
+                          Back to Results
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-lg font-semibold">
+                        Exercise Complete! Final Score: {correctAnswers}/{exercises.length} (
+                        {Math.round((correctAnswers / exercises.length) * 100)}%)
+                      </div>
+                      <Button
+                        onClick={() => {
+                          // Mark exercise as completed with score data
+                          markExerciseCompleted(
+                            exerciseSet.id,
+                            exerciseType,
+                            theme || undefined,
+                            { correct: correctAnswers, total: exercises.length },
+                            title
+                          );
+                          onComplete();
+                        }}
+                        size="lg"
+                      >
+                        Finish Exercise
+                      </Button>
+                    </>
+                  )}
                 </div>
               )}
             </div>
