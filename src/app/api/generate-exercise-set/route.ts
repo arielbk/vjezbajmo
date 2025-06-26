@@ -302,17 +302,32 @@ Return JSON in this exact format:
 }`;
     } else {
       const exampleExercises = JSON.stringify({ exercises: interrogativePronounsData.exercises.slice(0, 3) }, null, 2);
-      prompt = `Create 5 Croatian interrogative pronoun exercises. Each should be a sentence with one blank where students fill in the correct form of koji/koja/koje/tko/što etc.${themeText}
+      prompt = `Create 5 Croatian interrogative pronoun exercises. Each should be a sentence with one blank where students fill in the correct form of koji/koja/koje ONLY.${themeText}
 
 Here are examples of the quality and style expected:
 
 ${exampleExercises}
 
+IMPORTANT: Use ONLY forms of "koji" (which). Do NOT use other interrogative pronouns like "tko", "što", "čiji", etc.
+
+Declension table for "koji" (which):
+SINGULAR:
+- Masculine: koji (N), kojeg(a) (G), kojem(u) (D), koji/kojeg(a) (A), kojem(u) (L), kojim (I)
+- Feminine: koja (N), koje (G), kojoj (D), koju (A), kojoj (L), kojom (I)
+- Neuter: koje (N), kojeg(a) (G), kojem(u) (D), koje (A), kojem(u) (L), kojim (I)
+
+PLURAL:
+- Masculine: koji (N), kojih (G), kojima (D), koje (A), kojima (L), kojima (I)
+- Feminine: koje (N), kojih (G), kojima (D), koje (A), kojima (L), kojima (I)
+- Neuter: koja (N), kojih (G), kojima (D), koja (A), kojima (L), kojima (I)
+
 Key requirements:
 - Create natural, realistic sentences that Croatian speakers would actually use
-- Focus on proper declension of interrogative pronouns (koji/koja/koje/čiji/tko/što)
-- Include a variety of cases and genders
-- Provide clear explanations mentioning case, gender, and reasoning
+- Focus EXCLUSIVELY on the declension of "koji/koja/koje" forms shown above
+- Include a variety of cases (nominative, genitive, dative, accusative, locative, instrumental)
+- Include masculine, feminine, and neuter forms
+- Include both singular and plural forms
+- Provide clear explanations mentioning case, gender, number, and reasoning
 - Maintain appropriate ${cefrLevel} difficulty level
 
 Return JSON in this exact format:
@@ -450,17 +465,32 @@ Return JSON in this exact format:
 }`;
     } else {
       const exampleExercises = JSON.stringify({ exercises: interrogativePronounsData.exercises.slice(0, 3) }, null, 2);
-      prompt = `Create 5 Croatian interrogative pronoun exercises. Each should be a sentence with one blank where students fill in the correct form of koji/koja/koje/tko/što etc.${themeText}
+      prompt = `Create 5 Croatian interrogative pronoun exercises. Each should be a sentence with one blank where students fill in the correct form of koji/koja/koje ONLY.${themeText}
 
 Here are examples of the quality and style expected:
 
 ${exampleExercises}
 
+IMPORTANT: Use ONLY forms of "koji" (which). Do NOT use other interrogative pronouns like "tko", "što", "čiji", etc.
+
+Declension table for "koji" (which):
+SINGULAR:
+- Masculine: koji (N), kojeg(a) (G), kojem(u) (D), koji/kojeg(a) (A), kojem(u) (L), kojim (I)
+- Feminine: koja (N), koje (G), kojoj (D), koju (A), kojoj (L), kojom (I)
+- Neuter: koje (N), kojeg(a) (G), kojem(u) (D), koje (A), kojem(u) (L), kojim (I)
+
+PLURAL:
+- Masculine: koji (N), kojih (G), kojima (D), koje (A), kojima (L), kojima (I)
+- Feminine: koje (N), kojih (G), kojima (D), koje (A), kojima (L), kojima (I)
+- Neuter: koja (N), kojih (G), kojima (D), koja (A), kojima (L), kojima (I)
+
 Key requirements:
 - Create natural, realistic sentences that Croatian speakers would actually use
-- Focus on proper declension of interrogative pronouns (koji/koja/koje/čiji/tko/što)
-- Include a variety of cases and genders
-- Provide clear explanations mentioning case, gender, and reasoning
+- Focus EXCLUSIVELY on the declension of "koji/koja/koje" forms shown above
+- Include a variety of cases (nominative, genitive, dative, accusative, locative, instrumental)
+- Include masculine, feminine, and neuter forms
+- Include both singular and plural forms
+- Provide clear explanations mentioning case, gender, number, and reasoning
 - Maintain appropriate ${cefrLevel} difficulty level
 
 Return JSON in this exact format:
