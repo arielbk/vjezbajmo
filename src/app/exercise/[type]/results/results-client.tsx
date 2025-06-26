@@ -11,11 +11,6 @@ export default function ResultsClient({ exerciseType }: { exerciseType: Exercise
   const { state, dispatch, generateExercises } = useExercise();
   const router = useRouter();
 
-  const handleBackToSelection = () => {
-    dispatch({ type: "RESET_SESSION" });
-    router.push("/");
-  };
-
   const handleRestartExercise = () => {
     if (exerciseType) {
       dispatch({ type: "START_SESSION", payload: { exerciseType } });
@@ -71,7 +66,6 @@ export default function ResultsClient({ exerciseType }: { exerciseType: Exercise
       )}
 
       <ResultsDisplay
-        onBack={handleBackToSelection}
         onRestart={handleRestartExercise}
         onReviewMistakes={handleReviewMistakes}
         onNextExercise={handleNextExercise}

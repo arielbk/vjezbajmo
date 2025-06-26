@@ -7,6 +7,12 @@ import { ParagraphExerciseSet, SentenceExercise, SentenceExerciseSet } from "@/t
 import { exerciseCache } from "@/lib/exercise-cache";
 import { cacheProvider, generateCacheKey, CachedExercise } from "@/lib/cache-provider";
 
+// Static exercise imports for examples
+import verbTensesData from "@/data/verb-tenses-paragraph.json";
+import nounAdjectiveData from "@/data/noun-adjective-paragraph.json";
+import verbAspectData from "@/data/verb-aspect-exercises.json";
+import interrogativePronounsData from "@/data/interrogative-pronouns-exercises.json";
+
 // Cache static exercise generation for 1 hour
 export const revalidate = 3600;
 
@@ -206,7 +212,19 @@ async function generateWithOpenAI(exerciseType: string, cefrLevel: string, apiKe
     const themeText = theme ? ` The theme should be: ${theme}.` : "";
 
     if (exerciseType === "verbTenses") {
+      const exampleExercise = JSON.stringify(verbTensesData, null, 2);
       prompt = `Create a Croatian verb tenses paragraph exercise. Generate a connected story with 6 blanks where students fill in correct verb forms.${themeText}
+
+Here's an example of the quality and style expected:
+
+${exampleExercise}
+
+Key requirements:
+- Create a coherent, engaging story that flows naturally
+- Use a variety of verb tenses (present, past, future, conditional)
+- Include both perfective and imperfective verbs where appropriate
+- Provide clear, educational explanations for each answer
+- Maintain appropriate ${cefrLevel} difficulty level
 
 Return JSON in this exact format:
 {
@@ -223,7 +241,19 @@ Return JSON in this exact format:
   ]
 }`;
     } else {
+      const exampleExercise = JSON.stringify(nounAdjectiveData, null, 2);
       prompt = `Create a Croatian noun-adjective declension paragraph exercise. Generate a connected story with 6 blanks where students fill in correctly declined noun-adjective pairs.${themeText}
+
+Here's an example of the quality and style expected:
+
+${exampleExercise}
+
+Key requirements:
+- Create a coherent, engaging story that flows naturally
+- Use a variety of cases (nominative, accusative, genitive, dative, locative, instrumental)
+- Include masculine, feminine, and neuter declensions
+- Provide clear explanations mentioning the case and reasoning
+- Maintain appropriate ${cefrLevel} difficulty level
 
 Return JSON in this exact format:
 {
@@ -245,7 +275,19 @@ Return JSON in this exact format:
     const themeText = theme ? ` The theme should be: ${theme}.` : "";
 
     if (exerciseType === "verbAspect") {
+      const exampleExercises = JSON.stringify({ exercises: verbAspectData.exercises.slice(0, 3) }, null, 2);
       prompt = `Create 5 Croatian verb aspect exercises. Each should be a sentence with one blank where students choose between perfective/imperfective verb forms.${themeText}
+
+Here are examples of the quality and style expected:
+
+${exampleExercises}
+
+Key requirements:
+- Create natural, realistic sentences that Croatian speakers would actually use
+- Focus on proper verb tense and aspect usage
+- Include a variety of contexts (daily activities, past events, future plans)
+- Provide clear explanations about tense and person
+- Maintain appropriate ${cefrLevel} difficulty level
 
 Return JSON in this exact format:
 {
@@ -259,7 +301,19 @@ Return JSON in this exact format:
   ]
 }`;
     } else {
+      const exampleExercises = JSON.stringify({ exercises: interrogativePronounsData.exercises.slice(0, 3) }, null, 2);
       prompt = `Create 5 Croatian interrogative pronoun exercises. Each should be a sentence with one blank where students fill in the correct form of koji/koja/koje/tko/što etc.${themeText}
+
+Here are examples of the quality and style expected:
+
+${exampleExercises}
+
+Key requirements:
+- Create natural, realistic sentences that Croatian speakers would actually use
+- Focus on proper declension of interrogative pronouns (koji/koja/koje/čiji/tko/što)
+- Include a variety of cases and genders
+- Provide clear explanations mentioning case, gender, and reasoning
+- Maintain appropriate ${cefrLevel} difficulty level
 
 Return JSON in this exact format:
 {
@@ -306,7 +360,19 @@ async function generateWithAnthropic(exerciseType: string, cefrLevel: string, ap
     const themeText = theme ? ` The theme should be: ${theme}.` : "";
 
     if (exerciseType === "verbTenses") {
+      const exampleExercise = JSON.stringify(verbTensesData, null, 2);
       prompt = `Create a Croatian verb tenses paragraph exercise. Generate a connected story with 6 blanks where students fill in correct verb forms.${themeText}
+
+Here's an example of the quality and style expected:
+
+${exampleExercise}
+
+Key requirements:
+- Create a coherent, engaging story that flows naturally
+- Use a variety of verb tenses (present, past, future, conditional)
+- Include both perfective and imperfective verbs where appropriate
+- Provide clear, educational explanations for each answer
+- Maintain appropriate ${cefrLevel} difficulty level
 
 Return JSON in this exact format:
 {
@@ -323,7 +389,19 @@ Return JSON in this exact format:
   ]
 }`;
     } else {
+      const exampleExercise = JSON.stringify(nounAdjectiveData, null, 2);
       prompt = `Create a Croatian noun-adjective declension paragraph exercise. Generate a connected story with 6 blanks where students fill in correctly declined noun-adjective pairs.${themeText}
+
+Here's an example of the quality and style expected:
+
+${exampleExercise}
+
+Key requirements:
+- Create a coherent, engaging story that flows naturally
+- Use a variety of cases (nominative, accusative, genitive, dative, locative, instrumental)
+- Include masculine, feminine, and neuter declensions
+- Provide clear explanations mentioning the case and reasoning
+- Maintain appropriate ${cefrLevel} difficulty level
 
 Return JSON in this exact format:
 {
@@ -345,7 +423,19 @@ Return JSON in this exact format:
     const themeText = theme ? ` The theme should be: ${theme}.` : "";
 
     if (exerciseType === "verbAspect") {
+      const exampleExercises = JSON.stringify({ exercises: verbAspectData.exercises.slice(0, 3) }, null, 2);
       prompt = `Create 5 Croatian verb aspect exercises. Each should be a sentence with one blank where students choose between perfective/imperfective verb forms.${themeText}
+
+Here are examples of the quality and style expected:
+
+${exampleExercises}
+
+Key requirements:
+- Create natural, realistic sentences that Croatian speakers would actually use
+- Focus on proper verb tense and aspect usage
+- Include a variety of contexts (daily activities, past events, future plans)
+- Provide clear explanations about tense and person
+- Maintain appropriate ${cefrLevel} difficulty level
 
 Return JSON in this exact format:
 {
@@ -359,7 +449,19 @@ Return JSON in this exact format:
   ]
 }`;
     } else {
+      const exampleExercises = JSON.stringify({ exercises: interrogativePronounsData.exercises.slice(0, 3) }, null, 2);
       prompt = `Create 5 Croatian interrogative pronoun exercises. Each should be a sentence with one blank where students fill in the correct form of koji/koja/koje/tko/što etc.${themeText}
+
+Here are examples of the quality and style expected:
+
+${exampleExercises}
+
+Key requirements:
+- Create natural, realistic sentences that Croatian speakers would actually use
+- Focus on proper declension of interrogative pronouns (koji/koja/koje/čiji/tko/što)
+- Include a variety of cases and genders
+- Provide clear explanations mentioning case, gender, and reasoning
+- Maintain appropriate ${cefrLevel} difficulty level
 
 Return JSON in this exact format:
 {
