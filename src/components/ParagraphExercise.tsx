@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { useExercise } from "@/contexts/ExerciseContext";
 import { ParagraphExerciseSet, ExerciseType } from "@/types/exercise";
 import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
-import { Check, X, RefreshCw, AlertTriangle } from "lucide-react";
+import { Check, X, RefreshCw, AlertTriangle, RotateCcw, ArrowRight, Target } from "lucide-react";
 
 interface ParagraphExerciseProps {
   exerciseSet: ParagraphExerciseSet;
@@ -18,6 +19,7 @@ interface ParagraphExerciseProps {
 }
 
 export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title }: ParagraphExerciseProps) {
+  const router = useRouter();
   const { dispatch, checkAnswer, forceRegenerateExercise, state, markExerciseCompleted } = useExercise();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [results, setResults] = useState<Record<string, ReturnType<typeof createExerciseResult>>>({});
@@ -179,6 +181,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
   };
 
   const correctAnswers = Object.values(results).filter((r) => r.correct).length;
+  const incorrectAnswers = Object.values(results).filter((r) => !r.correct);
   const totalQuestions = exerciseSet.questions.length;
   const filledAnswers = exerciseSet.questions.filter((q) => answers[q.id] && answers[q.id].trim() !== "").length;
   const progress = hasChecked ? (correctAnswers / totalQuestions) * 100 : (filledAnswers / totalQuestions) * 100;
@@ -264,22 +267,68 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
                       </div>
                     </>
                   ) : (
-                    <Button
-                      onClick={() => {
-                        // Mark exercise as completed with score data
-                        markExerciseCompleted(
-                          exerciseSet.id,
-                          exerciseType,
-                          theme || undefined,
-                          { correct: correctAnswers, total: totalQuestions },
-                          title
-                        );
-                        onComplete();
-                      }}
-                      size="lg"
-                    >
-                      Continue
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                      <Button
+                        onClick={() => {
+                          setAnswers(state.currentSession?.previousAnswers || {});
+                          setResults({});
+                          setHasChecked(false);
+                        }}
+                        variant="outline"
+                        size="lg"
+                      >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Try Again
+                      </Button>
+                      
+                      <Button
+                        onClick={async () => {
+                          // Mark exercise as completed with score data
+                          markExerciseCompleted(
+                            exerciseSet.id,
+                            exerciseType,
+                            theme || undefined,
+                            { correct: correctAnswers, total: totalQuestions },
+                            title
+                          );
+                          // Generate new exercise and navigate to it
+                          try {
+                            await forceRegenerateExercise(exerciseType);
+                            dispatch({ type: "START_SESSION", payload: { exerciseType } });
+                            router.push(`/exercise/${exerciseType}`);
+                          } catch (error) {
+                            console.error("Failed to generate next exercise:", error);
+                          }
+                        }}
+                        size="lg"
+                      >
+                        <ArrowRight className="h-4 w-4 mr-2" />
+                        Next Exercise
+                      </Button>
+
+                      {incorrectAnswers.length > 0 && (
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            // Mark exercise as completed first
+                            markExerciseCompleted(
+                              exerciseSet.id,
+                              exerciseType,
+                              theme || undefined,
+                              { correct: correctAnswers, total: totalQuestions },
+                              title
+                            );
+                            // Navigate to review mode with current answers
+                            const answersParam = encodeURIComponent(JSON.stringify(answers));
+                            router.push(`/exercise/${exerciseType}?review=true&answers=${answersParam}`);
+                          }}
+                          size="lg"
+                        >
+                          <Target className="h-4 w-4 mr-2" />
+                          Review Mistakes ({incorrectAnswers.length})
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
 

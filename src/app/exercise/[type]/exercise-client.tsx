@@ -46,11 +46,13 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
   }, [exerciseType, dispatch, searchParams]);
 
   const handleCompleteExercise = () => {
+    // This is primarily used for review mode now, since the exercise components
+    // handle their own navigation for normal completion
     if (state.currentSession?.isReviewMode) {
       // If in review mode, go back to results
       router.push(`/exercise/${exerciseType}/results`);
     } else {
-      // Normal completion flow
+      // Fallback for any other completion scenarios
       dispatch({ type: "COMPLETE_SESSION" });
       router.push(`/exercise/${exerciseType}/results`);
     }

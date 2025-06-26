@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { useExercise } from "@/contexts/ExerciseContext";
 import type { SentenceExercise, SentenceExerciseSet, ExerciseType } from "@/types/exercise";
 import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
-import { Check, X, RefreshCw, AlertTriangle } from "lucide-react";
+import { Check, X, RefreshCw, AlertTriangle, RotateCcw, ArrowRight, Target } from "lucide-react";
 
 interface SentenceExerciseProps {
   exerciseSet: SentenceExerciseSet;
@@ -18,6 +19,7 @@ interface SentenceExerciseProps {
 }
 
 export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title }: SentenceExerciseProps) {
+  const router = useRouter();
   const { dispatch, checkAnswer, forceRegenerateExercise, state, markExerciseCompleted } = useExercise();
   const [answers, setAnswers] = useState<Record<string | number, string>>({});
   const [results, setResults] = useState<Record<string | number, ReturnType<typeof createExerciseResult>>>({});
@@ -150,6 +152,7 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
   };
 
   const correctAnswers = Object.values(results).filter((r) => r.correct).length;
+  const incorrectAnswers = Object.values(results).filter((r) => !r.correct);
   const filledAnswers = exercises.filter((ex) => answers[ex.id] && answers[ex.id].trim() !== "").length;
   const progress = hasChecked ? 100 : (filledAnswers / exercises.length) * 100;
   const allAnswered = exercises.every((ex) => answers[ex.id] && answers[ex.id].trim() !== "");
@@ -273,28 +276,75 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
                       </div>
                     </>
                   ) : (
-                    <>
+                    <div className="space-y-3">
                       <div className="text-lg font-semibold">
                         Exercise Complete! Final Score: {correctAnswers}/{exercises.length} (
                         {Math.round((correctAnswers / exercises.length) * 100)}%)
                       </div>
-                      <Button
-                        onClick={() => {
-                          // Mark exercise as completed with score data
-                          markExerciseCompleted(
-                            exerciseSet.id,
-                            exerciseType,
-                            theme || undefined,
-                            { correct: correctAnswers, total: exercises.length },
-                            title
-                          );
-                          onComplete();
-                        }}
-                        size="lg"
-                      >
-                        Finish Exercise
-                      </Button>
-                    </>
+                      
+                      <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                        <Button
+                          onClick={() => {
+                            setAnswers(state.currentSession?.previousAnswers || {});
+                            setResults({});
+                            setHasChecked(false);
+                          }}
+                          variant="outline"
+                          size="lg"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-2" />
+                          Try Again
+                        </Button>
+                        
+                        <Button
+                          onClick={async () => {
+                            // Mark exercise as completed with score data
+                            markExerciseCompleted(
+                              exerciseSet.id,
+                              exerciseType,
+                              theme || undefined,
+                              { correct: correctAnswers, total: exercises.length },
+                              title
+                            );
+                            // Generate new exercise and navigate to it
+                            try {
+                              await forceRegenerateExercise(exerciseType);
+                              dispatch({ type: "START_SESSION", payload: { exerciseType } });
+                              router.push(`/exercise/${exerciseType}`);
+                            } catch (error) {
+                              console.error("Failed to generate next exercise:", error);
+                            }
+                          }}
+                          size="lg"
+                        >
+                          <ArrowRight className="h-4 w-4 mr-2" />
+                          Next Exercise
+                        </Button>
+
+                        {incorrectAnswers.length > 0 && (
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              // Mark exercise as completed first
+                              markExerciseCompleted(
+                                exerciseSet.id,
+                                exerciseType,
+                                theme || undefined,
+                                { correct: correctAnswers, total: exercises.length },
+                                title
+                              );
+                              // Navigate to review mode with current answers
+                              const answersParam = encodeURIComponent(JSON.stringify(answers));
+                              router.push(`/exercise/${exerciseType}?review=true&answers=${answersParam}`);
+                            }}
+                            size="lg"
+                          >
+                            <Target className="h-4 w-4 mr-2" />
+                            Review Mistakes ({incorrectAnswers.length})
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
