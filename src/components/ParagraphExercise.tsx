@@ -56,20 +56,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
     setHasChecked(false);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent, currentIndex: number) => {
-    if (e.key === "Tab") {
-      e.preventDefault();
 
-      const nextIndex = e.shiftKey
-        ? Math.max(0, currentIndex - 1)
-        : Math.min(exerciseSet.questions.length - 1, currentIndex + 1);
-
-      const nextQuestion = exerciseSet.questions[nextIndex];
-      if (nextQuestion && inputRefs.current[nextQuestion.id]) {
-        inputRefs.current[nextQuestion.id].focus();
-      }
-    }
-  };
 
   const handleCheckAnswers = async () => {
     setIsChecking(true);
@@ -119,6 +106,13 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
     }
   };
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!hasChecked && Object.keys(answers).length > 0) {
+      handleCheckAnswers();
+    }
+  };
+
   const getInputStyling = (result: ReturnType<typeof createExerciseResult> | undefined) => {
     if (!result) return "";
     if (result.correct && result.diacriticWarning) {
@@ -142,12 +136,12 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
   };
 
   const renderParagraphWithInputs = () => {
-    // Remove the bracketed base forms from the paragraph since we show them in input placeholders
+    // Remove the bracketed base forms from the paragraph since we show them after the inputs
     const cleanParagraph = exerciseSet.paragraph.replace(/\s*\([^)]+\)/g, "");
     const paragraphParts = cleanParagraph.split(/___\d+___/);
     const inputs: React.ReactElement[] = [];
 
-    exerciseSet.questions.forEach((question, index) => {
+    exerciseSet.questions.forEach((question) => {
       const hasResult = hasChecked && results[question.id];
 
       inputs.push(
@@ -159,12 +153,13 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
             type="text"
             value={answers[question.id] || ""}
             onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-            onKeyDown={(e) => handleKeyDown(e, index)}
             className={`inline-block w-20 sm:w-28 lg:w-32 text-center ${getInputStyling(results[question.id])}`}
-            placeholder={question.baseForm}
             disabled={hasChecked}
           />
           {hasResult && <span className="ml-1">{getResultIcon(results[question.id])}</span>}
+          <span className="ml-1 text-xs text-muted-foreground italic">
+            ({question.baseForm})
+          </span>
         </span>
       );
     });
@@ -207,13 +202,13 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
             <CardTitle className="text-lg sm:text-xl lg:text-2xl">{title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 sm:space-y-6 px-3 sm:px-6">
-            <div className="bg-muted/30 p-3 sm:p-6 rounded-lg">{renderParagraphWithInputs()}</div>
-
             {!hasChecked ? (
-              <div className="space-y-4">
+              <form onSubmit={handleFormSubmit} className="space-y-4" data-testid="exercise-form">
+                <div className="bg-muted/30 p-3 sm:p-6 rounded-lg">{renderParagraphWithInputs()}</div>
+                
                 <div className="text-center">
                   <Button
-                    onClick={handleCheckAnswers}
+                    type="submit"
                     disabled={isChecking || Object.keys(answers).length === 0}
                     size="lg"
                   >
@@ -227,6 +222,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
                       You&apos;re reviewing your previous answers. You can modify them and check again.
                     </p>
                     <Button
+                      type="button"
                       variant="outline"
                       onClick={() => {
                         setAnswers({});
@@ -240,9 +236,12 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
                     </Button>
                   </div>
                 )}
-              </div>
+              </form>
             ) : (
-              <div className="space-y-4">
+              <>
+                <div className="bg-muted/30 p-3 sm:p-6 rounded-lg">{renderParagraphWithInputs()}</div>
+                
+                <div className="space-y-4">
                 <div className="text-center space-y-2">
                   {state.currentSession?.isReviewMode ? (
                     <>
@@ -382,6 +381,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
                   })}
                 </div>
               </div>
+              </>
             )}
           </CardContent>
         </Card>

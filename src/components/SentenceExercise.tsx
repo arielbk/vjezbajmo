@@ -99,6 +99,13 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
     }
   };
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!hasChecked && allAnswered) {
+      handleCheckAllAnswers();
+    }
+  };
+
   const getInputStyling = (result: ReturnType<typeof createExerciseResult> | undefined) => {
     if (!result) return "";
     if (result.correct && result.diacriticWarning) {
@@ -179,153 +186,127 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
             <CardTitle className="text-lg sm:text-xl lg:text-2xl">{title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 sm:space-y-8 px-3 sm:px-6">
-            {exercises.map((exercise, index) => (
-              <div key={exercise.id} className="space-y-2 sm:space-y-4">
-                <div className="flex items-start gap-2 sm:gap-3">
-                  <span className="text-sm font-medium text-muted-foreground mt-1 min-w-[1.2rem] sm:min-w-[2rem] flex-shrink-0">
-                    {index + 1}.
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="bg-muted/30 p-2 sm:p-4 rounded-lg">{renderSentenceWithInput(exercise)}</div>
+            <form onSubmit={handleFormSubmit}>
+              {exercises.map((exercise, index) => (
+                <div key={exercise.id} className="space-y-2 sm:space-y-4">
+                  <div className="flex items-start gap-2 sm:gap-3">
+                    <span className="text-sm font-medium text-muted-foreground mt-1 min-w-[1.2rem] sm:min-w-[2rem] flex-shrink-0">
+                      {index + 1}.
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="bg-muted/30 p-2 sm:p-4 rounded-lg">{renderSentenceWithInput(exercise)}</div>
 
-                    {hasChecked && results[exercise.id] && (
-                      <div className="mt-2 sm:mt-3 border rounded-lg p-2 sm:p-3">
-                        <div className="flex items-start gap-2">
-                          {results[exercise.id].correct ? (
-                            <Check className="h-5 w-5 text-green-600 mt-0.5" />
-                          ) : (
-                            <X className="h-5 w-5 text-red-600 mt-0.5" />
-                          )}
-                          <div className="flex-1">
-                            {!results[exercise.id].correct && (
-                              <div className="mb-2 text-sm">
-                                Your answer: <span className="font-mono">{results[exercise.id].userAnswer}</span>
-                                {" → "}
-                                Correct:{" "}
-                                <span className="font-mono text-green-600">{results[exercise.id].correctAnswer}</span>
-                              </div>
+                      {hasChecked && results[exercise.id] && (
+                        <div className="mt-2 sm:mt-3 border rounded-lg p-2 sm:p-3">
+                          <div className="flex items-start gap-2">
+                            {results[exercise.id].correct ? (
+                              <Check className="h-5 w-5 text-green-600 mt-0.5" />
+                            ) : (
+                              <X className="h-5 w-5 text-red-600 mt-0.5" />
                             )}
-                            <p className="text-sm text-muted-foreground">{results[exercise.id].explanation}</p>
+                            <div className="flex-1">
+                              {!results[exercise.id].correct && (
+                                <div className="mb-2 text-sm">
+                                  Your answer: <span className="font-mono">{results[exercise.id].userAnswer}</span>
+                                  {" → "}
+                                  Correct:{" "}
+                                  <span className="font-mono text-green-600">{results[exercise.id].correctAnswer}</span>
+                                </div>
+                              )}
+                              <p className="text-sm text-muted-foreground">{results[exercise.id].explanation}</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            <div className="pt-4 border-t">
-              {!hasChecked ? (
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <Button onClick={handleCheckAllAnswers} disabled={isChecking || !allAnswered} size="lg">
-                      {isChecking ? "Checking..." : "Check My Work"}
-                    </Button>
-                    {!allAnswered && (
-                      <p className="text-sm text-muted-foreground mt-2">Please answer all questions before checking.</p>
-                    )}
-                  </div>
-
-                  {state.currentSession?.isReviewMode && (
-                    <div className="text-center">
-                      <p className="text-sm text-muted-foreground">
-                        You&apos;re reviewing your previous answers. You can modify them and check again.
-                      </p>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setAnswers({});
-                          setResults({});
-                          setHasChecked(false);
-                        }}
-                        size="sm"
-                        className="mt-2"
-                      >
-                        Clear All Answers
-                      </Button>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center space-y-4">
-                  {state.currentSession?.isReviewMode ? (
-                    <>
-                      <div className="text-lg font-semibold">
-                        Review Complete! Final Score: {correctAnswers}/{exercises.length} (
-                        {Math.round((correctAnswers / exercises.length) * 100)}%)
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Review complete! You can practice again or go back to see your results.
-                      </p>
-                      <div className="flex justify-center gap-2">
-                        <Button
-                          onClick={() => {
-                            setAnswers(state.currentSession?.previousAnswers || {});
-                            setResults({});
-                            setHasChecked(false);
-                          }}
-                          variant="outline"
-                          size="lg"
-                        >
-                          Try Again
-                        </Button>
-                        <Button onClick={onComplete} size="lg">
-                          Back to Results
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="text-lg font-semibold">
-                        Exercise Complete! Final Score: {correctAnswers}/{exercises.length} (
-                        {Math.round((correctAnswers / exercises.length) * 100)}%)
-                      </div>
-                      
-                      <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                        <Button
-                          onClick={() => {
-                            setAnswers(state.currentSession?.previousAnswers || {});
-                            setResults({});
-                            setHasChecked(false);
-                          }}
-                          variant="outline"
-                          size="lg"
-                        >
-                          <RotateCcw className="h-4 w-4 mr-2" />
-                          Try Again
-                        </Button>
-                        
-                        <Button
-                          onClick={async () => {
-                            // Mark exercise as completed with score data
-                            markExerciseCompleted(
-                              exerciseSet.id,
-                              exerciseType,
-                              theme || undefined,
-                              { correct: correctAnswers, total: exercises.length },
-                              title
-                            );
-                            // Generate new exercise and navigate to it
-                            try {
-                              await forceRegenerateExercise(exerciseType);
-                              dispatch({ type: "START_SESSION", payload: { exerciseType } });
-                              router.push(`/exercise/${exerciseType}`);
-                            } catch (error) {
-                              console.error("Failed to generate next exercise:", error);
-                            }
-                          }}
-                          size="lg"
-                        >
-                          <ArrowRight className="h-4 w-4 mr-2" />
-                          Next Exercise
-                        </Button>
+              ))}
 
-                        {incorrectAnswers.length > 0 && (
+              <div className="pt-4 border-t">
+                {!hasChecked ? (
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <Button type="submit" disabled={isChecking || !allAnswered} size="lg">
+                        {isChecking ? "Checking..." : "Check My Work"}
+                      </Button>
+                      {!allAnswered && (
+                        <p className="text-sm text-muted-foreground mt-2">Please answer all questions before checking.</p>
+                      )}
+                    </div>
+
+                    {state.currentSession?.isReviewMode && (
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground">
+                          You&apos;re reviewing your previous answers. You can modify them and check again.
+                        </p>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setAnswers({});
+                            setResults({});
+                            setHasChecked(false);
+                          }}
+                          size="sm"
+                          className="mt-2"
+                        >
+                          Clear All Answers
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center space-y-4">
+                    {state.currentSession?.isReviewMode ? (
+                      <>
+                        <div className="text-lg font-semibold">
+                          Review Complete! Final Score: {correctAnswers}/{exercises.length} (
+                          {Math.round((correctAnswers / exercises.length) * 100)}%)
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Review complete! You can practice again or go back to see your results.
+                        </p>
+                        <div className="flex justify-center gap-2">
                           <Button
-                            variant="outline"
                             onClick={() => {
-                              // Mark exercise as completed first
+                              setAnswers(state.currentSession?.previousAnswers || {});
+                              setResults({});
+                              setHasChecked(false);
+                            }}
+                            variant="outline"
+                            size="lg"
+                          >
+                            Try Again
+                          </Button>
+                          <Button onClick={onComplete} size="lg">
+                            Back to Results
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="text-lg font-semibold">
+                          Exercise Complete! Final Score: {correctAnswers}/{exercises.length} (
+                          {Math.round((correctAnswers / exercises.length) * 100)}%)
+                        </div>
+                        
+                        <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                          <Button
+                            onClick={() => {
+                              setAnswers(state.currentSession?.previousAnswers || {});
+                              setResults({});
+                              setHasChecked(false);
+                            }}
+                            variant="outline"
+                            size="lg"
+                          >
+                            <RotateCcw className="h-4 w-4 mr-2" />
+                            Try Again
+                          </Button>
+                          
+                          <Button
+                            onClick={async () => {
+                              // Mark exercise as completed with score data
                               markExerciseCompleted(
                                 exerciseSet.id,
                                 exerciseType,
@@ -333,22 +314,50 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
                                 { correct: correctAnswers, total: exercises.length },
                                 title
                               );
-                              // Navigate to review mode with current answers
-                              const answersParam = encodeURIComponent(JSON.stringify(answers));
-                              router.push(`/exercise/${exerciseType}?review=true&answers=${answersParam}`);
+                              // Generate new exercise and navigate to it
+                              try {
+                                await forceRegenerateExercise(exerciseType);
+                                dispatch({ type: "START_SESSION", payload: { exerciseType } });
+                                router.push(`/exercise/${exerciseType}`);
+                              } catch (error) {
+                                console.error("Failed to generate next exercise:", error);
+                              }
                             }}
                             size="lg"
                           >
-                            <Target className="h-4 w-4 mr-2" />
-                            Review Mistakes ({incorrectAnswers.length})
+                            <ArrowRight className="h-4 w-4 mr-2" />
+                            Next Exercise
                           </Button>
-                        )}
+
+                          {incorrectAnswers.length > 0 && (
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                // Mark exercise as completed first
+                                markExerciseCompleted(
+                                  exerciseSet.id,
+                                  exerciseType,
+                                  theme || undefined,
+                                  { correct: correctAnswers, total: exercises.length },
+                                  title
+                                );
+                                // Navigate to review mode with current answers
+                                const answersParam = encodeURIComponent(JSON.stringify(answers));
+                                router.push(`/exercise/${exerciseType}?review=true&answers=${answersParam}`);
+                              }}
+                              size="lg"
+                            >
+                              <Target className="h-4 w-4 mr-2" />
+                              Review Mistakes ({incorrectAnswers.length})
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </form>
           </CardContent>
         </Card>
 

@@ -69,7 +69,7 @@ export function ResultsDisplay({ onRestart, onReviewMistakes, onNextExercise }: 
       case "verbAspect":
         return "Verb Aspect";
       case "interrogativePronouns":
-        return "Interrogative Pronouns";
+        return "Koji, koja, koje";
       default:
         return "Exercise";
     }

@@ -82,7 +82,7 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
       case "verbAspect":
         return "Verb Aspect";
       case "interrogativePronouns":
-        return "Interrogative Pronouns";
+        return "Koji, koja, koje";
       default:
         return "Exercise";
     }
