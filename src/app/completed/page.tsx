@@ -1,11 +1,10 @@
 "use client";
 
 import { CompletedExercisesView } from "@/components/CompletedExercisesView";
-import { ExerciseProvider } from "@/contexts/ExerciseContext";
 import { SettingsModal } from "@/components/SettingsModal";
 import { useRouter } from "next/navigation";
 
-function CompletedPageContent() {
+export default function CompletedPage() {
   const router = useRouter();
 
   const handleBackToSelection = () => {
@@ -32,13 +31,5 @@ function CompletedPageContent() {
         <CompletedExercisesView onBack={handleBackToSelection} />
       </div>
     </div>
-  );
-}
-
-export default function CompletedPage() {
-  return (
-    <ExerciseProvider>
-      <CompletedPageContent />
-    </ExerciseProvider>
   );
 }
