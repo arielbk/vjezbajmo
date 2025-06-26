@@ -118,7 +118,7 @@ describe("CacheProvider", () => {
         exerciseType: "verbAspect",
         cefrLevel: "A2.2",
         theme: null,
-        data: { exercises: [] },
+        data: { id: "set-1", exercises: [] },
         createdAt: Date.now(),
       };
 
@@ -127,7 +127,7 @@ describe("CacheProvider", () => {
         exerciseType: "verbAspect",
         cefrLevel: "A2.2",
         theme: null,
-        data: { exercises: [] },
+        data: { id: "set-2", exercises: [] },
         createdAt: Date.now(),
       };
 

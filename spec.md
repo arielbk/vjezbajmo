@@ -188,20 +188,58 @@ interface CheckAnswerResponse {
 
 ### **11. Completion Tracking & Exercise Review System**
 
-- **Manual Completion Workflow:**
+- **Enhanced Manual Completion Workflow:**
 
   1. User fills in answers and clicks "Check My Work"
   2. Results are displayed with explanations and feedback
   3. User reviews results and decides when to mark exercise as "completed"
   4. "Mark as Completed" button becomes available after checking answers
-  5. Completion is tracked in localStorage with exercise ID, timestamp, and score
+  5. Completion is tracked in localStorage with comprehensive performance data:
+     - Exercise ID and type
+     - Timestamp of completion
+     - Detailed score data (correct answers, total questions, percentage)
+     - Time spent on exercise (optional future enhancement)
+     - CEFR level and theme (if applicable)
 
-- **Completed Exercise Management:**
+- **Enhanced Completed Exercise Management:**
 
-  - **View Completed Exercises:** Dedicated interface showing list of completed exercises with scores and completion dates
-  - **Re-attempt Exercises:** Users can re-do completed exercises without affecting their completion status
-  - **Progress Statistics:** Display completion rates, average scores, and learning trends by exercise type
-  - **Exercise History:** Track multiple attempts at the same exercise for progress monitoring
+  - **Exercise History View:** Dedicated interface showing completed exercises with:
+    - Exercise type and title
+    - Completion date
+    - Performance score (e.g., "8/10 - 80%")
+    - Quick retry button to re-attempt the same exercise
+    - Filtering by exercise type, date range, and performance score
+  - **Performance Analytics:**
+    - Average scores by exercise type
+    - Progress trends over time
+    - Identification of challenging exercise types
+    - Overall completion statistics
+  - **Re-attempt System:**
+    - Users can revisit completed exercises for practice
+    - Re-attempts don't overwrite original completion records
+    - Option to track improvement between attempts
+  - **Spaced Repetition Support:**
+    - Highlight exercises where user scored below 80% for review
+    - Suggest re-attempting exercises after time intervals
+    - Track performance improvement over multiple attempts
+
+- **Enhanced Data Model:**
+
+```typescript
+interface CompletedExerciseRecord {
+  exerciseId: string;
+  exerciseType: ExerciseType;
+  completedAt: number; // timestamp
+  score: {
+    correct: number;
+    total: number;
+    percentage: number;
+  };
+  cefrLevel: CefrLevel;
+  theme?: string;
+  attemptNumber: number; // Track multiple attempts at same exercise
+}
+```
 
 - **Cache Filtering Logic:**
 
@@ -209,9 +247,12 @@ interface CheckAnswerResponse {
   - Prevents race conditions where exercises are marked complete before users finish reviewing
   - Ensures reliable cache filtering based on explicit user actions
   - Supports both paragraph exercises (tracked by `exerciseSet.id`) and sentence exercises (tracked by `sentenceExerciseSet.id`)
+  - Enhanced filtering considers performance scores for intelligent exercise serving
 
 - **Benefits:**
   - **User Control:** Learners decide when they've truly mastered an exercise
-  - **Spaced Repetition:** Easy access to review previously completed work
+  - **Spaced Repetition:** Easy access to review previously completed work with performance context
+  - **Progress Tracking:** Detailed performance metrics help users identify strengths and weaknesses
   - **Reliable Caching:** Eliminates technical issues with automatic completion tracking
-  - **Progress Transparency:** Clear visibility into learning history and achievements
+  - **Learning Analytics:** Comprehensive data helps users optimize their learning strategy
+  - **Motivation:** Clear progress visualization encourages continued learning

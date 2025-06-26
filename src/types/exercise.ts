@@ -67,3 +67,34 @@ export interface ExerciseSession {
   completed: boolean;
   mistakeQuestions: (string | number)[];
 }
+
+// For enhanced completion tracking
+export interface CompletedExerciseRecord {
+  exerciseId: string;
+  exerciseType: ExerciseType;
+  completedAt: number; // timestamp
+  score: {
+    correct: number;
+    total: number;
+    percentage: number;
+  };
+  cefrLevel: CefrLevel;
+  theme?: string;
+  attemptNumber: number; // Track multiple attempts at same exercise
+  title?: string; // Optional title for better display
+}
+
+// For exercise performance analytics
+export interface ExercisePerformanceStats {
+  totalCompleted: number;
+  averageScore: number;
+  exerciseTypeStats: Record<
+    ExerciseType,
+    {
+      completed: number;
+      averageScore: number;
+      lastAttempted?: number;
+    }
+  >;
+  recentActivity: CompletedExerciseRecord[];
+}

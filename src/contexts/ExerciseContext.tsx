@@ -186,7 +186,13 @@ const ExerciseContext = createContext<{
   generateExercises: (exerciseType: ExerciseType, theme?: string) => Promise<void>;
   regenerateAllExercises: (theme?: string) => Promise<void>;
   checkAnswer: (questionId: string, userAnswer: string) => Promise<CheckAnswerResponse>;
-  markExerciseCompleted: (exerciseId: string, exerciseType: ExerciseType, theme?: string) => void;
+  markExerciseCompleted: (
+    exerciseId: string,
+    exerciseType: ExerciseType,
+    theme?: string,
+    scoreData?: { correct: number; total: number },
+    title?: string
+  ) => void;
 } | null>(null);
 
 export function ExerciseProvider({ children }: { children: React.ReactNode }) {
@@ -382,8 +388,14 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const markExerciseCompleted = (exerciseId: string, exerciseType: ExerciseType, theme?: string) => {
-    userProgressManager.markExerciseCompleted(exerciseId, exerciseType, state.cefrLevel, theme);
+  const markExerciseCompleted = (
+    exerciseId: string,
+    exerciseType: ExerciseType,
+    theme?: string,
+    scoreData?: { correct: number; total: number },
+    title?: string
+  ) => {
+    userProgressManager.markExerciseCompleted(exerciseId, exerciseType, state.cefrLevel, theme, scoreData, title);
   };
 
   return (

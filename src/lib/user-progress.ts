@@ -1,16 +1,50 @@
 // User progress tracking for completed exercises
-// Uses localStorage to track which exercises a user has completed
+// Uses localStorage to track which exercises a user has completed with performance data
 
-import { ExerciseType, CefrLevel } from "@/types/exercise";
+import { ExerciseType, CefrLevel, CompletedExerciseRecord } from "@/types/exercise";
 
 interface UserExerciseProgress {
-  completedExercises: string[]; // Array of exercise IDs
+  completedExercises: string[]; // Array of exercise IDs (kept for backward compatibility)
+  completedRecords: CompletedExerciseRecord[]; // Enhanced completion records
+  lastUpdated: number;
+}
+
+// Legacy interface for migration
+interface LegacyUserExerciseProgress {
+  completedExercises: string[];
   lastUpdated: number;
 }
 
 class UserProgressManager {
   private getStorageKey(exerciseType: ExerciseType, cefrLevel: CefrLevel, theme?: string): string {
     return `vjezbajmo-progress:${exerciseType}:${cefrLevel}:${theme || "default"}`;
+  }
+
+  private getGlobalStorageKey(): string {
+    return `vjezbajmo-completed-exercises`;
+  }
+
+  private migrateProgressData(data: LegacyUserExerciseProgress | UserExerciseProgress): UserExerciseProgress {
+    // Handle legacy data structure
+    if (Array.isArray(data.completedExercises) && !("completedRecords" in data)) {
+      return {
+        completedExercises: data.completedExercises,
+        completedRecords: [],
+        lastUpdated: data.lastUpdated || Date.now(),
+      };
+    }
+
+    // Handle modern data structure
+    if ("completedRecords" in data) {
+      return data as UserExerciseProgress;
+    }
+
+    // Fallback for completely unknown structure
+    return {
+      completedExercises: [],
+      completedRecords: [],
+      lastUpdated: Date.now(),
+    };
   }
 
   getCompletedExercises(exerciseType: ExerciseType, cefrLevel: CefrLevel, theme?: string): string[] {
@@ -22,7 +56,7 @@ class UserProgressManager {
 
       if (!stored) return [];
 
-      const progress: UserExerciseProgress = JSON.parse(stored);
+      const progress = this.migrateProgressData(JSON.parse(stored));
 
       // Check if data is older than 30 days and clear it
       const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
@@ -38,24 +72,179 @@ class UserProgressManager {
     }
   }
 
-  markExerciseCompleted(exerciseId: string, exerciseType: ExerciseType, cefrLevel: CefrLevel, theme?: string): void {
+  markExerciseCompleted(
+    exerciseId: string,
+    exerciseType: ExerciseType,
+    cefrLevel: CefrLevel,
+    theme?: string,
+    scoreData?: { correct: number; total: number },
+    title?: string
+  ): void {
     if (typeof window === "undefined") return; // SSR safety
 
     try {
       const key = this.getStorageKey(exerciseType, cefrLevel, theme);
-      const existing = this.getCompletedExercises(exerciseType, cefrLevel, theme);
+      const stored = localStorage.getItem(key);
+      const existing = stored
+        ? this.migrateProgressData(JSON.parse(stored))
+        : {
+            completedExercises: [],
+            completedRecords: [],
+            lastUpdated: Date.now(),
+          };
 
-      if (!existing.includes(exerciseId)) {
-        const updated: UserExerciseProgress = {
-          completedExercises: [...existing, exerciseId],
-          lastUpdated: Date.now(),
+      // Check if exercise is already completed
+      if (!existing.completedExercises.includes(exerciseId)) {
+        existing.completedExercises.push(exerciseId);
+      }
+
+      // Find existing attempt number for this exercise
+      const existingAttempts = existing.completedRecords.filter((r) => r.exerciseId === exerciseId);
+      const attemptNumber = existingAttempts.length + 1;
+
+      // Create new completion record if score data is provided
+      if (scoreData) {
+        const completionRecord: CompletedExerciseRecord = {
+          exerciseId,
+          exerciseType,
+          completedAt: Date.now(),
+          score: {
+            correct: scoreData.correct,
+            total: scoreData.total,
+            percentage: Math.round((scoreData.correct / scoreData.total) * 100),
+          },
+          cefrLevel,
+          theme,
+          attemptNumber,
+          title,
         };
 
-        localStorage.setItem(key, JSON.stringify(updated));
+        existing.completedRecords.push(completionRecord);
+
+        // Also store in global completed exercises for cross-type analytics
+        this.addToGlobalCompletedExercises(completionRecord);
       }
+
+      const updated: UserExerciseProgress = {
+        completedExercises: existing.completedExercises,
+        completedRecords: existing.completedRecords,
+        lastUpdated: Date.now(),
+      };
+
+      localStorage.setItem(key, JSON.stringify(updated));
     } catch (error) {
       console.error("Failed to mark exercise completed:", error);
     }
+  }
+
+  private addToGlobalCompletedExercises(record: CompletedExerciseRecord): void {
+    try {
+      const key = this.getGlobalStorageKey();
+      const stored = localStorage.getItem(key);
+      const existing: CompletedExerciseRecord[] = stored ? JSON.parse(stored) : [];
+
+      existing.push(record);
+
+      // Keep only the last 1000 records to prevent storage bloat
+      const trimmed = existing.slice(-1000);
+
+      localStorage.setItem(key, JSON.stringify(trimmed));
+    } catch (error) {
+      console.error("Failed to add to global completed exercises:", error);
+    }
+  }
+
+  getAllCompletedRecords(): CompletedExerciseRecord[] {
+    if (typeof window === "undefined") return [];
+
+    try {
+      const key = this.getGlobalStorageKey();
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error("Failed to get all completed records:", error);
+      return [];
+    }
+  }
+
+  getCompletedRecords(exerciseType?: ExerciseType, cefrLevel?: CefrLevel, theme?: string): CompletedExerciseRecord[] {
+    if (typeof window === "undefined") return [];
+
+    try {
+      if (exerciseType && cefrLevel) {
+        // Get records for specific exercise type/level
+        const key = this.getStorageKey(exerciseType, cefrLevel, theme);
+        const stored = localStorage.getItem(key);
+        if (!stored) return [];
+
+        const progress = this.migrateProgressData(JSON.parse(stored));
+        return progress.completedRecords;
+      } else {
+        // Get all records from global storage
+        return this.getAllCompletedRecords();
+      }
+    } catch (error) {
+      console.error("Failed to get completed records:", error);
+      return [];
+    }
+  }
+
+  getPerformanceStats(exerciseType?: ExerciseType): {
+    totalCompleted: number;
+    averageScore: number;
+    byExerciseType: Record<ExerciseType, { completed: number; averageScore: number; lastAttempted?: number }>;
+  } {
+    const records = this.getAllCompletedRecords();
+
+    if (exerciseType) {
+      const filteredRecords = records.filter((r) => r.exerciseType === exerciseType);
+      const totalCompleted = filteredRecords.length;
+      const averageScore =
+        totalCompleted > 0 ? filteredRecords.reduce((sum, r) => sum + r.score.percentage, 0) / totalCompleted : 0;
+
+      return {
+        totalCompleted,
+        averageScore: Math.round(averageScore),
+        byExerciseType: {
+          verbTenses: { completed: 0, averageScore: 0 },
+          nounDeclension: { completed: 0, averageScore: 0 },
+          verbAspect: { completed: 0, averageScore: 0 },
+          interrogativePronouns: { completed: 0, averageScore: 0 },
+        },
+      };
+    }
+
+    const totalCompleted = records.length;
+    const averageScore =
+      totalCompleted > 0 ? records.reduce((sum, r) => sum + r.score.percentage, 0) / totalCompleted : 0;
+
+    const byExerciseType: Record<ExerciseType, { completed: number; averageScore: number; lastAttempted?: number }> = {
+      verbTenses: { completed: 0, averageScore: 0 },
+      nounDeclension: { completed: 0, averageScore: 0 },
+      verbAspect: { completed: 0, averageScore: 0 },
+      interrogativePronouns: { completed: 0, averageScore: 0 },
+    };
+
+    // Calculate stats by exercise type
+    const exerciseTypes: ExerciseType[] = ["verbTenses", "nounDeclension", "verbAspect", "interrogativePronouns"];
+
+    exerciseTypes.forEach((type) => {
+      const typeRecords = records.filter((r) => r.exerciseType === type);
+      byExerciseType[type] = {
+        completed: typeRecords.length,
+        averageScore:
+          typeRecords.length > 0
+            ? Math.round(typeRecords.reduce((sum, r) => sum + r.score.percentage, 0) / typeRecords.length)
+            : 0,
+        lastAttempted: typeRecords.length > 0 ? Math.max(...typeRecords.map((r) => r.completedAt)) : undefined,
+      };
+    });
+
+    return {
+      totalCompleted,
+      averageScore: Math.round(averageScore),
+      byExerciseType,
+    };
   }
 
   clearCompletedExercises(exerciseType: ExerciseType, cefrLevel: CefrLevel, theme?: string): void {
@@ -81,7 +270,7 @@ class UserProgressManager {
         if (key && key.startsWith("vjezbajmo-progress:")) {
           const value = localStorage.getItem(key);
           if (value) {
-            progress[key] = JSON.parse(value);
+            progress[key] = this.migrateProgressData(JSON.parse(value));
           }
         }
       }
@@ -105,7 +294,7 @@ class UserProgressManager {
         if (key && key.startsWith("vjezbajmo-progress:")) {
           const value = localStorage.getItem(key);
           if (value) {
-            const progress: UserExerciseProgress = JSON.parse(value);
+            const progress = this.migrateProgressData(JSON.parse(value));
             if (progress.lastUpdated < thirtyDaysAgo) {
               keysToRemove.push(key);
             }

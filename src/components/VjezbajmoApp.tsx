@@ -36,6 +36,7 @@ export function VjezbajmoApp() {
   };
 
   const handleViewCompletedExercises = () => {
+    console.log("Navigating to completed exercises screen");
     setCurrentScreen("completed");
   };
 
@@ -98,6 +99,7 @@ export function VjezbajmoApp() {
   };
 
   const renderContent = () => {
+    console.log("Current screen:", currentScreen);
     switch (currentScreen) {
       case "selection":
         return <ExerciseSelection onViewCompleted={handleViewCompletedExercises} />;
@@ -160,7 +162,9 @@ export function VjezbajmoApp() {
         {/* Header with app title and settings */}
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <div className="flex items-center gap-2 sm:gap-3">
-            <span className="rounded-full bg-white inline-grid place-items-center w-10 h-10 sm:w-12 sm:h-12 text-2xl sm:text-4xl">🇭🇷</span>
+            <span className="rounded-full bg-white inline-grid place-items-center w-10 h-10 sm:w-12 sm:h-12 text-2xl sm:text-4xl">
+              🇭🇷
+            </span>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Vježbajmo</h1>
               <p className="text-sm sm:text-base text-gray-500">Croatian Language Practice</p>

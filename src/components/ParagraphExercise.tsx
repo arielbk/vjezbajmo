@@ -40,9 +40,6 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
   };
 
   const handleRegenerateExercise = async () => {
-    // Auto-complete current exercise when generating a new one
-    markExerciseCompleted(exerciseSet.id, exerciseType);
-    
     await generateExercises(exerciseType, theme || undefined);
     setTheme("");
     // Reset all state for the new exercises
@@ -138,7 +135,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
 
   const renderParagraphWithInputs = () => {
     // Remove the bracketed base forms from the paragraph since we show them in input placeholders
-    const cleanParagraph = exerciseSet.paragraph.replace(/\s*\([^)]+\)/g, '');
+    const cleanParagraph = exerciseSet.paragraph.replace(/\s*\([^)]+\)/g, "");
     const paragraphParts = cleanParagraph.split(/___\d+___/);
     const inputs: React.ReactElement[] = [];
 
@@ -220,7 +217,20 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, onBac
             ) : (
               <div className="space-y-4">
                 <div className="text-center">
-                  <Button onClick={onComplete} size="lg">
+                  <Button
+                    onClick={() => {
+                      // Mark exercise as completed with score data
+                      markExerciseCompleted(
+                        exerciseSet.id,
+                        exerciseType,
+                        theme || undefined,
+                        { correct: correctAnswers, total: totalQuestions },
+                        title
+                      );
+                      onComplete();
+                    }}
+                    size="lg"
+                  >
                     Continue
                   </Button>
                 </div>

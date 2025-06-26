@@ -34,9 +34,6 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, onBack
   };
 
   const handleRegenerateExercise = async () => {
-    // Auto-complete current exercise when generating a new one
-    markExerciseCompleted(exerciseSet.id, exerciseType);
-    
     await generateExercises(exerciseType, theme || undefined);
     setTheme("");
     // Reset all state for the new exercises
@@ -229,7 +226,20 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, onBack
                     Exercise Complete! Final Score: {correctAnswers}/{exercises.length} (
                     {Math.round((correctAnswers / exercises.length) * 100)}%)
                   </div>
-                  <Button onClick={onComplete} size="lg">
+                  <Button
+                    onClick={() => {
+                      // Mark exercise as completed with score data
+                      markExerciseCompleted(
+                        exerciseSet.id,
+                        exerciseType,
+                        theme || undefined,
+                        { correct: correctAnswers, total: exercises.length },
+                        title
+                      );
+                      onComplete();
+                    }}
+                    size="lg"
+                  >
                     Finish Exercise
                   </Button>
                 </div>
