@@ -18,7 +18,7 @@ interface SentenceExerciseProps {
 }
 
 export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title }: SentenceExerciseProps) {
-  const { dispatch, checkAnswer, generateExercises, state, markExerciseCompleted } = useExercise();
+  const { dispatch, checkAnswer, forceRegenerateExercise, state, markExerciseCompleted } = useExercise();
   const [answers, setAnswers] = useState<Record<string | number, string>>({});
   const [results, setResults] = useState<Record<string | number, ReturnType<typeof createExerciseResult>>>({});
   const [isChecking, setIsChecking] = useState(false);
@@ -40,7 +40,7 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
   };
 
   const handleRegenerateExercise = async () => {
-    await generateExercises(exerciseType, theme || undefined);
+    await forceRegenerateExercise(exerciseType, theme || undefined);
     setTheme("");
     // Reset all state for the new exercises
     setAnswers({});

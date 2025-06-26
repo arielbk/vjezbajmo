@@ -17,12 +17,9 @@ export interface CacheProvider {
   getCachedExercises(key: string): Promise<CachedExercise[]>;
   setCachedExercise(key: string, exercise: CachedExercise): Promise<void>;
 
-  // Solution caching (for answer validation)
-  getCachedSolution(questionId: string): Promise<{ correctAnswer: string | string[]; explanation: string } | null>;
-  setCachedSolution(
-    questionId: string,
-    solution: { correctAnswer: string | string[]; explanation: string }
-  ): Promise<void>;
+  // Enhanced cache invalidation
+  invalidateExercise(key: string, exerciseId: string): Promise<void>;
+  invalidateAllExercises(key: string): Promise<void>;
 
   // Cleanup old entries
   cleanup?(): Promise<void>;
@@ -31,7 +28,6 @@ export interface CacheProvider {
 // In-memory fallback cache (for development/fallback)
 class InMemoryCache implements CacheProvider {
   private exercises = new Map<string, CachedExercise[]>();
-  private solutions = new Map<string, { correctAnswer: string | string[]; explanation: string; timestamp: number }>();
 
   async getCachedExercises(key: string): Promise<CachedExercise[]> {
     return this.exercises.get(key) || [];
@@ -43,41 +39,19 @@ class InMemoryCache implements CacheProvider {
     this.exercises.set(key, existing);
   }
 
-  async getCachedSolution(
-    questionId: string
-  ): Promise<{ correctAnswer: string | string[]; explanation: string } | null> {
-    const solution = this.solutions.get(questionId);
-    if (!solution) return null;
-
-    // Check if solution is older than 1 hour
-    if (Date.now() - solution.timestamp > 60 * 60 * 1000) {
-      this.solutions.delete(questionId);
-      return null;
-    }
-
-    return {
-      correctAnswer: solution.correctAnswer,
-      explanation: solution.explanation,
-    };
+  async invalidateExercise(key: string, exerciseId: string): Promise<void> {
+    const existing = this.exercises.get(key) || [];
+    const filtered = existing.filter((ex) => ex.id !== exerciseId);
+    this.exercises.set(key, filtered);
   }
 
-  async setCachedSolution(
-    questionId: string,
-    solution: { correctAnswer: string | string[]; explanation: string }
-  ): Promise<void> {
-    this.solutions.set(questionId, {
-      ...solution,
-      timestamp: Date.now(),
-    });
+  async invalidateAllExercises(key: string): Promise<void> {
+    this.exercises.delete(key);
   }
 
   async cleanup(): Promise<void> {
-    const oneHourAgo = Date.now() - 60 * 60 * 1000;
-    for (const [key, value] of this.solutions.entries()) {
-      if (value.timestamp < oneHourAgo) {
-        this.solutions.delete(key);
-      }
-    }
+    // Clean up any old data if needed
+    this.exercises.clear();
   }
 }
 
@@ -136,33 +110,32 @@ class VercelKVCache implements CacheProvider {
     }
   }
 
-  async getCachedSolution(
-    questionId: string
-  ): Promise<{ correctAnswer: string | string[]; explanation: string } | null> {
-    const kv = await this.getKV();
-    if (!kv) return null;
-
-    try {
-      const solution = await kv.get(`solution:${questionId}`);
-      return solution;
-    } catch (error) {
-      console.error("Failed to get cached solution:", error);
-      return null;
-    }
-  }
-
-  async setCachedSolution(
-    questionId: string,
-    solution: { correctAnswer: string | string[]; explanation: string }
-  ): Promise<void> {
+  async invalidateExercise(key: string, exerciseId: string): Promise<void> {
     const kv = await this.getKV();
     if (!kv) return;
 
     try {
-      // Store with 1-hour expiration
-      await kv.set(`solution:${questionId}`, solution, { ex: 60 * 60 });
+      const existing = await this.getCachedExercises(key);
+      const filtered = existing.filter((ex) => ex.id !== exerciseId);
+
+      if (filtered.length === 0) {
+        await kv.del(`exercises:${key}`);
+      } else {
+        await kv.set(`exercises:${key}`, filtered, { ex: 7 * 24 * 60 * 60 });
+      }
     } catch (error) {
-      console.error("Failed to cache solution:", error);
+      console.error("Failed to invalidate exercise:", error);
+    }
+  }
+
+  async invalidateAllExercises(key: string): Promise<void> {
+    const kv = await this.getKV();
+    if (!kv) return;
+
+    try {
+      await kv.del(`exercises:${key}`);
+    } catch (error) {
+      console.error("Failed to invalidate all exercises:", error);
     }
   }
 }

@@ -3,8 +3,7 @@ import { z } from "zod";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { v4 as uuidv4 } from "uuid";
-import { ParagraphExerciseSet, SentenceExercise, SentenceExerciseSet } from "@/types/exercise";
-import { exerciseCache } from "@/lib/exercise-cache";
+import { ParagraphExerciseSet, SentenceExercise } from "@/types/exercise";
 import { cacheProvider, generateCacheKey, CachedExercise } from "@/lib/cache-provider";
 
 // Static exercise imports for examples
@@ -16,7 +15,7 @@ import interrogativePronounsData from "@/data/interrogative-pronouns-exercises.j
 // Cache static exercise generation for 1 hour
 export const revalidate = 3600;
 
-// Validation schema - now includes userCompletedExercises
+// Validation schema - now includes userCompletedExercises and forceRegenerate
 const generateExerciseSchema = z.object({
   exerciseType: z.enum(["verbTenses", "nounDeclension", "verbAspect", "interrogativePronouns"]),
   cefrLevel: z.enum(["A1", "A2.1", "A2.2", "B1.1"]),
@@ -24,6 +23,7 @@ const generateExerciseSchema = z.object({
   apiKey: z.string().optional(),
   theme: z.string().optional(),
   userCompletedExercises: z.array(z.string()).optional(),
+  forceRegenerate: z.boolean().optional(),
 });
 
 // Interfaces for AI responses
@@ -55,7 +55,7 @@ interface AISentenceResponse {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { exerciseType, cefrLevel, provider, apiKey, theme, userCompletedExercises } =
+    const { exerciseType, cefrLevel, provider, apiKey, theme, userCompletedExercises, forceRegenerate } =
       generateExerciseSchema.parse(body);
 
     // Determine which API key and provider to use
@@ -71,67 +71,72 @@ export async function POST(request: NextRequest) {
       theme,
       userCompletedCount: userCompletedExercises?.length || 0,
       userCompletedIds: userCompletedExercises,
+      forceRegenerate,
     });
 
     if (!effectiveApiKey) {
       return NextResponse.json({ error: "No API key available" }, { status: 400 });
     }
 
-    // Try to serve from cache first
+    // Generate cache key for this request
     const cacheKey = generateCacheKey(exerciseType, cefrLevel, theme);
-    console.log("Generated cache key:", cacheKey);
 
-    const cachedExercises = await cacheProvider.getCachedExercises(cacheKey);
-    console.log("Raw cached exercises:", cachedExercises.length);
+    // Skip cache if forceRegenerate is true
+    if (!forceRegenerate) {
+      // Try to serve from cache first
+      console.log("Generated cache key:", cacheKey);
 
-    // Filter out exercises the user has already completed
-    // Check against the actual exercise data ID, not the cache wrapper ID
-    const completedSet = new Set(userCompletedExercises || []);
-    const availableExercises = cachedExercises.filter((exercise) => {
-      // Get the actual exercise set ID from the data - this should always be the data.id
-      const exerciseDataId = exercise.data.id;
-      const isCompleted = completedSet.has(exerciseDataId);
+      const cachedExercises = await cacheProvider.getCachedExercises(cacheKey);
+      console.log("Raw cached exercises:", cachedExercises.length);
 
-      console.log("Filtering exercise:", {
-        cacheId: exercise.id,
-        dataId: exerciseDataId,
-        isCompleted,
-        completedSet: Array.from(completedSet),
+      // Filter out exercises the user has already completed
+      // Check against the actual exercise data ID, not the cache wrapper ID
+      const completedSet = new Set(userCompletedExercises || []);
+      const availableExercises = cachedExercises.filter((exercise) => {
+        // Get the actual exercise set ID from the data - this should always be the data.id
+        const exerciseDataId = exercise.data.id;
+        const isCompleted = completedSet.has(exerciseDataId);
+
+        console.log("Filtering exercise:", {
+          cacheId: exercise.id,
+          dataId: exerciseDataId,
+          isCompleted,
+          completedSet: Array.from(completedSet),
+        });
+
+        return !isCompleted;
       });
 
-      return !isCompleted;
-    });
-
-    console.log("Cache filtering debug:", {
-      totalCached: cachedExercises.length,
-      completedCount: completedSet.size,
-      availableAfterFilter: availableExercises.length,
-      completedIds: Array.from(completedSet),
-      cachedIds: cachedExercises.map((ex) => ({
-        cacheId: ex.id,
-        dataId: ex.data.id,
-      })),
-    });
-
-    if (availableExercises.length > 0) {
-      // Serve from cache
-      console.log(`Serving from cache: ${availableExercises.length} available exercises`);
-      const selectedExercise = availableExercises[Math.floor(Math.random() * availableExercises.length)];
-
-      console.log("Selected cached exercise:", {
-        cacheId: selectedExercise.id,
-        dataId: selectedExercise.data.id,
-        exerciseType: selectedExercise.exerciseType,
+      console.log("Cache filtering debug:", {
+        totalCached: cachedExercises.length,
+        completedCount: completedSet.size,
+        availableAfterFilter: availableExercises.length,
+        completedIds: Array.from(completedSet),
+        cachedIds: cachedExercises.map((ex) => ({
+          cacheId: ex.id,
+          dataId: ex.data.id,
+        })),
       });
 
-      // Cache the solutions for answer validation
-      await cacheExerciseSolutions(selectedExercise.data);
+      if (availableExercises.length > 0) {
+        // Serve from cache
+        console.log(`Serving from cache: ${availableExercises.length} available exercises`);
+        const selectedExercise = availableExercises[Math.floor(Math.random() * availableExercises.length)];
 
-      return NextResponse.json(selectedExercise.data);
+        console.log("Selected cached exercise:", {
+          cacheId: selectedExercise.id,
+          dataId: selectedExercise.data.id,
+          exerciseType: selectedExercise.exerciseType,
+        });
+
+        return NextResponse.json(selectedExercise.data);
+      }
     }
 
-    // No suitable cached exercises, generate new ones
-    console.log("No suitable cached exercises found, generating new ones...");
+    // No suitable cached exercises or force regeneration requested, generate new ones
+    console.log(
+      forceRegenerate ? "Force regeneration requested..." : "No suitable cached exercises found, generating new ones..."
+    );
 
     // Route to appropriate provider
     let response;
@@ -175,29 +180,6 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ error: "Failed to generate exercises" }, { status: 500 });
-  }
-}
-
-// Helper function to cache exercise solutions for answer validation
-async function cacheExerciseSolutions(exerciseData: ParagraphExerciseSet | SentenceExerciseSet) {
-  if ("paragraph" in exerciseData) {
-    // Paragraph exercise
-    const paragraphExercise = exerciseData as ParagraphExerciseSet;
-    for (const question of paragraphExercise.questions) {
-      await exerciseCache.set(question.id, {
-        correctAnswer: question.correctAnswer,
-        explanation: question.explanation,
-      });
-    }
-  } else {
-    // Sentence exercises
-    const sentenceExercise = exerciseData as SentenceExerciseSet;
-    for (const exercise of sentenceExercise.exercises) {
-      await exerciseCache.set(exercise.id as string, {
-        correctAnswer: exercise.correctAnswer,
-        explanation: exercise.explanation,
-      });
-    }
   }
 }
 

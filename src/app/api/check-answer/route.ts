@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { checkAnswer } from "@/lib/exercise-utils";
-import { exerciseCache } from "@/lib/exercise-cache";
+import { cacheProvider } from "@/lib/cache-provider";
+import { ParagraphExerciseSet, SentenceExerciseSet } from "@/types/exercise";
 
 // Cache answer validation for 1 hour since solutions don't change
 export const revalidate = 3600;
@@ -11,24 +12,72 @@ const checkAnswerSchema = z.object({
   userAnswer: z.string(),
 });
 
+async function findSolutionForQuestion(
+  questionId: string
+): Promise<{ correctAnswer: string | string[]; explanation: string } | null> {
+  // We need to search through all cached exercises to find the question
+  // Since we don't know which exercise type/level contains this question,
+  // we'll need to search across different cache keys
+
+  const exerciseTypes = ["verbTenses", "nounDeclension", "verbAspect", "interrogativePronouns"];
+  const cefrLevels = ["A1", "A2.1", "A2.2", "B1.1"];
+
+  for (const exerciseType of exerciseTypes) {
+    for (const cefrLevel of cefrLevels) {
+      const cacheKey = `${exerciseType}:${cefrLevel}:default`;
+      const cachedExercises = await cacheProvider.getCachedExercises(cacheKey);
+
+      for (const cachedExercise of cachedExercises) {
+        const data = cachedExercise.data;
+
+        // Check if it's a paragraph exercise set
+        if ("questions" in data) {
+          const paragraphData = data as ParagraphExerciseSet;
+          const question = paragraphData.questions.find((q) => q.id === questionId);
+          if (question) {
+            return {
+              correctAnswer: question.correctAnswer,
+              explanation: question.explanation,
+            };
+          }
+        }
+
+        // Check if it's a sentence exercise set
+        if ("exercises" in data) {
+          const sentenceData = data as SentenceExerciseSet;
+          const exercise = sentenceData.exercises.find((ex) => ex.id === questionId);
+          if (exercise) {
+            return {
+              correctAnswer: exercise.correctAnswer,
+              explanation: exercise.explanation,
+            };
+          }
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { questionId, userAnswer } = checkAnswerSchema.parse(body);
 
-    // Get the cached solution
-    const cachedSolution = await exerciseCache.get(questionId);
+    // Find the solution within cached exercises
+    const solution = await findSolutionForQuestion(questionId);
 
-    if (!cachedSolution) {
+    if (!solution) {
       return NextResponse.json({ error: "Question not found or expired" }, { status: 404 });
     }
 
-    const { correct, diacriticWarning, matchedAnswer } = checkAnswer(userAnswer, cachedSolution.correctAnswer);
+    const { correct, diacriticWarning, matchedAnswer } = checkAnswer(userAnswer, solution.correctAnswer);
 
     return NextResponse.json({
       correct,
-      explanation: cachedSolution.explanation,
-      correctAnswer: correct ? undefined : cachedSolution.correctAnswer,
+      explanation: solution.explanation,
+      correctAnswer: correct ? undefined : solution.correctAnswer,
       diacriticWarning,
       matchedAnswer,
     });

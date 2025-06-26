@@ -201,7 +201,7 @@ function exerciseReducer(state: ExerciseState, action: ExerciseAction): Exercise
 const ExerciseContext = createContext<{
   state: ExerciseState;
   dispatch: React.Dispatch<ExerciseAction>;
-  generateExercises: (exerciseType: ExerciseType, theme?: string) => Promise<void>;
+  forceRegenerateExercise: (exerciseType: ExerciseType, theme?: string) => Promise<void>;
   regenerateAllExercises: (theme?: string) => Promise<void>;
   checkAnswer: (questionId: string, userAnswer: string) => Promise<CheckAnswerResponse>;
   markExerciseCompleted: (
@@ -264,7 +264,7 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("vjezbajmo-cefr-level", state.cefrLevel);
   }, [state.cefrLevel]);
 
-  const generateExercises = async (exerciseType: ExerciseType, theme?: string) => {
+  const forceRegenerateExercise = async (exerciseType: ExerciseType, theme?: string) => {
     dispatch({ type: "SET_GENERATING", payload: true });
     dispatch({ type: "SET_ERROR", payload: null });
 
@@ -279,11 +279,13 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
         provider?: "openai" | "anthropic";
         apiKey?: string;
         userCompletedExercises?: string[];
+        forceRegenerate?: boolean;
       } = {
         exerciseType,
         cefrLevel: state.cefrLevel,
         theme,
         userCompletedExercises: completedExercises,
+        forceRegenerate: true, // Force new generation, bypass cache
       };
 
       // Include user's API key and provider if available
@@ -439,7 +441,7 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
       value={{
         state,
         dispatch,
-        generateExercises,
+        forceRegenerateExercise,
         regenerateAllExercises,
         checkAnswer,
         markExerciseCompleted,

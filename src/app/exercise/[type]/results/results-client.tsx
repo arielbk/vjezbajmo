@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import type { ExerciseType } from "@/types/exercise";
 
 export default function ResultsClient({ exerciseType }: { exerciseType: ExerciseType }) {
-  const { state, dispatch, generateExercises } = useExercise();
+  const { state, dispatch, forceRegenerateExercise } = useExercise();
   const router = useRouter();
 
   const handleRestartExercise = () => {
@@ -22,7 +22,7 @@ export default function ResultsClient({ exerciseType }: { exerciseType: Exercise
     if (exerciseType) {
       try {
         // Generate a new exercise for the same type
-        await generateExercises(exerciseType);
+        await forceRegenerateExercise(exerciseType);
         // Start new session and navigate to exercise
         dispatch({ type: "START_SESSION", payload: { exerciseType } });
         router.push(`/exercise/${exerciseType}`);

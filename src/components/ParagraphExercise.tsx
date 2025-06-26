@@ -18,7 +18,7 @@ interface ParagraphExerciseProps {
 }
 
 export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title }: ParagraphExerciseProps) {
-  const { dispatch, checkAnswer, generateExercises, state, markExerciseCompleted } = useExercise();
+  const { dispatch, checkAnswer, forceRegenerateExercise, state, markExerciseCompleted } = useExercise();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [results, setResults] = useState<Record<string, ReturnType<typeof createExerciseResult>>>({});
   const [isChecking, setIsChecking] = useState(false);
@@ -46,7 +46,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
   };
 
   const handleRegenerateExercise = async () => {
-    await generateExercises(exerciseType, theme || undefined);
+    await forceRegenerateExercise(exerciseType, theme || undefined);
     setTheme("");
     // Reset all state for the new exercises
     setAnswers({});
