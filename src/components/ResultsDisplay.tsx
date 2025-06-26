@@ -5,16 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { useExercise } from "@/contexts/ExerciseContext";
 import { calculateScore } from "@/lib/exercise-utils";
-import { ArrowLeft, RotateCcw, Target, TrendingUp, Award, AlertTriangle, ArrowRight } from "lucide-react";
+import { RotateCcw, Target, TrendingUp, Award, AlertTriangle, ArrowRight } from "lucide-react";
 
 interface ResultsDisplayProps {
-  onBack: () => void;
   onRestart: () => void;
   onReviewMistakes: () => void;
   onNextExercise?: () => void;
 }
 
-export function ResultsDisplay({ onBack, onRestart, onReviewMistakes, onNextExercise }: ResultsDisplayProps) {
+export function ResultsDisplay({ onRestart, onReviewMistakes, onNextExercise }: ResultsDisplayProps) {
   const { state, markExerciseCompleted } = useExercise();
 
   if (!state.currentSession) {
