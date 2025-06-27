@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useExercise } from "@/contexts/ExerciseContext";
+import { useResetExerciseState } from "@/hooks/useResetExerciseState";
 import type { SentenceExercise, SentenceExerciseSet, ExerciseType } from "@/types/exercise";
 import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
 import { Check, X, RefreshCw, AlertTriangle, RotateCcw, ArrowRight, Target } from "lucide-react";
@@ -31,13 +32,7 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
   const exercises = exerciseSet.exercises;
 
   // Reset component state when exercise set changes (new exercise loaded)
-  useEffect(() => {
-    // Reset all local state when we get a new exercise set
-    setAnswers({});
-    setResults({});
-    setHasChecked(false);
-    setTheme("");
-  }, [exerciseSet.id]);
+  useResetExerciseState(exerciseSet.id, setAnswers, setResults, setHasChecked, setTheme);
 
   // Initialize answers from previous session in review mode
   useEffect(() => {
