@@ -31,7 +31,7 @@ interface AIQuestion {
   id?: string;
   blankNumber: number;
   baseForm: string;
-  correctAnswer: string;
+  correctAnswer: string | string[]; // Support multiple answers
   explanation: string;
 }
 
@@ -44,7 +44,7 @@ interface AIParagraphResponse {
 interface AIExercise {
   id?: string;
   text: string;
-  correctAnswer: string;
+  correctAnswer: string | string[]; // Support multiple answers
   explanation: string;
 }
 
@@ -184,6 +184,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function generateWithOpenAI(exerciseType: string, cefrLevel: string, apiKey: string, theme?: string) {
+  // OpenAI-specific exercise generation - Updated to support multiple correct answers
   const openai = new OpenAI({ apiKey });
 
   let prompt: string;
