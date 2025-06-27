@@ -10,7 +10,7 @@ import { useExercise } from "@/contexts/ExerciseContext";
 import { useResetExerciseState } from "@/hooks/useResetExerciseState";
 import type { SentenceExercise, SentenceExerciseSet, ExerciseType } from "@/types/exercise";
 import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
-import { Check, X, RefreshCw, AlertTriangle, RotateCcw, ArrowRight, Target } from "lucide-react";
+import { Check, X, RefreshCw, AlertTriangle, RotateCcw, ArrowRight } from "lucide-react";
 
 interface SentenceExerciseProps {
   exerciseSet: SentenceExerciseSet;
@@ -27,6 +27,7 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
   const [isChecking, setIsChecking] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
   const [theme, setTheme] = useState("");
+  const [isGeneratingNext, setIsGeneratingNext] = useState(false);
 
   // Extract exercises from the set
   const exercises = exerciseSet.exercises;
@@ -93,6 +94,15 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
 
       setResults(newResults);
       setHasChecked(true);
+
+      // Mark the exercise as completed when answers are checked
+      markExerciseCompleted(
+        exerciseSet.id,
+        exerciseType,
+        theme || undefined,
+        { correct: correctAnswers, total: exercises.length },
+        title
+      );
 
       // Mark the exercise set as completed in user progress (not individual exercises)
       markExerciseCompleted(exerciseSet.id, exerciseType, theme || undefined);
@@ -166,7 +176,6 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
   };
 
   const correctAnswers = Object.values(results).filter((r) => r.correct).length;
-  const incorrectAnswers = Object.values(results).filter((r) => !r.correct);
   const filledAnswers = exercises.filter((ex) => answers[ex.id] && answers[ex.id].trim() !== "").length;
   const progress = hasChecked ? 100 : (filledAnswers / exercises.length) * 100;
   const allAnswered = exercises.every((ex) => answers[ex.id] && answers[ex.id].trim() !== "");
@@ -313,14 +322,7 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
                           
                           <Button
                             onClick={async () => {
-                              // Mark exercise as completed with score data
-                              markExerciseCompleted(
-                                exerciseSet.id,
-                                exerciseType,
-                                theme || undefined,
-                                { correct: correctAnswers, total: exercises.length },
-                                title
-                              );
+                              setIsGeneratingNext(true);
                               // Generate new exercise and navigate to it
                               try {
                                 await forceRegenerateExercise(exerciseType);
@@ -328,36 +330,16 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
                                 router.push(`/exercise/${exerciseType}`);
                               } catch (error) {
                                 console.error("Failed to generate next exercise:", error);
+                              } finally {
+                                setIsGeneratingNext(false);
                               }
                             }}
                             size="lg"
+                            disabled={isGeneratingNext}
                           >
                             <ArrowRight className="h-4 w-4 mr-2" />
-                            Next Exercise
+                            {isGeneratingNext ? "Generating..." : "Next Exercise"}
                           </Button>
-
-                          {incorrectAnswers.length > 0 && (
-                            <Button
-                              variant="outline"
-                              onClick={() => {
-                                // Mark exercise as completed first
-                                markExerciseCompleted(
-                                  exerciseSet.id,
-                                  exerciseType,
-                                  theme || undefined,
-                                  { correct: correctAnswers, total: exercises.length },
-                                  title
-                                );
-                                // Navigate to review mode with current answers
-                                const answersParam = encodeURIComponent(JSON.stringify(answers));
-                                router.push(`/exercise/${exerciseType}?review=true&answers=${answersParam}`);
-                              }}
-                              size="lg"
-                            >
-                              <Target className="h-4 w-4 mr-2" />
-                              Review Mistakes ({incorrectAnswers.length})
-                            </Button>
-                          )}
                         </div>
                       </div>
                     )}

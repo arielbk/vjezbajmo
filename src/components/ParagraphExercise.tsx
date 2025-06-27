@@ -10,7 +10,7 @@ import { useExercise } from "@/contexts/ExerciseContext";
 import { useResetExerciseState } from "@/hooks/useResetExerciseState";
 import { ParagraphExerciseSet, ExerciseType } from "@/types/exercise";
 import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
-import { Check, X, RefreshCw, AlertTriangle, RotateCcw, ArrowRight, Target } from "lucide-react";
+import { Check, X, RefreshCw, AlertTriangle, RotateCcw, ArrowRight } from "lucide-react";
 
 interface ParagraphExerciseProps {
   exerciseSet: ParagraphExerciseSet;
@@ -27,6 +27,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
   const [isChecking, setIsChecking] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
   const [theme, setTheme] = useState("");
+  const [isGeneratingNext, setIsGeneratingNext] = useState(false);
   const inputRefs = useRef<Record<string, HTMLInputElement>>({});
 
   // Reset component state when exercise set changes (new exercise loaded)
@@ -59,8 +60,6 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
     setResults({});
     setHasChecked(false);
   };
-
-
 
   const handleCheckAnswers = async () => {
     setIsChecking(true);
@@ -102,7 +101,16 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
       setResults(newResults);
       setHasChecked(true);
 
-      // Note: Completion is now manual - user decides when to mark as completed
+      // Mark the exercise as completed when answers are checked
+      markExerciseCompleted(
+        exerciseSet.id,
+        exerciseType,
+        theme || undefined,
+        { correct: correctAnswers, total: totalQuestions },
+        title
+      );
+
+      // Note: Completion now happens when checking answers, not when clicking next exercise
     } catch (error) {
       console.error("Error checking answers:", error);
     } finally {
@@ -157,7 +165,8 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
             type="text"
             value={answers[question.id] || ""}
             onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-            className={`inline-block w-20 sm:w-28 lg:w-32 text-center ${getInputStyling(results[question.id])}`}
+            className={`inline-block min-w-20 text-center ${getInputStyling(results[question.id])}`}
+            style={{ width: `${Math.max(120, (answers[question.id]?.length || question.baseForm?.length || 8) * 8 + 16)}px` }}
             disabled={hasChecked}
           />
           {hasResult && <span className="ml-1">{getResultIcon(results[question.id])}</span>}
@@ -180,7 +189,6 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
   };
 
   const correctAnswers = Object.values(results).filter((r) => r.correct).length;
-  const incorrectAnswers = Object.values(results).filter((r) => !r.correct);
   const totalQuestions = exerciseSet.questions.length;
   const filledAnswers = exerciseSet.questions.filter((q) => answers[q.id] && answers[q.id].trim() !== "").length;
   const progress = hasChecked ? (correctAnswers / totalQuestions) * 100 : (filledAnswers / totalQuestions) * 100;
@@ -286,14 +294,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
                       
                       <Button
                         onClick={async () => {
-                          // Mark exercise as completed with score data
-                          markExerciseCompleted(
-                            exerciseSet.id,
-                            exerciseType,
-                            theme || undefined,
-                            { correct: correctAnswers, total: totalQuestions },
-                            title
-                          );
+                          setIsGeneratingNext(true);
                           // Generate new exercise and navigate to it
                           try {
                             await forceRegenerateExercise(exerciseType);
@@ -301,36 +302,26 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
                             router.push(`/exercise/${exerciseType}`);
                           } catch (error) {
                             console.error("Failed to generate next exercise:", error);
+                          } finally {
+                            setIsGeneratingNext(false);
                           }
                         }}
                         size="lg"
+                        disabled={isGeneratingNext}
                       >
-                        <ArrowRight className="h-4 w-4 mr-2" />
-                        Next Exercise
+                        {isGeneratingNext ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <ArrowRight className="h-4 w-4 mr-2" />
+                            Next Exercise
+                          </>
+                        )}
                       </Button>
 
-                      {incorrectAnswers.length > 0 && (
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            // Mark exercise as completed first
-                            markExerciseCompleted(
-                              exerciseSet.id,
-                              exerciseType,
-                              theme || undefined,
-                              { correct: correctAnswers, total: totalQuestions },
-                              title
-                            );
-                            // Navigate to review mode with current answers
-                            const answersParam = encodeURIComponent(JSON.stringify(answers));
-                            router.push(`/exercise/${exerciseType}?review=true&answers=${answersParam}`);
-                          }}
-                          size="lg"
-                        >
-                          <Target className="h-4 w-4 mr-2" />
-                          Review Mistakes ({incorrectAnswers.length})
-                        </Button>
-                      )}
                     </div>
                   )}
                 </div>

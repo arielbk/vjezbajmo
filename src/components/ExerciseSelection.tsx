@@ -51,7 +51,7 @@ export function ExerciseSelection() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pt-4">
       <div className="grid gap-4 md:grid-cols-2">
         {exerciseTypes.map((exercise) => (
           <Card key={exercise.type} className="relative">
