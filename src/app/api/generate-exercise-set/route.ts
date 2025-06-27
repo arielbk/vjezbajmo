@@ -218,11 +218,19 @@ Return JSON in this exact format:
       "id": "question-uuid",
       "blankNumber": 1,
       "baseForm": "infinitive",
-      "correctAnswer": "correct form",
-      "explanation": "explanation of why this form is correct"
+      "correctAnswer": ["primary correct form", "alternative acceptable form"],
+      "explanation": "explanation of why these forms are correct, including any grammatical variations"
     }
   ]
-}`;
+}
+
+IMPORTANT: For each question, provide "correctAnswer" as an array of strings containing ALL grammatically acceptable variations, including:
+- Different verb forms when multiple aspects/tenses are contextually appropriate
+- Alternative word orders when Croatian grammar allows flexibility
+- Gender variations (masculine/feminine) when both are possible
+- Regional or stylistic variations that are grammatically correct
+
+Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`;
     } else {
       const exampleExercise = JSON.stringify(nounAdjectiveData, null, 2);
       prompt = `Create a Croatian noun-adjective declension paragraph exercise. Generate a connected story with 6 blanks where students fill in correctly declined noun-adjective pairs.${themeText}
@@ -247,11 +255,19 @@ Return JSON in this exact format:
       "id": "question-uuid",
       "blankNumber": 1,
       "baseForm": "nominative form",
-      "correctAnswer": "declined form",
-      "explanation": "explanation of case and why"
+      "correctAnswer": ["primary declined form", "alternative acceptable form"],
+      "explanation": "explanation of case and acceptable variations"
     }
   ]
-}`;
+}
+
+IMPORTANT: For each question, provide "correctAnswer" as an array of strings containing ALL grammatically acceptable variations, including:
+- Different case forms when context allows multiple interpretations
+- Alternative adjective declensions that agree with the noun
+- Word order variations when Croatian grammar permits flexibility
+- Regional variations that are grammatically correct
+
+Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`;
     }
   } else {
     // Sentence exercises
@@ -278,11 +294,19 @@ Return JSON in this exact format:
     {
       "id": "question-uuid",
       "text": "Sentence with _____ blank",
-      "correctAnswer": "correct verb form",
-      "explanation": "explanation of aspect choice"
+      "correctAnswer": ["primary correct form", "alternative acceptable form"],
+      "explanation": "explanation of aspect choice and acceptable variations"
     }
   ]
-}`;
+}
+
+IMPORTANT: For each exercise, provide "correctAnswer" as an array of strings containing ALL grammatically acceptable variations, including:
+- Both perfective and imperfective forms when context allows either
+- Different gender/person forms when applicable
+- Alternative verb forms that express the same meaning
+- Regional or stylistic variations that are grammatically correct
+
+Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`;
     } else {
       const exampleExercises = JSON.stringify({ exercises: interrogativePronounsData.exercises.slice(0, 3) }, null, 2);
       prompt = `Create 5 Croatian interrogative pronoun exercises. Each should be a sentence with one blank where students fill in the correct form of koji/koja/koje ONLY.${themeText}
@@ -319,11 +343,19 @@ Return JSON in this exact format:
     {
       "id": "question-uuid",
       "text": "_____ question sentence?",
-      "correctAnswer": "correct pronoun",
-      "explanation": "explanation of why this pronoun"
+      "correctAnswer": ["primary correct pronoun", "alternative acceptable form"],
+      "explanation": "explanation of why these pronouns are correct and their variations"
     }
   ]
-}`;
+}
+
+IMPORTANT: For each exercise, provide "correctAnswer" as an array of strings containing ALL grammatically acceptable variations, including:
+- Alternative case forms when context permits multiple interpretations
+- Both long and short forms where applicable (e.g., kojeg vs kojega)
+- Regional variations that are grammatically correct
+- Different word orders when Croatian grammar allows flexibility
+
+Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`;
     }
   }
 
@@ -381,11 +413,19 @@ Return JSON in this exact format:
       "id": "question-uuid",
       "blankNumber": 1,
       "baseForm": "infinitive",
-      "correctAnswer": "correct form",
-      "explanation": "explanation of why this form is correct"
+      "correctAnswer": ["primary correct form", "alternative acceptable form"],
+      "explanation": "explanation of why these forms are correct, including any grammatical variations"
     }
   ]
-}`;
+}
+
+IMPORTANT: For each question, provide "correctAnswer" as an array of strings containing ALL grammatically acceptable variations, including:
+- Different verb forms when multiple aspects/tenses are contextually appropriate
+- Alternative word orders when Croatian grammar allows flexibility
+- Gender variations (masculine/feminine) when both are possible
+- Regional or stylistic variations that are grammatically correct
+
+Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`;
     } else {
       const exampleExercise = JSON.stringify(nounAdjectiveData, null, 2);
       prompt = `Create a Croatian noun-adjective declension paragraph exercise. Generate a connected story with 6 blanks where students fill in correctly declined noun-adjective pairs.${themeText}
@@ -410,11 +450,19 @@ Return JSON in this exact format:
       "id": "question-uuid",
       "blankNumber": 1,
       "baseForm": "nominative form",
-      "correctAnswer": "declined form",
-      "explanation": "explanation of case and why"
+      "correctAnswer": ["primary declined form", "alternative acceptable form"],
+      "explanation": "explanation of case and acceptable variations"
     }
   ]
-}`;
+}
+
+IMPORTANT: For each question, provide "correctAnswer" as an array of strings containing ALL grammatically acceptable variations, including:
+- Different case forms when context allows multiple interpretations
+- Alternative adjective declensions that agree with the noun
+- Word order variations when Croatian grammar permits flexibility
+- Regional variations that are grammatically correct
+
+Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`;
     }
   } else {
     // Sentence exercises
@@ -441,11 +489,19 @@ Return JSON in this exact format:
     {
       "id": "question-uuid",
       "text": "Sentence with _____ blank",
-      "correctAnswer": "correct verb form",
-      "explanation": "explanation of aspect choice"
+      "correctAnswer": ["primary correct form", "alternative acceptable form"],
+      "explanation": "explanation of aspect choice and acceptable variations"
     }
   ]
-}`;
+}
+
+IMPORTANT: For each exercise, provide "correctAnswer" as an array of strings containing ALL grammatically acceptable variations, including:
+- Both perfective and imperfective forms when context allows either
+- Different gender/person forms when applicable
+- Alternative verb forms that express the same meaning
+- Regional or stylistic variations that are grammatically correct
+
+Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`;
     } else {
       const exampleExercises = JSON.stringify({ exercises: interrogativePronounsData.exercises.slice(0, 3) }, null, 2);
       prompt = `Create 5 Croatian interrogative pronoun exercises. Each should be a sentence with one blank where students fill in the correct form of koji/koja/koje ONLY.${themeText}
@@ -482,11 +538,19 @@ Return JSON in this exact format:
     {
       "id": "question-uuid",
       "text": "_____ question sentence?",
-      "correctAnswer": "correct pronoun",
-      "explanation": "explanation of why this pronoun"
+      "correctAnswer": ["primary correct pronoun", "alternative acceptable form"],
+      "explanation": "explanation of why these pronouns are correct and their variations"
     }
   ]
-}`;
+}
+
+IMPORTANT: For each exercise, provide "correctAnswer" as an array of strings containing ALL grammatically acceptable variations, including:
+- Alternative case forms when context permits multiple interpretations
+- Both long and short forms where applicable (e.g., kojeg vs kojega)
+- Regional variations that are grammatically correct
+- Different word orders when Croatian grammar allows flexibility
+
+Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`;
     }
   }
 
