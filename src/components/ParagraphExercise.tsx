@@ -162,7 +162,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
           />
           {hasResult && <span className="ml-1">{getResultIcon(results[question.id])}</span>}
           <span className="ml-1 text-xs text-muted-foreground italic">
-            ({question.baseForm})
+            ({question.baseForm}{question.isPlural ? " - plural" : ""})
           </span>
         </span>
       );
@@ -349,7 +349,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
                           </span>
                           <div className="flex-1 min-w-0">
                             <div className="mb-1">
-                              <span className="font-medium">{question.baseForm}</span>
+                              <span className="font-medium">{question.baseForm}{question.isPlural ? " (plural)" : ""}</span>
                               {!result.correct && (
                                 <span className="ml-2 text-sm">
                                   Your answer: <span className="font-mono">{result.userAnswer}</span>

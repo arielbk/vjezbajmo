@@ -36,6 +36,8 @@ IMPORTANT: For each question, provide "correctAnswer" as an array of strings con
 - Gender variations (masculine/feminine) when both are possible
 - Regional or stylistic variations that are grammatically correct
 
+Set "isPlural" to true when the correct answer requires a plural form (e.g., when the subject is plural).
+
 Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`,
 
   NOUN_DECLENSION: `
@@ -45,6 +47,8 @@ IMPORTANT: For each question, provide "correctAnswer" as an array of strings con
 - Alternative adjective declensions that agree with the noun
 - Word order variations when Croatian grammar permits flexibility
 - Regional variations that are grammatically correct
+
+Set "isPlural" to true when the correct answer requires a plural form (e.g., when declining plural nouns/adjectives).
 
 Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`,
 
@@ -56,6 +60,8 @@ IMPORTANT: For each exercise, provide "correctAnswer" as an array of strings con
 - Alternative verb forms that express the same meaning
 - Regional or stylistic variations that are grammatically correct
 
+Set "isPlural" to true when the correct answer requires a plural form (e.g., when the subject is plural).
+
 Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`,
 
   INTERROGATIVE_PRONOUNS: `
@@ -65,6 +71,8 @@ IMPORTANT: For each exercise, provide "correctAnswer" as an array of strings con
 - Both long and short forms where applicable (e.g., kojeg vs kojega)
 - Regional variations that are grammatically correct
 - Different word orders when Croatian grammar allows flexibility
+
+Set "isPlural" to true when the correct answer requires a plural form (e.g., koji -> koji for plural masculine, koja -> koja for plural neuter).
 
 Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`
 };
@@ -76,6 +84,7 @@ interface AIQuestion {
   baseForm: string;
   correctAnswer: string | string[]; // Support multiple answers
   explanation: string;
+  isPlural?: boolean; // Indicates if plural form is required
 }
 
 interface AIParagraphResponse {
@@ -89,6 +98,7 @@ interface AIExercise {
   text: string;
   correctAnswer: string | string[]; // Support multiple answers
   explanation: string;
+  isPlural?: boolean; // Indicates if plural form is required
 }
 
 interface AISentenceResponse {
@@ -251,6 +261,7 @@ Key requirements:
 - Include both perfective and imperfective verbs where appropriate
 - Provide clear, educational explanations for each answer
 - Maintain appropriate ${cefrLevel} difficulty level
+- Set "isPlural" to true when the correct answer requires a plural form
 
 Return JSON in this exact format:
 {
@@ -262,7 +273,8 @@ Return JSON in this exact format:
       "blankNumber": 1,
       "baseForm": "infinitive",
       "correctAnswer": ["primary correct form", "alternative acceptable form"],
-      "explanation": "explanation of why these forms are correct, including any grammatical variations"
+      "explanation": "explanation of why these forms are correct, including any grammatical variations",
+      "isPlural": false
     }
   ]
 }${MULTIPLE_ANSWERS_INSTRUCTIONS.VERB_TENSES}`;
@@ -291,7 +303,8 @@ Return JSON in this exact format:
       "blankNumber": 1,
       "baseForm": "nominative form",
       "correctAnswer": ["primary declined form", "alternative acceptable form"],
-      "explanation": "explanation of case and acceptable variations"
+      "explanation": "explanation of case and acceptable variations",
+      "isPlural": false
     }
   ]
 }${MULTIPLE_ANSWERS_INSTRUCTIONS.NOUN_DECLENSION}`;
@@ -322,7 +335,8 @@ Return JSON in this exact format:
       "id": "question-uuid",
       "text": "Sentence with _____ blank",
       "correctAnswer": ["primary correct form", "alternative acceptable form"],
-      "explanation": "explanation of aspect choice and acceptable variations"
+      "explanation": "explanation of aspect choice and acceptable variations",
+      "isPlural": false
     }
   ]
 }${MULTIPLE_ANSWERS_INSTRUCTIONS.VERB_ASPECT}`;
@@ -363,7 +377,8 @@ Return JSON in this exact format:
       "id": "question-uuid",
       "text": "_____ question sentence?",
       "correctAnswer": ["primary correct pronoun", "alternative acceptable form"],
-      "explanation": "explanation of why these pronouns are correct and their variations"
+      "explanation": "explanation of why these pronouns are correct and their variations",
+      "isPlural": false
     }
   ]
 }${MULTIPLE_ANSWERS_INSTRUCTIONS.INTERROGATIVE_PRONOUNS}`;
@@ -414,6 +429,7 @@ Key requirements:
 - Include both perfective and imperfective verbs where appropriate
 - Provide clear, educational explanations for each answer
 - Maintain appropriate ${cefrLevel} difficulty level
+- Set "isPlural" to true when the correct answer requires a plural form
 
 Return JSON in this exact format:
 {
@@ -425,7 +441,8 @@ Return JSON in this exact format:
       "blankNumber": 1,
       "baseForm": "infinitive",
       "correctAnswer": ["primary correct form", "alternative acceptable form"],
-      "explanation": "explanation of why these forms are correct, including any grammatical variations"
+      "explanation": "explanation of why these forms are correct, including any grammatical variations",
+      "isPlural": false
     }
   ]
 }${MULTIPLE_ANSWERS_INSTRUCTIONS.VERB_TENSES}`;
@@ -454,7 +471,8 @@ Return JSON in this exact format:
       "blankNumber": 1,
       "baseForm": "nominative form",
       "correctAnswer": ["primary declined form", "alternative acceptable form"],
-      "explanation": "explanation of case and acceptable variations"
+      "explanation": "explanation of case and acceptable variations",
+      "isPlural": false
     }
   ]
 }${MULTIPLE_ANSWERS_INSTRUCTIONS.NOUN_DECLENSION}`;
@@ -485,7 +503,8 @@ Return JSON in this exact format:
       "id": "question-uuid",
       "text": "Sentence with _____ blank",
       "correctAnswer": ["primary correct form", "alternative acceptable form"],
-      "explanation": "explanation of aspect choice and acceptable variations"
+      "explanation": "explanation of aspect choice and acceptable variations",
+      "isPlural": false
     }
   ]
 }${MULTIPLE_ANSWERS_INSTRUCTIONS.VERB_ASPECT}`;
@@ -526,7 +545,8 @@ Return JSON in this exact format:
       "id": "question-uuid",
       "text": "_____ question sentence?",
       "correctAnswer": ["primary correct pronoun", "alternative acceptable form"],
-      "explanation": "explanation of why these pronouns are correct and their variations"
+      "explanation": "explanation of why these pronouns are correct and their variations",
+      "isPlural": false
     }
   ]
 }${MULTIPLE_ANSWERS_INSTRUCTIONS.INTERROGATIVE_PRONOUNS}`;
@@ -583,6 +603,7 @@ function processAIResponse(content: string, exerciseType: string) {
         baseForm: q.baseForm,
         correctAnswer: q.correctAnswer,
         explanation: q.explanation,
+        isPlural: q.isPlural,
       })),
     };
 
@@ -594,6 +615,7 @@ function processAIResponse(content: string, exerciseType: string) {
       text: ex.text,
       correctAnswer: ex.correctAnswer,
       explanation: ex.explanation,
+      isPlural: ex.isPlural,
     }));
 
     // Add a set ID for consistent tracking

@@ -5,6 +5,7 @@ export interface SentenceExercise {
   text: string;
   correctAnswer: string | string[]; // Support multiple correct answers
   explanation: string;
+  isPlural?: boolean; // Indicates if the answer should be plural
 }
 
 export interface ParagraphExerciseSet {
@@ -16,6 +17,7 @@ export interface ParagraphExerciseSet {
     baseForm: string;
     correctAnswer: string | string[]; // Support multiple correct answers
     explanation: string;
+    isPlural?: boolean; // Indicates if the answer should be plural
   }[];
 }
 

@@ -150,6 +150,9 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
             disabled={hasChecked}
           />
           {result && <span className="ml-1">{getResultIcon(result)}</span>}
+          {exercise.isPlural && (
+            <span className="ml-1 text-xs text-muted-foreground italic">(plural)</span>
+          )}
         </span>
         <span>{parts[1] || ""}</span>
         {result && result.correct && result.diacriticWarning && (
