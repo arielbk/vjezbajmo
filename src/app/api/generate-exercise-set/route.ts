@@ -26,6 +26,49 @@ const generateExerciseSchema = z.object({
   forceRegenerate: z.boolean().optional(),
 });
 
+// Shared prompt instructions for flexible answer validation
+const MULTIPLE_ANSWERS_INSTRUCTIONS = {
+  VERB_TENSES: `
+
+IMPORTANT: For each question, provide "correctAnswer" as an array of strings containing ALL grammatically acceptable variations, including:
+- Different verb forms when multiple aspects/tenses are contextually appropriate
+- Alternative word orders when Croatian grammar allows flexibility
+- Gender variations (masculine/feminine) when both are possible
+- Regional or stylistic variations that are grammatically correct
+
+Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`,
+
+  NOUN_DECLENSION: `
+
+IMPORTANT: For each question, provide "correctAnswer" as an array of strings containing ALL grammatically acceptable variations, including:
+- Different case forms when context allows multiple interpretations
+- Alternative adjective declensions that agree with the noun
+- Word order variations when Croatian grammar permits flexibility
+- Regional variations that are grammatically correct
+
+Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`,
+
+  VERB_ASPECT: `
+
+IMPORTANT: For each exercise, provide "correctAnswer" as an array of strings containing ALL grammatically acceptable variations, including:
+- Both perfective and imperfective forms when context allows either
+- Different gender/person forms when applicable
+- Alternative verb forms that express the same meaning
+- Regional or stylistic variations that are grammatically correct
+
+Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`,
+
+  INTERROGATIVE_PRONOUNS: `
+
+IMPORTANT: For each exercise, provide "correctAnswer" as an array of strings containing ALL grammatically acceptable variations, including:
+- Alternative case forms when context permits multiple interpretations
+- Both long and short forms where applicable (e.g., kojeg vs kojega)
+- Regional variations that are grammatically correct
+- Different word orders when Croatian grammar allows flexibility
+
+Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`
+};
+
 // Interfaces for AI responses
 interface AIQuestion {
   id?: string;
