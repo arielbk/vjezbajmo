@@ -28,6 +28,15 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
   const [theme, setTheme] = useState("");
   const inputRefs = useRef<Record<string, HTMLInputElement>>({});
 
+  // Reset component state when exercise set changes (new exercise loaded)
+  useEffect(() => {
+    // Reset all local state when we get a new exercise set
+    setAnswers({});
+    setResults({});
+    setHasChecked(false);
+    setTheme("");
+  }, [exerciseSet.id]);
+
   // Initialize answers from previous session in review mode
   useEffect(() => {
     if (state.currentSession?.isReviewMode && state.currentSession?.previousAnswers) {

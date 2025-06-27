@@ -30,6 +30,15 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
   // Extract exercises from the set
   const exercises = exerciseSet.exercises;
 
+  // Reset component state when exercise set changes (new exercise loaded)
+  useEffect(() => {
+    // Reset all local state when we get a new exercise set
+    setAnswers({});
+    setResults({});
+    setHasChecked(false);
+    setTheme("");
+  }, [exerciseSet.id]);
+
   // Initialize answers from previous session in review mode
   useEffect(() => {
     if (state.currentSession?.isReviewMode && state.currentSession?.previousAnswers) {
