@@ -2,9 +2,10 @@
 
 import { ParagraphExercise } from "@/components/ParagraphExercise";
 import { SentenceExercise as SentenceExerciseComponent } from "@/components/SentenceExercise";
+import { VerbAspectExerciseComponent } from "@/components/VerbAspectExercise";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useExercise } from "@/contexts/ExerciseContext";
-import type { ParagraphExerciseSet, SentenceExerciseSet, ExerciseType } from "@/types/exercise";
+import type { ParagraphExerciseSet, SentenceExerciseSet, ExerciseType, VerbAspectExercise } from "@/types/exercise";
 import { AlertTriangle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -118,6 +119,13 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
           exerciseType={exerciseType}
           title={getExerciseTitle()}
           onComplete={handleCompleteExercise}
+        />
+      ) : exerciseType === "verbAspect" ? (
+        <VerbAspectExerciseComponent
+          exerciseSet={exerciseData as SentenceExerciseSet & { exercises: VerbAspectExercise[] }}
+          exerciseType={exerciseType}
+          onComplete={handleCompleteExercise}
+          title={getExerciseTitle()}
         />
       ) : (
         <SentenceExerciseComponent

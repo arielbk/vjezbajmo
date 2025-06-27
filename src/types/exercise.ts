@@ -7,6 +7,16 @@ export interface SentenceExercise {
   explanation: string;
 }
 
+// Specialized interface for verb aspect exercises with radio button options
+export interface VerbAspectExercise extends SentenceExercise {
+  exerciseSubType: 'verb-aspect';
+  options: {
+    imperfective: string;
+    perfective: string;
+  };
+  correctAspect: 'imperfective' | 'perfective';
+}
+
 export interface ParagraphExerciseSet {
   id: string; // Unique ID (UUID) for the entire generated set
   paragraph: string; // The template with blanks
