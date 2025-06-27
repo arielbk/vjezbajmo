@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { useExercise } from "@/contexts/ExerciseContext";
 import { calculateScore } from "@/lib/exercise-utils";
-import { RotateCcw, Target, TrendingUp, Award, AlertTriangle, ArrowRight } from "lucide-react";
+import { RotateCcw, Target, TrendingUp, Award, AlertTriangle, ArrowRight, RefreshCw } from "lucide-react";
 
 interface ResultsDisplayProps {
   onRestart: () => void;
@@ -25,6 +25,7 @@ export function ResultsDisplay({ onRestart, onReviewMistakes, onNextExercise }: 
   const diacriticWarnings = state.currentSession.results.filter((r) => r.correct && r.diacriticWarning);
   const hasMistakes = mistakes.length > 0;
   const hasDiacriticWarnings = diacriticWarnings.length > 0;
+  const isGenerating = state.isGenerating;
 
   // Get the current exercise data to extract the exercise ID
   const getCurrentExerciseData = () => {
@@ -129,20 +130,29 @@ export function ResultsDisplay({ onRestart, onReviewMistakes, onNextExercise }: 
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2 justify-center">
-            <Button onClick={onRestart} size="lg" variant="outline">
+            <Button onClick={onRestart} size="lg" variant="outline" disabled={isGenerating}>
               <RotateCcw className="h-4 w-4 mr-2" />
               Try Again
             </Button>
 
             {onNextExercise && (
-              <Button onClick={handleNextExercise} size="lg" variant="default">
-                <ArrowRight className="h-4 w-4 mr-2" />
-                Next Exercise
+              <Button onClick={handleNextExercise} size="lg" variant="default" disabled={isGenerating}>
+                {isGenerating ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <ArrowRight className="h-4 w-4 mr-2" />
+                    Next Exercise
+                  </>
+                )}
               </Button>
             )}
 
             {hasMistakes && (
-              <Button variant="outline" onClick={onReviewMistakes} size="lg">
+              <Button variant="outline" onClick={onReviewMistakes} size="lg" disabled={isGenerating}>
                 <Target className="h-4 w-4 mr-2" />
                 Review Mistakes ({mistakes.length})
               </Button>
