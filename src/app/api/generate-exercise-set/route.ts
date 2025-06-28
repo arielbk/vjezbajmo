@@ -270,6 +270,12 @@ Key requirements:
 - Maintain appropriate ${cefrLevel} difficulty level
 - Set "isPlural" to true when the correct answer requires a plural form
 
+CRITICAL: Avoid reflexive pronoun duplication!
+- If a reflexive pronoun (se/si) appears in the visible text, do NOT include it in the expected answer
+- For reflexive verbs, either put the reflexive pronoun in the blank OR in the visible text, never both
+- Example: "Ana _____ (pripremiti se)" expects "se priprema" OR "Ana se _____ (pripremiti)" expects "priprema"
+- Never create: "Ana se _____ (pripremiti se)" expecting "se priprema" - this duplicates "se"
+
 Return JSON in this exact format:
 {
   "id": "generated-uuid",
@@ -334,6 +340,12 @@ Key requirements:
 - Include a variety of contexts (daily activities, past events, future plans)
 - Provide clear explanations about tense and person
 - Maintain appropriate ${cefrLevel} difficulty level
+
+CRITICAL: Avoid reflexive pronoun duplication!
+- If a reflexive pronoun (se/si) appears in the visible text, do NOT include it in the expected answer
+- For reflexive verbs, either put the reflexive pronoun in the blank OR in the visible text, never both
+- Example: "Ana _____ (pripremiti se)" expects "se priprema" OR "Ana se _____ (pripremiti)" expects "priprema"
+- Never create: "Ana se _____ (pripremiti se)" expecting "se priprema" - this duplicates "se"
 
 Return JSON in this exact format:
 {
@@ -444,6 +456,12 @@ Key requirements:
 - Maintain appropriate ${cefrLevel} difficulty level
 - Set "isPlural" to true when the correct answer requires a plural form
 
+CRITICAL: Avoid reflexive pronoun duplication!
+- If a reflexive pronoun (se/si) appears in the visible text, do NOT include it in the expected answer
+- For reflexive verbs, either put the reflexive pronoun in the blank OR in the visible text, never both
+- Example: "Ana _____ (pripremiti se)" expects "se priprema" OR "Ana se _____ (pripremiti)" expects "priprema"
+- Never create: "Ana se _____ (pripremiti se)" expecting "se priprema" - this duplicates "se"
+
 Return JSON in this exact format:
 {
   "id": "generated-uuid",
@@ -508,6 +526,12 @@ Key requirements:
 - Include a variety of contexts (daily activities, past events, future plans)
 - Provide clear explanations about tense and person
 - Maintain appropriate ${cefrLevel} difficulty level
+
+CRITICAL: Avoid reflexive pronoun duplication!
+- If a reflexive pronoun (se/si) appears in the visible text, do NOT include it in the expected answer
+- For reflexive verbs, either put the reflexive pronoun in the blank OR in the visible text, never both
+- Example: "Ana _____ (pripremiti se)" expects "se priprema" OR "Ana se _____ (pripremiti)" expects "priprema"
+- Never create: "Ana se _____ (pripremiti se)" expecting "se priprema" - this duplicates "se"
 
 Return JSON in this exact format:
 {
