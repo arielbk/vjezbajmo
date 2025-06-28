@@ -6,15 +6,15 @@
       "id": "na-1-1",
       "blankNumber": 1,
       "baseForm": "veliki grad",
-      "correctAnswer": "velikome gradu",
-      "explanation": "Locative case (where?) - masculine singular: 'veliki' becomes 'velikome', 'grad' becomes 'gradu'."
+      "correctAnswer": ["velikome gradu", "velikom gradu"],
+      "explanation": "Locative case (where?) - masculine singular: 'veliki' becomes 'velikome' or 'velikom', 'grad' becomes 'gradu'. Both adjective forms are correct."
     },
     {
       "id": "na-1-2",
       "blankNumber": 2,
       "baseForm": "nova knjižnica",
-      "correctAnswer": "novoj knjižnici",
-      "explanation": "Locative case (where?) - feminine singular: 'nova' becomes 'novoj', 'knjižnica' becomes 'knjižnici'."
+      "correctAnswer": ["novoj knjižnici", "novoj knjižnoci"],
+      "explanation": "Locative case (where?) - feminine singular: 'nova' becomes 'novoj', 'knjižnica' becomes 'knjižnici' or 'knjižnoci'. Both noun forms are acceptable."
     },
     {
       "id": "na-1-3",

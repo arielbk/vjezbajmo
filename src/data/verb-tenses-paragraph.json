@@ -13,8 +13,8 @@
       "id": "vt-1-2",
       "blankNumber": 2,
       "baseForm": "učiti",
-      "correctAnswer": "učio",
-      "explanation": "Past tense, third person singular masculine of 'učiti' (to study)."
+      "correctAnswer": ["učio", "učio je"],
+      "explanation": "Past tense, third person singular masculine of 'učiti' (to study). Both with and without auxiliary 'je' are acceptable in context."
     },
     {
       "id": "vt-1-3",
@@ -34,8 +34,8 @@
       "id": "vt-1-5",
       "blankNumber": 5,
       "baseForm": "završiti",
-      "correctAnswer": "završi",
-      "explanation": "Present tense, third person singular of 'završiti' (to finish/complete)."
+      "correctAnswer": ["završi", "završe"],
+      "explanation": "Present tense of 'završiti' (to finish/complete). Both 'završi' (third person singular) and 'završe' (third person plural) are acceptable forms in different Croatian dialects."
     },
     {
       "id": "vt-1-6",
