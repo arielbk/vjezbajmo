@@ -166,12 +166,15 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
             value={answers[question.id] || ""}
             onChange={(e) => handleAnswerChange(question.id, e.target.value)}
             className={`inline-block min-w-20 text-center ${getInputStyling(results[question.id])}`}
-            style={{ width: `${Math.max(120, (answers[question.id]?.length || question.baseForm?.length || 8) * 8 + 16)}px` }}
+            style={{
+              width: `${Math.max(120, (answers[question.id]?.length || question.baseForm?.length || 8) * 8 + 16)}px`,
+            }}
             disabled={hasChecked}
           />
           {hasResult && <span className="ml-1">{getResultIcon(results[question.id])}</span>}
           <span className="ml-1 text-xs text-muted-foreground italic">
-            ({question.baseForm}{question.isPlural ? " - plural" : ""})
+            ({question.baseForm}
+            {question.isPlural ? " - plural" : ""})
           </span>
         </span>
       );
@@ -217,13 +220,9 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
             {!hasChecked ? (
               <form onSubmit={handleFormSubmit} className="space-y-4" data-testid="exercise-form">
                 <div className="bg-muted/30 p-3 sm:p-6 rounded-lg">{renderParagraphWithInputs()}</div>
-                
+
                 <div className="text-center">
-                  <Button
-                    type="submit"
-                    disabled={isChecking || Object.keys(answers).length === 0}
-                    size="lg"
-                  >
+                  <Button type="submit" disabled={isChecking || Object.keys(answers).length === 0} size="lg">
                     {isChecking ? "Checking..." : "Check My Work"}
                   </Button>
                 </div>
@@ -252,15 +251,33 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
             ) : (
               <>
                 <div className="bg-muted/30 p-3 sm:p-6 rounded-lg">{renderParagraphWithInputs()}</div>
-                
+
                 <div className="space-y-4">
-                <div className="text-center space-y-2">
-                  {state.currentSession?.isReviewMode ? (
-                    <>
-                      <p className="text-sm text-muted-foreground">
-                        Review complete! You can practice again or go back to see your results.
-                      </p>
-                      <div className="flex justify-center gap-2">
+                  <div className="text-center space-y-2">
+                    {state.currentSession?.isReviewMode ? (
+                      <>
+                        <p className="text-sm text-muted-foreground">
+                          Review complete! You can practice again or go back to see your results.
+                        </p>
+                        <div className="flex justify-center gap-2">
+                          <Button
+                            onClick={() => {
+                              setAnswers(state.currentSession?.previousAnswers || {});
+                              setResults({});
+                              setHasChecked(false);
+                            }}
+                            variant="outline"
+                            size="lg"
+                          >
+                            Try Again
+                          </Button>
+                          <Button onClick={onComplete} size="lg">
+                            Back to Results
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex flex-col sm:flex-row gap-2 justify-center">
                         <Button
                           onClick={() => {
                             setAnswers(state.currentSession?.previousAnswers || {});
@@ -270,112 +287,96 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
                           variant="outline"
                           size="lg"
                         >
+                          <RotateCcw className="h-4 w-4 mr-2" />
                           Try Again
                         </Button>
-                        <Button onClick={onComplete} size="lg">
-                          Back to Results
+
+                        <Button
+                          onClick={async () => {
+                            setIsGeneratingNext(true);
+                            // Generate new exercise and navigate to it
+                            try {
+                              await forceRegenerateExercise(exerciseType);
+                              dispatch({ type: "START_SESSION", payload: { exerciseType } });
+                              router.push(`/exercise/${exerciseType}`);
+                            } catch (error) {
+                              console.error("Failed to generate next exercise:", error);
+                            } finally {
+                              setIsGeneratingNext(false);
+                            }
+                          }}
+                          size="lg"
+                          disabled={isGeneratingNext}
+                        >
+                          {isGeneratingNext ? (
+                            <>
+                              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <ArrowRight className="h-4 w-4 mr-2" />
+                              Next Exercise
+                            </>
+                          )}
                         </Button>
                       </div>
-                    </>
-                  ) : (
-                    <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                      <Button
-                        onClick={() => {
-                          setAnswers(state.currentSession?.previousAnswers || {});
-                          setResults({});
-                          setHasChecked(false);
-                        }}
-                        variant="outline"
-                        size="lg"
-                      >
-                        <RotateCcw className="h-4 w-4 mr-2" />
-                        Try Again
-                      </Button>
-                      
-                      <Button
-                        onClick={async () => {
-                          setIsGeneratingNext(true);
-                          // Generate new exercise and navigate to it
-                          try {
-                            await forceRegenerateExercise(exerciseType);
-                            dispatch({ type: "START_SESSION", payload: { exerciseType } });
-                            router.push(`/exercise/${exerciseType}`);
-                          } catch (error) {
-                            console.error("Failed to generate next exercise:", error);
-                          } finally {
-                            setIsGeneratingNext(false);
-                          }
-                        }}
-                        size="lg"
-                        disabled={isGeneratingNext}
-                      >
-                        {isGeneratingNext ? (
-                          <>
-                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                            Generating...
-                          </>
-                        ) : (
-                          <>
-                            <ArrowRight className="h-4 w-4 mr-2" />
-                            Next Exercise
-                          </>
-                        )}
-                      </Button>
+                    )}
+                  </div>
 
-                    </div>
-                  )}
-                </div>
+                  <div className="space-y-3">
+                    <h3 className="font-semibold">Explanations:</h3>
+                    {exerciseSet.questions.map((question, index) => {
+                      const result = results[question.id];
+                      if (!result) return null;
 
-                <div className="space-y-3">
-                  <h3 className="font-semibold">Explanations:</h3>
-                  {exerciseSet.questions.map((question, index) => {
-                    const result = results[question.id];
-                    if (!result) return null;
-
-                    return (
-                      <div key={question.id} className="border rounded-lg p-2 sm:p-3">
-                        <div className="flex items-start gap-2">
-                          <span className="font-medium text-sm flex-shrink-0 min-w-[1.5rem] sm:min-w-[2rem]">
-                            #{index + 1}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <div className="mb-1">
-                              <span className="font-medium">{question.baseForm}{question.isPlural ? " (plural)" : ""}</span>
-                              {!result.correct && (
-                                <span className="ml-2 text-sm">
-                                  Your answer: <span className="font-mono">{result.userAnswer}</span>
-                                  {" → "}
-                                  Correct:{" "}
-                                  <span className="font-mono text-green-600">
-                                    {Array.isArray(result.correctAnswer)
-                                      ? result.correctAnswer.join(" or ")
-                                      : result.correctAnswer}
+                      return (
+                        <div key={question.id} className="border rounded-lg p-2 sm:p-3">
+                          <div className="flex items-start gap-2">
+                            <span className="font-medium text-sm flex-shrink-0 min-w-[1.5rem] sm:min-w-[2rem]">
+                              #{index + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="mb-1">
+                                <span className="font-medium">
+                                  {question.baseForm}
+                                  {question.isPlural ? " (plural)" : ""}
+                                </span>
+                                {!result.correct && (
+                                  <span className="ml-2 text-sm">
+                                    Your answer: <span className="font-mono">{result.userAnswer}</span>
+                                    {" → "}
+                                    Correct:{" "}
+                                    <span className="font-mono text-green-600">
+                                      {Array.isArray(result.correctAnswer)
+                                        ? result.correctAnswer.join(" or ")
+                                        : result.correctAnswer}
+                                    </span>
                                   </span>
-                                </span>
-                              )}
-                              {result.correct && result.diacriticWarning && (
-                                <span className="ml-2 text-sm text-yellow-700">
-                                  <AlertTriangle className="h-3 w-3 inline mr-1" />
-                                  Correct! Remember diacritics:{" "}
-                                  <span className="font-mono">{result.matchedAnswer}</span>
-                                </span>
-                              )}
+                                )}
+                                {result.correct && result.diacriticWarning && (
+                                  <span className="ml-2 text-sm text-yellow-700">
+                                    <AlertTriangle className="h-3 w-3 inline mr-1" />
+                                    Correct! Remember diacritics:{" "}
+                                    <span className="font-mono">{result.matchedAnswer}</span>
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-muted-foreground">{result.explanation}</p>
                             </div>
-                            <p className="text-sm text-muted-foreground">{result.explanation}</p>
+                            {result.correct && result.diacriticWarning ? (
+                              <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                            ) : result.correct ? (
+                              <Check className="h-5 w-5 text-green-600" />
+                            ) : (
+                              <X className="h-5 w-5 text-red-600" />
+                            )}
                           </div>
-                          {result.correct && result.diacriticWarning ? (
-                            <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                          ) : result.correct ? (
-                            <Check className="h-5 w-5 text-green-600" />
-                          ) : (
-                            <X className="h-5 w-5 text-red-600" />
-                          )}
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
               </>
             )}
           </CardContent>

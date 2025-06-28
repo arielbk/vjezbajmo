@@ -160,9 +160,7 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
             disabled={hasChecked}
           />
           {result && <span className="ml-1">{getResultIcon(result)}</span>}
-          {exercise.isPlural && (
-            <span className="ml-1 text-xs text-muted-foreground italic">(plural)</span>
-          )}
+          {exercise.isPlural && <span className="ml-1 text-xs text-muted-foreground italic">(plural)</span>}
         </span>
         <span>{parts[1] || ""}</span>
         {result && result.correct && result.diacriticWarning && (
@@ -247,7 +245,9 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
                         {isChecking ? "Checking..." : "Check My Work"}
                       </Button>
                       {!allAnswered && (
-                        <p className="text-sm text-muted-foreground mt-2">Please answer all questions before checking.</p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Please answer all questions before checking.
+                        </p>
                       )}
                     </div>
 
@@ -305,7 +305,7 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
                           Exercise Complete! Final Score: {correctAnswers}/{exercises.length} (
                           {Math.round((correctAnswers / exercises.length) * 100)}%)
                         </div>
-                        
+
                         <div className="flex flex-col sm:flex-row gap-2 justify-center">
                           <Button
                             onClick={() => {
@@ -319,7 +319,7 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
                             <RotateCcw className="h-4 w-4 mr-2" />
                             Try Again
                           </Button>
-                          
+
                           <Button
                             onClick={async () => {
                               setIsGeneratingNext(true);
