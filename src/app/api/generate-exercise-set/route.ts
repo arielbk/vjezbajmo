@@ -99,6 +99,13 @@ interface AIExercise {
   correctAnswer: string | string[]; // Support multiple answers
   explanation: string;
   isPlural?: boolean; // Indicates if plural form is required
+  // Verb aspect specific properties
+  exerciseSubType?: string;
+  options?: {
+    imperfective: string;
+    perfective: string;
+  };
+  correctAspect?: "imperfective" | "perfective";
 }
 
 interface AISentenceResponse {
@@ -334,8 +341,14 @@ Return JSON in this exact format:
     {
       "id": "question-uuid",
       "text": "Sentence with _____ blank",
-      "correctAnswer": ["primary correct form", "alternative acceptable form"],
-      "explanation": "explanation of aspect choice and acceptable variations",
+      "exerciseSubType": "verb-aspect",
+      "options": {
+        "imperfective": "imperfective verb form",
+        "perfective": "perfective verb form"
+      },
+      "correctAspect": "imperfective or perfective",
+      "correctAnswer": "correct verb form",
+      "explanation": "explanation of aspect choice and reasoning",
       "isPlural": false
     }
   ]
@@ -502,8 +515,14 @@ Return JSON in this exact format:
     {
       "id": "question-uuid",
       "text": "Sentence with _____ blank",
-      "correctAnswer": ["primary correct form", "alternative acceptable form"],
-      "explanation": "explanation of aspect choice and acceptable variations",
+      "exerciseSubType": "verb-aspect",
+      "options": {
+        "imperfective": "imperfective verb form",
+        "perfective": "perfective verb form"
+      },
+      "correctAspect": "imperfective or perfective",
+      "correctAnswer": "correct verb form",
+      "explanation": "explanation of aspect choice and reasoning",
       "isPlural": false
     }
   ]
@@ -610,13 +629,30 @@ function processAIResponse(content: string, exerciseType: string) {
     return NextResponse.json(exerciseSet);
   } else {
     const aiData = exerciseData as AISentenceResponse;
-    const exercises: SentenceExercise[] = aiData.exercises.map((ex) => ({
-      id: uuidv4(),
-      text: ex.text,
-      correctAnswer: ex.correctAnswer,
-      explanation: ex.explanation,
-      isPlural: ex.isPlural,
-    }));
+    const exercises: SentenceExercise[] = aiData.exercises.map((ex: AIExercise) => {
+      // Check if this is a verb aspect exercise and preserve the verb aspect properties
+      if (exerciseType === "verbAspect" && ex.exerciseSubType === "verb-aspect") {
+        return {
+          id: uuidv4(),
+          text: ex.text,
+          exerciseSubType: ex.exerciseSubType,
+          options: ex.options,
+          correctAspect: ex.correctAspect,
+          correctAnswer: ex.correctAnswer,
+          explanation: ex.explanation,
+          isPlural: ex.isPlural,
+        };
+      }
+      
+      // Default sentence exercise format
+      return {
+        id: uuidv4(),
+        text: ex.text,
+        correctAnswer: ex.correctAnswer,
+        explanation: ex.explanation,
+        isPlural: ex.isPlural,
+      };
+    });
 
     // Add a set ID for consistent tracking
     const exerciseSetWithId = {

@@ -21,10 +21,15 @@ interface VerbAspectExerciseSetProps {
   title: string;
 }
 
-export function VerbAspectExerciseComponent({ exerciseSet, exerciseType, onComplete, title }: VerbAspectExerciseSetProps) {
+export function VerbAspectExerciseComponent({
+  exerciseSet,
+  exerciseType,
+  onComplete,
+  title,
+}: VerbAspectExerciseSetProps) {
   const router = useRouter();
   const { dispatch, forceRegenerateExercise, state, markExerciseCompleted } = useExercise();
-  const [answers, setAnswers] = useState<Record<string | number, 'perfective' | 'imperfective'>>({});
+  const [answers, setAnswers] = useState<Record<string | number, "perfective" | "imperfective">>({});
   const [results, setResults] = useState<Record<string | number, ReturnType<typeof createExerciseResult>>>({});
   const [isChecking, setIsChecking] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
@@ -46,15 +51,15 @@ export function VerbAspectExerciseComponent({ exerciseSet, exerciseType, onCompl
   useEffect(() => {
     if (state.currentSession?.isReviewMode && state.currentSession?.previousAnswers) {
       // Convert string answers back to aspect answers
-      const aspectAnswers: Record<string | number, 'perfective' | 'imperfective'> = {};
+      const aspectAnswers: Record<string | number, "perfective" | "imperfective"> = {};
       Object.entries(state.currentSession.previousAnswers).forEach(([key, value]) => {
-        aspectAnswers[key] = value as 'perfective' | 'imperfective';
+        aspectAnswers[key] = value as "perfective" | "imperfective";
       });
       setAnswers(aspectAnswers);
     }
   }, [state.currentSession]);
 
-  const handleAnswerChange = (questionId: string | number, value: 'perfective' | 'imperfective') => {
+  const handleAnswerChange = (questionId: string | number, value: "perfective" | "imperfective") => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
@@ -75,19 +80,14 @@ export function VerbAspectExerciseComponent({ exerciseSet, exerciseType, onCompl
       for (const exercise of exercises) {
         const userAnswer = answers[exercise.id];
         const isCorrect = userAnswer === exercise.correctAspect;
-        
+
         // For verb aspect exercises, we check against the correctAspect
         const correctAnswerText = exercise.options[exercise.correctAspect];
         const userAnswerText = userAnswer ? exercise.options[userAnswer] : "";
 
         if (isStaticExercise(exercise.id)) {
           // Handle static exercise locally
-          const result = createExerciseResult(
-            exercise.id, 
-            userAnswerText, 
-            correctAnswerText, 
-            exercise.explanation
-          );
+          const result = createExerciseResult(exercise.id, userAnswerText, correctAnswerText, exercise.explanation);
           // Override the correct flag since createExerciseResult doesn't know about our custom logic
           result.correct = isCorrect;
           newResults[exercise.id] = result;
@@ -95,12 +95,7 @@ export function VerbAspectExerciseComponent({ exerciseSet, exerciseType, onCompl
         } else {
           // Handle generated exercise via API - for verb aspect we'll check locally for now
           // since the API doesn't understand our radio button format yet
-          const result = createExerciseResult(
-            exercise.id, 
-            userAnswerText, 
-            correctAnswerText, 
-            exercise.explanation
-          );
+          const result = createExerciseResult(exercise.id, userAnswerText, correctAnswerText, exercise.explanation);
           // Override the correct flag since createExerciseResult doesn't know about our custom logic
           result.correct = isCorrect;
           newResults[exercise.id] = result;
@@ -167,27 +162,21 @@ export function VerbAspectExerciseComponent({ exerciseSet, exerciseType, onCompl
 
         <RadioGroup
           value={selectedValue || ""}
-          onValueChange={(value) => handleAnswerChange(exercise.id, value as 'perfective' | 'imperfective')}
+          onValueChange={(value) => handleAnswerChange(exercise.id, value as "perfective" | "imperfective")}
           disabled={hasChecked}
           className={`space-y-3 p-3 rounded-lg border-2 ${getRadioGroupStyling(result)}`}
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="imperfective" id={`${exercise.id}-imp`} />
-            <Label 
-              htmlFor={`${exercise.id}-imp`} 
-              className="text-sm sm:text-base cursor-pointer flex-1"
-            >
-              <span className="font-mono font-semibold mr-2">{exercise.options.imperfective}</span>
+            <Label htmlFor={`${exercise.id}-imp`} className="text-sm sm:text-base cursor-pointer flex-1">
+              <span className="font-mono font-semibold mr-2">{exercise.options?.imperfective || "Loading..."}</span>
               <span className="text-muted-foreground">(imperfective)</span>
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="perfective" id={`${exercise.id}-perf`} />
-            <Label 
-              htmlFor={`${exercise.id}-perf`} 
-              className="text-sm sm:text-base cursor-pointer flex-1"
-            >
-              <span className="font-mono font-semibold mr-2">{exercise.options.perfective}</span>
+            <Label htmlFor={`${exercise.id}-perf`} className="text-sm sm:text-base cursor-pointer flex-1">
+              <span className="font-mono font-semibold mr-2">{exercise.options?.perfective || "Loading..."}</span>
               <span className="text-muted-foreground">(perfective)</span>
             </Label>
           </div>
@@ -214,7 +203,7 @@ export function VerbAspectExerciseComponent({ exerciseSet, exerciseType, onCompl
         {hasChecked && (
           <div className="flex justify-end">
             <div className="text-xs sm:text-sm text-muted-foreground">
-              Final Score: {correctAnswers}/{exercises.length} ({Math.round((correctAnswers / exercises.length) * 100)}%)
+              {`Final Score: ${correctAnswers}/${exercises.length} (${Math.round((correctAnswers / exercises.length) * 100)}%)`}
             </div>
           </div>
         )}
@@ -249,7 +238,8 @@ export function VerbAspectExerciseComponent({ exerciseSet, exerciseType, onCompl
                                 <div className="mb-2 text-sm">
                                   Your answer: <span className="font-mono">{results[exercise.id].userAnswer}</span>
                                   {" → "}
-                                  Correct: <span className="font-mono text-green-600">{results[exercise.id].correctAnswer}</span>
+                                  Correct:{" "}
+                                  <span className="font-mono text-green-600">{results[exercise.id].correctAnswer}</span>
                                 </div>
                               )}
                               <p className="text-sm text-muted-foreground">{results[exercise.id].explanation}</p>
@@ -270,7 +260,9 @@ export function VerbAspectExerciseComponent({ exerciseSet, exerciseType, onCompl
                         {isChecking ? "Checking..." : "Check My Work"}
                       </Button>
                       {!allAnswered && (
-                        <p className="text-sm text-muted-foreground mt-2">Please answer all questions before checking.</p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Please answer all questions before checking.
+                        </p>
                       )}
                     </div>
 
@@ -333,7 +325,7 @@ export function VerbAspectExerciseComponent({ exerciseSet, exerciseType, onCompl
                           Exercise Complete! Final Score: {correctAnswers}/{exercises.length} (
                           {Math.round((correctAnswers / exercises.length) * 100)}%)
                         </div>
-                        
+
                         <div className="flex flex-col sm:flex-row gap-2 justify-center">
                           <Button
                             onClick={() => {
@@ -347,7 +339,7 @@ export function VerbAspectExerciseComponent({ exerciseSet, exerciseType, onCompl
                             <RotateCcw className="h-4 w-4 mr-2" />
                             Try Again
                           </Button>
-                          
+
                           <Button
                             onClick={async () => {
                               setIsGeneratingNext(true);
