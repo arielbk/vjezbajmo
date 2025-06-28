@@ -3,20 +3,20 @@
     {
       "id": 6,
       "text": "Ovo su tenisice u _____ ću ići na Inmusic Festival.",
-      "correctAnswer": "kojima",
-      "explanation": "Use 'kojima' (locative plural) - 'in which' referring to tennis shoes (tenisice)."
+      "correctAnswer": ["kojima", "kojim"],
+      "explanation": "Use 'kojima' or 'kojim' (locative plural) - 'in which' referring to tennis shoes (tenisice). Both forms are grammatically correct."
     },
     {
       "id": 7,
       "text": "Zagreb je grad u _____ teče rijeka Sava.",
-      "correctAnswer": "kojem",
-      "explanation": "Use 'kojem' (locative masculine singular) - 'in which' referring to the city (grad)."
+      "correctAnswer": ["kojem", "kojemu"],
+      "explanation": "Use 'kojem' or 'kojemu' (locative masculine singular) - 'in which' referring to the city (grad). Both short and long forms are correct."
     },
     {
       "id": 8,
       "text": "Volim piti kavu s ljudima s _____ ne moram puno pričati.",
-      "correctAnswer": "kojima",
-      "explanation": "Use 'kojima' (instrumental plural) - 'with whom' referring to people (ljudima)."
+      "correctAnswer": ["kojima", "kojim"],
+      "explanation": "Use 'kojima' or 'kojim' (instrumental plural) - 'with whom' referring to people (ljudima). Both forms are grammatically correct."
     },
     {
       "id": 9,
