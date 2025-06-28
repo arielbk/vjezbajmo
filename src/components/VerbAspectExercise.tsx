@@ -203,8 +203,7 @@ export function VerbAspectExerciseComponent({
         {hasChecked && (
           <div className="flex justify-end">
             <div className="text-xs sm:text-sm text-muted-foreground">
-              Final Score: {correctAnswers}/{exercises.length} ({Math.round((correctAnswers / exercises.length) * 100)}
-              %)
+              {`Final Score: ${correctAnswers}/${exercises.length} (${Math.round((correctAnswers / exercises.length) * 100)}%)`}
             </div>
           </div>
         )}
