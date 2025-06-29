@@ -114,9 +114,6 @@ export function VerbAspectExerciseComponent({
         { correct: correctAnswers, total: exercises.length },
         title
       );
-
-      // Mark the exercise set as completed in user progress
-      markExerciseCompleted(exerciseSet.id, exerciseType, theme || undefined);
     } catch (error) {
       console.error("Error checking answers:", error);
     } finally {
