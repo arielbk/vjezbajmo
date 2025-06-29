@@ -8,13 +8,29 @@ import { useExercise } from "@/contexts/ExerciseContext";
 import type { ParagraphExerciseSet, SentenceExerciseSet, ExerciseType, VerbAspectExercise } from "@/types/exercise";
 import { AlertTriangle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 export default function ExerciseClient({ exerciseType }: { exerciseType: ExerciseType }) {
-  const { state, dispatch } = useExercise();
+  const { state, dispatch, forceRegenerateExercise } = useExercise();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
+  const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState(false);
+
+  const getCurrentExerciseData = useCallback(() => {
+    switch (exerciseType) {
+      case "verbTenses":
+        return state.verbTensesParagraph;
+      case "nounDeclension":
+        return state.nounAdjectiveParagraph;
+      case "verbAspect":
+        return state.verbAspectExercises;
+      case "interrogativePronouns":
+        return state.interrogativePronounsExercises;
+      default:
+        return null;
+    }
+  }, [exerciseType, state.verbTensesParagraph, state.nounAdjectiveParagraph, state.verbAspectExercises, state.interrogativePronounsExercises]);
 
   useEffect(() => {
     // Set the exercise type and start session when component mounts
@@ -46,6 +62,42 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
     }
   }, [exerciseType, dispatch, searchParams]);
 
+  // Auto-generate exercises if we're serving static exercises and user has API key
+  useEffect(() => {
+    const shouldGenerateExercises = () => {
+      // Don't generate if already attempted or currently generating
+      if (hasAttemptedGeneration || state.isGenerating) return false;
+      
+      // Don't generate for review sessions
+      if (searchParams.get("review") === "true") return false;
+      
+      // Only generate if user has API key
+      if (!state.apiKey) return false;
+      
+      // Check if we're currently serving static exercises
+      const currentData = getCurrentExerciseData();
+      if (!currentData) return false;
+      
+      // Static exercise IDs are predictable
+      const isServingStaticExercise = 
+        (exerciseType === "verbAspect" && currentData.id === "static-verb-aspect") ||
+        (exerciseType === "interrogativePronouns" && currentData.id === "static-interrogative-pronouns") ||
+        (exerciseType === "verbTenses" && currentData.id === "verb-tenses-static-1") ||
+        (exerciseType === "nounDeclension" && currentData.id === "noun-adjective-static-1");
+      
+      return isServingStaticExercise;
+    };
+
+    if (shouldGenerateExercises()) {
+      setHasAttemptedGeneration(true);
+      forceRegenerateExercise(exerciseType)
+        .catch((error) => {
+          console.error("Failed to auto-generate exercises:", error);
+          // Don't show error to user, just continue with static exercises
+        });
+    }
+  }, [exerciseType, state.apiKey, state.isGenerating, hasAttemptedGeneration, searchParams, forceRegenerateExercise, getCurrentExerciseData]);
+
   const handleCompleteExercise = () => {
     // This is primarily used for review mode now, since the exercise components
     // handle their own navigation for normal completion
@@ -56,21 +108,6 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
       // Fallback for any other completion scenarios
       dispatch({ type: "COMPLETE_SESSION" });
       router.push(`/exercise/${exerciseType}/results`);
-    }
-  };
-
-  const getCurrentExerciseData = () => {
-    switch (exerciseType) {
-      case "verbTenses":
-        return state.verbTensesParagraph;
-      case "nounDeclension":
-        return state.nounAdjectiveParagraph;
-      case "verbAspect":
-        return state.verbAspectExercises;
-      case "interrogativePronouns":
-        return state.interrogativePronounsExercises;
-      default:
-        return null;
     }
   };
 
@@ -100,6 +137,16 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
       <Alert>
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>No exercise data available. Please return to selection.</AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Show generating message when auto-generating exercises
+  if (state.isGenerating && hasAttemptedGeneration) {
+    return (
+      <Alert>
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>Generating personalized exercises... This may take a moment.</AlertDescription>
       </Alert>
     );
   }
