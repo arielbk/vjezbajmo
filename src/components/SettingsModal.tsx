@@ -24,6 +24,8 @@ export function SettingsModal() {
   const [isEditing, setIsEditing] = useState(false);
   const [open, setOpen] = useState(false);
   const [globalTheme, setGlobalTheme] = useState("");
+  const [isClearing, setIsClearing] = useState(false);
+  const [clearSuccess, setClearSuccess] = useState(false);
 
   const handleSaveApiKey = () => {
     if (tempApiKey.trim()) {
@@ -53,17 +55,23 @@ export function SettingsModal() {
     setOpen(false);
   };
 
-  const handleClearProgress = () => {
-    const exerciseTypes = ["verbTenses", "nounDeclension", "verbAspect", "interrogativePronouns"] as const;
-
-    // Clear progress for all exercise types at current CEFR level
-    exerciseTypes.forEach((type) => {
-      userProgressManager.clearCompletedExercises(type, state.cefrLevel);
-    });
-
-    // Also clear overall cleanup flag to force cleanup on next session
-    if (typeof window !== "undefined") {
-      sessionStorage.removeItem("vjezbajmo-cleaned");
+  const handleClearProgress = async () => {
+    setIsClearing(true);
+    setClearSuccess(false);
+    
+    try {
+      userProgressManager.clearAllProgress();
+      setClearSuccess(true);
+      
+      // Hide success message after 3 seconds
+      setTimeout(() => {
+        setClearSuccess(false);
+      }, 3000);
+    } catch (error) {
+      console.error("Failed to clear progress:", error);
+      // You could add error state here if needed
+    } finally {
+      setIsClearing(false);
     }
   };
 
@@ -239,10 +247,19 @@ export function SettingsModal() {
                 onClick={handleClearProgress}
                 variant="outline"
                 className="w-full gap-2 text-destructive hover:text-destructive"
+                disabled={isClearing}
               >
-                <Trash2 className="h-4 w-4" />
-                Clear Completed Exercises
+                <Trash2 className={`h-4 w-4 ${isClearing ? "animate-spin" : ""}`} />
+                {isClearing ? "Clearing..." : "Clear Completed Exercises"}
               </Button>
+              {clearSuccess && (
+                <Alert className="bg-green-50 border-green-200">
+                  <AlertCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-xs text-green-700">
+                    Progress successfully cleared! Your exercise history has been reset.
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
               This will reset your progress and allow you to see exercises you&apos;ve already completed.

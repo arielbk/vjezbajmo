@@ -258,6 +258,33 @@ class UserProgressManager {
     }
   }
 
+  clearAllProgress(): void {
+    if (typeof window === "undefined") return; // SSR safety
+
+    try {
+      // Clear global completed exercises storage
+      const globalKey = this.getGlobalStorageKey();
+      localStorage.removeItem(globalKey);
+
+      // Clear all exercise-type specific storage
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("vjezbajmo-progress:")) {
+          keysToRemove.push(key);
+        }
+      }
+
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+
+      // Clear the cleanup flag to force cleanup on next session
+      sessionStorage.removeItem("vjezbajmo-cleaned");
+    } catch (error) {
+      console.error("Failed to clear all progress:", error);
+      throw error; // Re-throw to allow caller to handle error feedback
+    }
+  }
+
   // Get all completed exercises across all types (for debugging/stats)
   getAllProgress(): Record<string, UserExerciseProgress> {
     if (typeof window === "undefined") return {}; // SSR safety
