@@ -5,12 +5,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { v4 as uuidv4 } from "uuid";
 import { ParagraphExerciseSet, SentenceExercise } from "@/types/exercise";
 import { cacheProvider, generateCacheKey, CachedExercise } from "@/lib/cache-provider";
-
-// Static exercise imports for examples
-import verbTensesData from "@/data/verb-tenses-paragraph.json";
-import nounAdjectiveData from "@/data/noun-adjective-paragraph.json";
-import verbAspectData from "@/data/verb-aspect-exercises.json";
-import interrogativePronounsData from "@/data/interrogative-pronouns-exercises.json";
+import { generatePrompt } from "@/lib/prompts";
 
 // Cache static exercise generation for 1 hour
 export const revalidate = 3600;
@@ -25,57 +20,6 @@ const generateExerciseSchema = z.object({
   userCompletedExercises: z.array(z.string()).optional(),
   forceRegenerate: z.boolean().optional(),
 });
-
-// Shared prompt instructions for flexible answer validation
-const MULTIPLE_ANSWERS_INSTRUCTIONS = {
-  VERB_TENSES: `
-
-IMPORTANT: For each question, provide "correctAnswer" as an array of strings containing ALL grammatically acceptable variations, including:
-- Different verb forms when multiple aspects/tenses are contextually appropriate
-- Alternative word orders when Croatian grammar allows flexibility
-- Gender variations (masculine/feminine) when both are possible
-- Regional or stylistic variations that are grammatically correct
-
-Set "isPlural" to true when the correct answer requires a plural form (e.g., when the subject is plural).
-
-Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`,
-
-  NOUN_DECLENSION: `
-
-IMPORTANT: For each question, provide "correctAnswer" as an array of strings containing ALL grammatically acceptable variations, including:
-- Different case forms when context allows multiple interpretations
-- Alternative adjective declensions that agree with the noun
-- Word order variations when Croatian grammar permits flexibility
-- Regional variations that are grammatically correct
-
-Set "isPlural" to true when the correct answer requires a plural form (e.g., when declining plural nouns/adjectives).
-
-Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`,
-
-  VERB_ASPECT: `
-
-IMPORTANT: For each exercise, provide "correctAnswer" as an array of strings containing ALL grammatically acceptable variations, including:
-- Both perfective and imperfective forms when context allows either
-- Different gender/person forms when applicable
-- Alternative verb forms that express the same meaning
-- Regional or stylistic variations that are grammatically correct
-
-Set "isPlural" to true when the correct answer requires a plural form (e.g., when the subject is plural).
-
-Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`,
-
-  INTERROGATIVE_PRONOUNS: `
-
-IMPORTANT: For each exercise, provide "correctAnswer" as an array of strings containing ALL grammatically acceptable variations, including:
-- Alternative case forms when context permits multiple interpretations
-- Both long and short forms where applicable (e.g., kojeg vs kojega)
-- Regional variations that are grammatically correct
-- Different word orders when Croatian grammar allows flexibility
-
-Set "isPlural" to true when the correct answer requires a plural form (e.g., koji -> koji for plural masculine, koja -> koja for plural neuter).
-
-Provide at least 2-3 acceptable variations where possible, but include ALL that are truly correct.`
-};
 
 // Interfaces for AI responses
 interface AIQuestion {
@@ -247,174 +191,17 @@ async function generateWithOpenAI(exerciseType: string, cefrLevel: string, apiKe
   // OpenAI-specific exercise generation - Updated to support multiple correct answers
   const openai = new OpenAI({ apiKey });
 
-  let prompt: string;
-  const systemPrompt = `You are a Croatian language teacher creating exercises for ${cefrLevel} CEFR level students. Always respond with valid JSON only, no additional text.`;
-
-  if (exerciseType === "verbTenses" || exerciseType === "nounDeclension") {
-    // Paragraph exercise
-    const themeText = theme ? ` The theme should be: ${theme}.` : "";
-
-    if (exerciseType === "verbTenses") {
-      const exampleExercise = JSON.stringify(verbTensesData, null, 2);
-      prompt = `Create a Croatian verb tenses paragraph exercise. Generate a connected story with 6 blanks where students fill in correct verb forms.${themeText}
-
-Here's an example of the quality and style expected:
-
-${exampleExercise}
-
-Key requirements:
-- Create a coherent, engaging story that flows naturally
-- Use a variety of verb tenses (present, past, future, conditional)
-- Include both perfective and imperfective verbs where appropriate
-- Provide clear, educational explanations for each answer
-- Maintain appropriate ${cefrLevel} difficulty level
-- Set "isPlural" to true when the correct answer requires a plural form
-
-CRITICAL: Avoid reflexive pronoun duplication!
-- If a reflexive pronoun (se/si) appears in the visible text, do NOT include it in the expected answer
-- For reflexive verbs, either put the reflexive pronoun in the blank OR in the visible text, never both
-- Example: "Ana _____ (pripremiti se)" expects "se priprema" OR "Ana se _____ (pripremiti)" expects "priprema"
-- Never create: "Ana se _____ (pripremiti se)" expecting "se priprema" - this duplicates "se"
-
-Return JSON in this exact format:
-{
-  "id": "generated-uuid",
-  "paragraph": "Story text with ___1___ (baseForm) blanks...",
-  "questions": [
-    {
-      "id": "question-uuid",
-      "blankNumber": 1,
-      "baseForm": "infinitive",
-      "correctAnswer": ["primary correct form", "alternative acceptable form"],
-      "explanation": "explanation of why these forms are correct, including any grammatical variations",
-      "isPlural": false
-    }
-  ]
-}${MULTIPLE_ANSWERS_INSTRUCTIONS.VERB_TENSES}`;
-    } else {
-      const exampleExercise = JSON.stringify(nounAdjectiveData, null, 2);
-      prompt = `Create a Croatian noun-adjective declension paragraph exercise. Generate a connected story with 6 blanks where students fill in correctly declined noun-adjective pairs.${themeText}
-
-Here's an example of the quality and style expected:
-
-${exampleExercise}
-
-Key requirements:
-- Create a coherent, engaging story that flows naturally
-- Use a variety of cases (nominative, accusative, genitive, dative, locative, instrumental)
-- Include masculine, feminine, and neuter declensions
-- Provide clear explanations mentioning the case and reasoning
-- Maintain appropriate ${cefrLevel} difficulty level
-
-Return JSON in this exact format:
-{
-  "id": "generated-uuid", 
-  "paragraph": "Story text with ___1___ (baseForm) blanks...",
-  "questions": [
-    {
-      "id": "question-uuid",
-      "blankNumber": 1,
-      "baseForm": "nominative form",
-      "correctAnswer": ["primary declined form", "alternative acceptable form"],
-      "explanation": "explanation of case and acceptable variations",
-      "isPlural": false
-    }
-  ]
-}${MULTIPLE_ANSWERS_INSTRUCTIONS.NOUN_DECLENSION}`;
-    }
-  } else {
-    // Sentence exercises
-    const themeText = theme ? ` The theme should be: ${theme}.` : "";
-
-    if (exerciseType === "verbAspect") {
-      const exampleExercises = JSON.stringify({ exercises: verbAspectData.exercises.slice(0, 3) }, null, 2);
-      prompt = `Create 5 Croatian verb aspect exercises. Each should be a sentence with one blank where students choose between perfective/imperfective verb forms.${themeText}
-
-Here are examples of the quality and style expected:
-
-${exampleExercises}
-
-Key requirements:
-- Create natural, realistic sentences that Croatian speakers would actually use
-- Focus on proper verb tense and aspect usage
-- Include a variety of contexts (daily activities, past events, future plans)
-- Provide clear explanations about tense and person
-- Maintain appropriate ${cefrLevel} difficulty level
-
-CRITICAL: Avoid reflexive pronoun duplication!
-- If a reflexive pronoun (se/si) appears in the visible text, do NOT include it in the expected answer
-- For reflexive verbs, either put the reflexive pronoun in the blank OR in the visible text, never both
-- Example: "Ana _____ (pripremiti se)" expects "se priprema" OR "Ana se _____ (pripremiti)" expects "priprema"
-- Never create: "Ana se _____ (pripremiti se)" expecting "se priprema" - this duplicates "se"
-
-Return JSON in this exact format:
-{
-  "exercises": [
-    {
-      "id": "question-uuid",
-      "text": "Sentence with _____ blank",
-      "exerciseSubType": "verb-aspect",
-      "options": {
-        "imperfective": "imperfective verb form",
-        "perfective": "perfective verb form"
-      },
-      "correctAspect": "imperfective or perfective",
-      "correctAnswer": "correct verb form",
-      "explanation": "explanation of aspect choice and reasoning",
-      "isPlural": false
-    }
-  ]
-}${MULTIPLE_ANSWERS_INSTRUCTIONS.VERB_ASPECT}`;
-    } else {
-      const exampleExercises = JSON.stringify({ exercises: interrogativePronounsData.exercises.slice(0, 3) }, null, 2);
-      prompt = `Create 5 Croatian interrogative pronoun exercises. Each should be a sentence with one blank where students fill in the correct form of koji/koja/koje ONLY.${themeText}
-
-Here are examples of the quality and style expected:
-
-${exampleExercises}
-
-IMPORTANT: Use ONLY forms of "koji" (which). Do NOT use other interrogative pronouns like "tko", "što", "čiji", etc.
-
-Declension table for "koji" (which):
-SINGULAR:
-- Masculine: koji (N), kojeg(a) (G), kojem(u) (D), koji/kojeg(a) (A), kojem(u) (L), kojim (I)
-- Feminine: koja (N), koje (G), kojoj (D), koju (A), kojoj (L), kojom (I)
-- Neuter: koje (N), kojeg(a) (G), kojem(u) (D), koje (A), kojem(u) (L), kojim (I)
-
-PLURAL:
-- Masculine: koji (N), kojih (G), kojima (D), koje (A), kojima (L), kojima (I)
-- Feminine: koje (N), kojih (G), kojima (D), koje (A), kojima (L), kojima (I)
-- Neuter: koja (N), kojih (G), kojima (D), koja (A), kojima (L), kojima (I)
-
-Key requirements:
-- Create natural, realistic sentences that Croatian speakers would actually use
-- Focus EXCLUSIVELY on the declension of "koji/koja/koje" forms shown above
-- Include a variety of cases (nominative, genitive, dative, accusative, locative, instrumental)
-- Include masculine, feminine, and neuter forms
-- Include both singular and plural forms
-- Provide clear explanations mentioning case, gender, number, and reasoning
-- Maintain appropriate ${cefrLevel} difficulty level
-
-Return JSON in this exact format:
-{
-  "exercises": [
-    {
-      "id": "question-uuid",
-      "text": "_____ question sentence?",
-      "correctAnswer": ["primary correct pronoun", "alternative acceptable form"],
-      "explanation": "explanation of why these pronouns are correct and their variations",
-      "isPlural": false
-    }
-  ]
-}${MULTIPLE_ANSWERS_INSTRUCTIONS.INTERROGATIVE_PRONOUNS}`;
-    }
-  }
+  const prompts = generatePrompt(
+    exerciseType as "verbTenses" | "nounDeclension" | "verbAspect" | "interrogativePronouns", 
+    cefrLevel as "A1" | "A2.1" | "A2.2" | "B1.1", 
+    theme
+  );
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: prompt },
+      { role: "system", content: prompts.systemPrompt },
+      { role: "user", content: prompts.userPrompt },
     ],
     temperature: 2,
     max_tokens: 1500,
@@ -433,168 +220,11 @@ async function generateWithAnthropic(exerciseType: string, cefrLevel: string, ap
 
   const anthropic = new Anthropic({ apiKey });
 
-  let prompt: string;
-  const systemPrompt = `You are a Croatian language teacher creating exercises for ${cefrLevel} CEFR level students. Always respond with valid JSON only, no additional text.`;
-
-  if (exerciseType === "verbTenses" || exerciseType === "nounDeclension") {
-    // Paragraph exercise
-    const themeText = theme ? ` The theme should be: ${theme}.` : "";
-
-    if (exerciseType === "verbTenses") {
-      const exampleExercise = JSON.stringify(verbTensesData, null, 2);
-      prompt = `Create a Croatian verb tenses paragraph exercise. Generate a connected story with 6 blanks where students fill in correct verb forms.${themeText}
-
-Here's an example of the quality and style expected:
-
-${exampleExercise}
-
-Key requirements:
-- Create a coherent, engaging story that flows naturally
-- Use a variety of verb tenses (present, past, future, conditional)
-- Include both perfective and imperfective verbs where appropriate
-- Provide clear, educational explanations for each answer
-- Maintain appropriate ${cefrLevel} difficulty level
-- Set "isPlural" to true when the correct answer requires a plural form
-
-CRITICAL: Avoid reflexive pronoun duplication!
-- If a reflexive pronoun (se/si) appears in the visible text, do NOT include it in the expected answer
-- For reflexive verbs, either put the reflexive pronoun in the blank OR in the visible text, never both
-- Example: "Ana _____ (pripremiti se)" expects "se priprema" OR "Ana se _____ (pripremiti)" expects "priprema"
-- Never create: "Ana se _____ (pripremiti se)" expecting "se priprema" - this duplicates "se"
-
-Return JSON in this exact format:
-{
-  "id": "generated-uuid",
-  "paragraph": "Story text with ___1___ (baseForm) blanks...",
-  "questions": [
-    {
-      "id": "question-uuid",
-      "blankNumber": 1,
-      "baseForm": "infinitive",
-      "correctAnswer": ["primary correct form", "alternative acceptable form"],
-      "explanation": "explanation of why these forms are correct, including any grammatical variations",
-      "isPlural": false
-    }
-  ]
-}${MULTIPLE_ANSWERS_INSTRUCTIONS.VERB_TENSES}`;
-    } else {
-      const exampleExercise = JSON.stringify(nounAdjectiveData, null, 2);
-      prompt = `Create a Croatian noun-adjective declension paragraph exercise. Generate a connected story with 6 blanks where students fill in correctly declined noun-adjective pairs.${themeText}
-
-Here's an example of the quality and style expected:
-
-${exampleExercise}
-
-Key requirements:
-- Create a coherent, engaging story that flows naturally
-- Use a variety of cases (nominative, accusative, genitive, dative, locative, instrumental)
-- Include masculine, feminine, and neuter declensions
-- Provide clear explanations mentioning the case and reasoning
-- Maintain appropriate ${cefrLevel} difficulty level
-
-Return JSON in this exact format:
-{
-  "id": "generated-uuid", 
-  "paragraph": "Story text with ___1___ (baseForm) blanks...",
-  "questions": [
-    {
-      "id": "question-uuid",
-      "blankNumber": 1,
-      "baseForm": "nominative form",
-      "correctAnswer": ["primary declined form", "alternative acceptable form"],
-      "explanation": "explanation of case and acceptable variations",
-      "isPlural": false
-    }
-  ]
-}${MULTIPLE_ANSWERS_INSTRUCTIONS.NOUN_DECLENSION}`;
-    }
-  } else {
-    // Sentence exercises
-    const themeText = theme ? ` The theme should be: ${theme}.` : "";
-
-    if (exerciseType === "verbAspect") {
-      const exampleExercises = JSON.stringify({ exercises: verbAspectData.exercises.slice(0, 3) }, null, 2);
-      prompt = `Create 5 Croatian verb aspect exercises. Each should be a sentence with one blank where students choose between perfective/imperfective verb forms.${themeText}
-
-Here are examples of the quality and style expected:
-
-${exampleExercises}
-
-Key requirements:
-- Create natural, realistic sentences that Croatian speakers would actually use
-- Focus on proper verb tense and aspect usage
-- Include a variety of contexts (daily activities, past events, future plans)
-- Provide clear explanations about tense and person
-- Maintain appropriate ${cefrLevel} difficulty level
-
-CRITICAL: Avoid reflexive pronoun duplication!
-- If a reflexive pronoun (se/si) appears in the visible text, do NOT include it in the expected answer
-- For reflexive verbs, either put the reflexive pronoun in the blank OR in the visible text, never both
-- Example: "Ana _____ (pripremiti se)" expects "se priprema" OR "Ana se _____ (pripremiti)" expects "priprema"
-- Never create: "Ana se _____ (pripremiti se)" expecting "se priprema" - this duplicates "se"
-
-Return JSON in this exact format:
-{
-  "exercises": [
-    {
-      "id": "question-uuid",
-      "text": "Sentence with _____ blank",
-      "exerciseSubType": "verb-aspect",
-      "options": {
-        "imperfective": "imperfective verb form",
-        "perfective": "perfective verb form"
-      },
-      "correctAspect": "imperfective or perfective",
-      "correctAnswer": "correct verb form",
-      "explanation": "explanation of aspect choice and reasoning",
-      "isPlural": false
-    }
-  ]
-}${MULTIPLE_ANSWERS_INSTRUCTIONS.VERB_ASPECT}`;
-    } else {
-      const exampleExercises = JSON.stringify({ exercises: interrogativePronounsData.exercises.slice(0, 3) }, null, 2);
-      prompt = `Create 5 Croatian interrogative pronoun exercises. Each should be a sentence with one blank where students fill in the correct form of koji/koja/koje ONLY.${themeText}
-
-Here are examples of the quality and style expected:
-
-${exampleExercises}
-
-IMPORTANT: Use ONLY forms of "koji" (which). Do NOT use other interrogative pronouns like "tko", "što", "čiji", etc.
-
-Declension table for "koji" (which):
-SINGULAR:
-- Masculine: koji (N), kojeg(a) (G), kojem(u) (D), koji/kojeg(a) (A), kojem(u) (L), kojim (I)
-- Feminine: koja (N), koje (G), kojoj (D), koju (A), kojoj (L), kojom (I)
-- Neuter: koje (N), kojeg(a) (G), kojem(u) (D), koje (A), kojem(u) (L), kojim (I)
-
-PLURAL:
-- Masculine: koji (N), kojih (G), kojima (D), koje (A), kojima (L), kojima (I)
-- Feminine: koje (N), kojih (G), kojima (D), koje (A), kojima (L), kojima (I)
-- Neuter: koja (N), kojih (G), kojima (D), koja (A), kojima (L), kojima (I)
-
-Key requirements:
-- Create natural, realistic sentences that Croatian speakers would actually use
-- Focus EXCLUSIVELY on the declension of "koji/koja/koje" forms shown above
-- Include a variety of cases (nominative, genitive, dative, accusative, locative, instrumental)
-- Include masculine, feminine, and neuter forms
-- Include both singular and plural forms
-- Provide clear explanations mentioning case, gender, number, and reasoning
-- Maintain appropriate ${cefrLevel} difficulty level
-
-Return JSON in this exact format:
-{
-  "exercises": [
-    {
-      "id": "question-uuid",
-      "text": "_____ question sentence?",
-      "correctAnswer": ["primary correct pronoun", "alternative acceptable form"],
-      "explanation": "explanation of why these pronouns are correct and their variations",
-      "isPlural": false
-    }
-  ]
-}${MULTIPLE_ANSWERS_INSTRUCTIONS.INTERROGATIVE_PRONOUNS}`;
-    }
-  }
+  const prompts = generatePrompt(
+    exerciseType as "verbTenses" | "nounDeclension" | "verbAspect" | "interrogativePronouns", 
+    cefrLevel as "A1" | "A2.1" | "A2.2" | "B1.1", 
+    theme
+  );
 
   console.log("Sending request to Anthropic...");
 
@@ -603,11 +233,11 @@ Return JSON in this exact format:
       model: "claude-3-5-sonnet-latest",
       max_tokens: 1500,
       temperature: 1,
-      system: systemPrompt,
+      system: prompts.systemPrompt,
       messages: [
         {
           role: "user",
-          content: prompt,
+          content: prompts.userPrompt,
         },
       ],
     });
