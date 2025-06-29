@@ -4,9 +4,10 @@ import { ParagraphExercise } from "@/components/ParagraphExercise";
 import { SentenceExercise as SentenceExerciseComponent } from "@/components/SentenceExercise";
 import { VerbAspectExerciseComponent } from "@/components/VerbAspectExercise";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { useExercise } from "@/contexts/ExerciseContext";
 import type { ParagraphExerciseSet, SentenceExerciseSet, ExerciseType, VerbAspectExercise } from "@/types/exercise";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Share, Check } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 
@@ -16,6 +17,7 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const getCurrentExerciseData = useCallback(() => {
     switch (exerciseType) {
@@ -31,6 +33,41 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
         return null;
     }
   }, [exerciseType, state.verbTensesParagraph, state.nounAdjectiveParagraph, state.verbAspectExercises, state.interrogativePronounsExercises]);
+
+  // Check if current exercise is generated (has UUID) and can be shared
+  const canShare = () => {
+    const currentData = getCurrentExerciseData();
+    if (!currentData) return false;
+    
+    // Check if this is a generated exercise (UUID format)
+    const id = currentData.id;
+    return typeof id === 'string' && id.length > 10 && id.includes('-');
+  };
+
+  const handleShare = async () => {
+    const currentData = getCurrentExerciseData();
+    if (!currentData || !canShare()) return;
+    
+    const shareUrl = `${window.location.origin}/exercise/${exerciseType}/${currentData.id}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Croatian Exercise - ${getExerciseTitle()}`,
+          text: `Check out this Croatian language exercise!`,
+          url: shareUrl,
+        });
+        return;
+      } catch {
+        // Fall back to clipboard if sharing fails
+      }
+    }
+    
+    // Copy to clipboard
+    await navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     // Set the exercise type and start session when component mounts
@@ -91,12 +128,18 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
     if (shouldGenerateExercises()) {
       setHasAttemptedGeneration(true);
       forceRegenerateExercise(exerciseType)
+        .then((newExerciseId) => {
+          // If we get a new exercise ID, redirect to the specific exercise URL
+          if (newExerciseId) {
+            router.push(`/exercise/${exerciseType}/${newExerciseId}`);
+          }
+        })
         .catch((error) => {
           console.error("Failed to auto-generate exercises:", error);
           // Don't show error to user, just continue with static exercises
         });
     }
-  }, [exerciseType, state.apiKey, state.isGenerating, hasAttemptedGeneration, searchParams, forceRegenerateExercise, getCurrentExerciseData]);
+  }, [exerciseType, state.apiKey, state.isGenerating, hasAttemptedGeneration, searchParams, forceRegenerateExercise, getCurrentExerciseData, router]);
 
   const handleCompleteExercise = () => {
     // This is primarily used for review mode now, since the exercise components
@@ -181,6 +224,16 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
           onComplete={handleCompleteExercise}
           title={getExerciseTitle()}
         />
+      )}
+
+      {/* Share button - only visible for generated exercises */}
+      {canShare() && (
+        <div className="mt-4">
+          <Button onClick={handleShare} variant="outline" size="sm" className="flex items-center">
+            {copied ? <Check className="mr-2 h-4 w-4" /> : <Share className="mr-2 h-4 w-4" />}
+            {copied ? "Link copied!" : "Share this exercise"}
+          </Button>
+        </div>
       )}
     </>
   );

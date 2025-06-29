@@ -201,7 +201,7 @@ function exerciseReducer(state: ExerciseState, action: ExerciseAction): Exercise
 const ExerciseContext = createContext<{
   state: ExerciseState;
   dispatch: React.Dispatch<ExerciseAction>;
-  forceRegenerateExercise: (exerciseType: ExerciseType, theme?: string) => Promise<void>;
+  forceRegenerateExercise: (exerciseType: ExerciseType, theme?: string) => Promise<string | null>;
   regenerateAllExercises: (theme?: string) => Promise<void>;
   checkAnswer: (questionId: string, userAnswer: string) => Promise<CheckAnswerResponse>;
   markExerciseCompleted: (
@@ -259,12 +259,7 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("vjezbajmo-cefr-level", state.cefrLevel);
   }, [state.cefrLevel]);
 
-  // Save CEFR level to localStorage when it changes
-  useEffect(() => {
-    localStorage.setItem("vjezbajmo-cefr-level", state.cefrLevel);
-  }, [state.cefrLevel]);
-
-  const forceRegenerateExercise = async (exerciseType: ExerciseType, theme?: string) => {
+  const forceRegenerateExercise = async (exerciseType: ExerciseType, theme?: string): Promise<string | null> => {
     dispatch({ type: "SET_GENERATING", payload: true });
     dispatch({ type: "SET_ERROR", payload: null });
 
@@ -309,11 +304,15 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
 
       const data = await response.json();
       dispatch({ type: "SET_GENERATED_EXERCISES", payload: { exerciseType, data } });
+      
+      // Return the exercise ID for URL updating
+      return data.id;
     } catch (error) {
       dispatch({
         type: "SET_ERROR",
         payload: error instanceof Error ? error.message : "Failed to generate exercises",
       });
+      return null;
     } finally {
       dispatch({ type: "SET_GENERATING", payload: false });
     }

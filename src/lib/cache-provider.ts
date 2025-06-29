@@ -17,6 +17,9 @@ export interface CacheProvider {
   getCachedExercises(key: string): Promise<CachedExercise[]>;
   setCachedExercise(key: string, exercise: CachedExercise): Promise<void>;
 
+  // Exercise retrieval by ID
+  getExerciseById(exerciseId: string): Promise<CachedExercise | null>;
+
   // Enhanced cache invalidation
   invalidateExercise(key: string, exerciseId: string): Promise<void>;
   invalidateAllExercises(key: string): Promise<void>;
@@ -37,6 +40,17 @@ class InMemoryCache implements CacheProvider {
     const existing = this.exercises.get(key) || [];
     existing.push(exercise);
     this.exercises.set(key, existing);
+  }
+
+  async getExerciseById(exerciseId: string): Promise<CachedExercise | null> {
+    // Search across all cache keys to find the exercise
+    for (const exercises of this.exercises.values()) {
+      const found = exercises.find((ex) => ex.id === exerciseId || ex.data.id === exerciseId);
+      if (found) {
+        return found;
+      }
+    }
+    return null;
   }
 
   async invalidateExercise(key: string, exerciseId: string): Promise<void> {
@@ -136,6 +150,30 @@ class VercelKVCache implements CacheProvider {
       await kv.del(`exercises:${key}`);
     } catch (error) {
       console.error("Failed to invalidate all exercises:", error);
+    }
+  }
+
+  async getExerciseById(exerciseId: string): Promise<CachedExercise | null> {
+    const kv = await this.getKV();
+    if (!kv) return null;
+
+    try {
+      // Search through all exercise keys to find the exercise by ID
+      // This is not the most efficient, but works for now
+      const keys = await kv.keys("exercises:*");
+      
+      for (const key of keys) {
+        const exercises: CachedExercise[] = await kv.get(key) || [];
+        const found = exercises.find(ex => ex.id === exerciseId || ex.data.id === exerciseId);
+        if (found) {
+          return found;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Failed to get exercise by ID:", error);
+      return null;
     }
   }
 }
