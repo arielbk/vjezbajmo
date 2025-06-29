@@ -106,12 +106,15 @@ export function VerbAspectExerciseComponent({
       setResults(newResults);
       setHasChecked(true);
 
+      // Calculate correct answers from the new results
+      const correctCount = Object.values(newResults).filter((r) => r.correct).length;
+
       // Mark the exercise as completed when answers are checked
       markExerciseCompleted(
         exerciseSet.id,
         exerciseType,
         theme || undefined,
-        { correct: correctAnswers, total: exercises.length },
+        { correct: correctCount, total: exercises.length },
         title
       );
     } catch (error) {
