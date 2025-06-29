@@ -53,12 +53,17 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
   };
 
   const handleRegenerateExercise = async () => {
-    await forceRegenerateExercise(exerciseType, theme || undefined);
+    const newExerciseId = await forceRegenerateExercise(exerciseType, theme || undefined);
     setTheme("");
     // Reset all state for the new exercises
     setAnswers({});
     setResults({});
     setHasChecked(false);
+    
+    // If we get a new exercise ID, redirect to the specific exercise URL
+    if (newExerciseId) {
+      router.push(`/exercise/${exerciseType}/${newExerciseId}`);
+    }
   };
 
   const handleCheckAnswers = async () => {

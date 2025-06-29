@@ -22,10 +22,16 @@ export default function ResultsClient({ exerciseType }: { exerciseType: Exercise
     if (exerciseType) {
       try {
         // Generate a new exercise for the same type
-        await forceRegenerateExercise(exerciseType);
+        const newExerciseId = await forceRegenerateExercise(exerciseType);
         // Start new session and navigate to exercise
         dispatch({ type: "START_SESSION", payload: { exerciseType } });
-        router.push(`/exercise/${exerciseType}`);
+        
+        // Navigate to specific exercise if we have an ID, otherwise use the type route
+        if (newExerciseId) {
+          router.push(`/exercise/${exerciseType}/${newExerciseId}`);
+        } else {
+          router.push(`/exercise/${exerciseType}`);
+        }
       } catch (error) {
         console.error("Failed to generate next exercise:", error);
       }
