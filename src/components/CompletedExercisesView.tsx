@@ -147,13 +147,25 @@ export function CompletedExercisesView({ onRetryExercise }: CompletedExercisesVi
 
       {/* Exercise Type Filter */}
       <Tabs value={selectedType} onValueChange={(value) => setSelectedType(value as ExerciseType | "all")}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="verbTenses">Verb Tenses</TabsTrigger>
-          <TabsTrigger value="nounDeclension">Declension</TabsTrigger>
-          <TabsTrigger value="verbAspect">Verb Aspect</TabsTrigger>
-          <TabsTrigger value="interrogativePronouns">Pronouns</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto">
+          <TabsList className="inline-flex w-max min-w-full justify-start gap-1 p-1">
+            <TabsTrigger value="all" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap">
+              All
+            </TabsTrigger>
+            <TabsTrigger value="verbTenses" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap">
+              Verb Tenses
+            </TabsTrigger>
+            <TabsTrigger value="nounDeclension" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap">
+              Declension
+            </TabsTrigger>
+            <TabsTrigger value="verbAspect" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap">
+              Verb Aspect
+            </TabsTrigger>
+            <TabsTrigger value="interrogativePronouns" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap">
+              Pronouns
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value={selectedType} className="space-y-4">
           {filteredRecords.length === 0 ? (
