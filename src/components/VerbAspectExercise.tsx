@@ -147,10 +147,25 @@ export function VerbAspectExerciseComponent({
     return <X className="h-4 w-4 text-red-600 inline" />;
   };
 
+  // Function to create shuffled options for each exercise consistently
+  const getShuffledOptions = (exercise: VerbAspectExercise) => {
+    // Use the exercise ID as a seed for consistent shuffling per exercise
+    const seed = typeof exercise.id === 'string' ? exercise.id.charCodeAt(0) : exercise.id;
+    const shouldReverse = seed % 2 === 0;
+    
+    const options = [
+      { aspect: 'imperfective', text: exercise.options?.imperfective || "Loading..." },
+      { aspect: 'perfective', text: exercise.options?.perfective || "Loading..." }
+    ];
+    
+    return shouldReverse ? options.reverse() : options;
+  };
+
   const renderVerbAspectQuestion = (exercise: VerbAspectExercise) => {
     const parts = exercise.text.split("_____");
     const result = results[exercise.id];
     const selectedValue = answers[exercise.id];
+    const shuffledOptions = getShuffledOptions(exercise);
 
     return (
       <div className="space-y-4">
@@ -166,20 +181,14 @@ export function VerbAspectExerciseComponent({
           disabled={hasChecked}
           className={`space-y-3 p-3 rounded-lg border-2 ${getRadioGroupStyling(result)}`}
         >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="imperfective" id={`${exercise.id}-imp`} />
-            <Label htmlFor={`${exercise.id}-imp`} className="text-sm sm:text-base cursor-pointer flex-1">
-              <span className="font-mono font-semibold mr-2">{exercise.options?.imperfective || "Loading..."}</span>
-              <span className="text-muted-foreground">(imperfective)</span>
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="perfective" id={`${exercise.id}-perf`} />
-            <Label htmlFor={`${exercise.id}-perf`} className="text-sm sm:text-base cursor-pointer flex-1">
-              <span className="font-mono font-semibold mr-2">{exercise.options?.perfective || "Loading..."}</span>
-              <span className="text-muted-foreground">(perfective)</span>
-            </Label>
-          </div>
+          {shuffledOptions.map((option) => (
+            <div key={option.aspect} className="flex items-center space-x-2">
+              <RadioGroupItem value={option.aspect} id={`${exercise.id}-${option.aspect.substring(0, 4)}`} />
+              <Label htmlFor={`${exercise.id}-${option.aspect.substring(0, 4)}`} className="text-sm sm:text-base cursor-pointer flex-1">
+                <span className="font-mono font-semibold">{option.text}</span>
+              </Label>
+            </div>
+          ))}
         </RadioGroup>
 
         {result && <span className="ml-2">{getResultIcon(result)}</span>}
