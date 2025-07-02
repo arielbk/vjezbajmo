@@ -6,6 +6,9 @@ import { v4 as uuidv4 } from "uuid";
 import { ParagraphExerciseSet, SentenceExercise } from "@/types/exercise";
 import { cacheProvider, generateCacheKey, CachedExercise } from "@/lib/cache-provider";
 import { generatePrompt } from "@/lib/prompts";
+import { 
+  validateExerciseResponse
+} from "@/lib/exercise-schemas";
 
 // Cache static exercise generation for 1 hour
 export const revalidate = 3600;
@@ -21,40 +24,7 @@ const generateExerciseSchema = z.object({
   forceRegenerate: z.boolean().optional(),
 });
 
-// Interfaces for AI responses
-interface AIQuestion {
-  id?: string;
-  blankNumber: number;
-  baseForm: string;
-  correctAnswer: string | string[]; // Support multiple answers
-  explanation: string;
-  isPlural?: boolean; // Indicates if plural form is required
-}
 
-interface AIParagraphResponse {
-  id?: string;
-  paragraph: string;
-  questions: AIQuestion[];
-}
-
-interface AIExercise {
-  id?: string;
-  text: string;
-  correctAnswer: string | string[]; // Support multiple answers
-  explanation: string;
-  isPlural?: boolean; // Indicates if plural form is required
-  // Verb aspect specific properties
-  exerciseSubType?: string;
-  options?: {
-    imperfective: string;
-    perfective: string;
-  };
-  correctAspect?: "imperfective" | "perfective";
-}
-
-interface AISentenceResponse {
-  exercises: AIExercise[];
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -188,7 +158,6 @@ export async function POST(request: NextRequest) {
 }
 
 async function generateWithOpenAI(exerciseType: string, cefrLevel: string, apiKey: string, theme?: string) {
-  // OpenAI-specific exercise generation - Updated to support multiple correct answers
   const openai = new OpenAI({ apiKey });
 
   const prompts = generatePrompt(
@@ -197,14 +166,20 @@ async function generateWithOpenAI(exerciseType: string, cefrLevel: string, apiKe
     theme
   );
 
+  // Determine the appropriate response schema based on exercise type
+  const responseFormat = getOpenAIResponseFormat(exerciseType);
+
+  console.log("Using OpenAI Responses API with structured output for:", exerciseType);
+
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
       { role: "system", content: prompts.systemPrompt },
       { role: "user", content: prompts.userPrompt },
     ],
-    temperature: 2,
+    temperature: 0.8, // Reduced from 2 for more consistent structured output
     max_tokens: 1500,
+    response_format: responseFormat
   });
 
   const content = completion.choices[0]?.message?.content;
@@ -212,7 +187,7 @@ async function generateWithOpenAI(exerciseType: string, cefrLevel: string, apiKe
     throw new Error("No response from OpenAI");
   }
 
-  return processAIResponse(content, exerciseType);
+  return processAIResponseWithValidation(content, exerciseType);
 }
 
 async function generateWithAnthropic(exerciseType: string, cefrLevel: string, apiKey: string, theme?: string) {
@@ -248,72 +223,216 @@ async function generateWithAnthropic(exerciseType: string, cefrLevel: string, ap
       throw new Error("No text response from Anthropic");
     }
 
-    return processAIResponse(content.text, exerciseType);
+    return processAIResponseWithValidation(content.text, exerciseType);
   } catch (error) {
     console.error("Anthropic API error:", error);
     throw error;
   }
 }
 
-function processAIResponse(content: string, exerciseType: string) {
-  let exerciseData: AIParagraphResponse | AISentenceResponse;
+function getOpenAIResponseFormat(exerciseType: string) {
+  if (exerciseType === "verbTenses" || exerciseType === "nounDeclension") {
+    return {
+      type: "json_schema" as const,
+      json_schema: {
+        name: "paragraph_exercise_response",
+        description: "A Croatian language paragraph exercise with fill-in-the-blank questions",
+        schema: {
+          type: "object",
+          properties: {
+            paragraph: {
+              type: "string",
+              description: "Croatian text with numbered blanks like {{1}}, {{2}}, etc."
+            },
+            questions: {
+              type: "array",
+              description: "Array of questions for each blank in the paragraph",
+              items: {
+                type: "object",
+                properties: {
+                  blankNumber: {
+                    type: "number",
+                    description: "The number of the blank this question corresponds to"
+                  },
+                  baseForm: {
+                    type: "string",
+                    description: "The Croatian base form of the word (infinitive for verbs, nominative for nouns)"
+                  },
+                  correctAnswer: {
+                    oneOf: [
+                      { type: "string" },
+                      { 
+                        type: "array",
+                        items: { type: "string" }
+                      }
+                    ],
+                    description: "The correct Croatian answer(s) - string for single answer, array for multiple acceptable answers"
+                  },
+                  explanation: {
+                    type: "string",
+                    description: "Explanation in English of why this answer is correct"
+                  },
+                  isPlural: {
+                    type: "boolean",
+                    description: "Whether the answer should be in plural form"
+                  }
+                },
+                required: ["blankNumber", "baseForm", "correctAnswer", "explanation"],
+                additionalProperties: false
+              }
+            }
+          },
+          required: ["paragraph", "questions"],
+          additionalProperties: false
+        }
+      }
+    };
+  } else {
+    return {
+      type: "json_schema" as const,
+      json_schema: {
+        name: "sentence_exercise_response",
+        description: "A set of Croatian language sentence exercises",
+        schema: {
+          type: "object",
+          properties: {
+            exercises: {
+              type: "array",
+              description: "Array of sentence exercises",
+              items: {
+                type: "object",
+                properties: {
+                  text: {
+                    type: "string",
+                    description: "Croatian sentence with a blank marked as ___"
+                  },
+                  correctAnswer: {
+                    oneOf: [
+                      { type: "string" },
+                      { 
+                        type: "array",
+                        items: { type: "string" }
+                      }
+                    ],
+                    description: "The correct Croatian answer(s)"
+                  },
+                  explanation: {
+                    type: "string",
+                    description: "Explanation in English of why this answer is correct"
+                  },
+                  isPlural: {
+                    type: "boolean",
+                    description: "Whether the answer should be in plural form"
+                  },
+                  ...(exerciseType === "verbAspect" ? {
+                    exerciseSubType: {
+                      type: "string",
+                      enum: ["verb-aspect"],
+                      description: "Type identifier for verb aspect exercises"
+                    },
+                    options: {
+                      type: "object",
+                      properties: {
+                        imperfective: { type: "string" },
+                        perfective: { type: "string" }
+                      },
+                      required: ["imperfective", "perfective"],
+                      description: "The two verb aspect options to choose from"
+                    },
+                    correctAspect: {
+                      type: "string",
+                      enum: ["imperfective", "perfective"],
+                      description: "Which aspect is correct"
+                    }
+                  } : {})
+                },
+                required: exerciseType === "verbAspect" 
+                  ? ["text", "correctAnswer", "explanation", "exerciseSubType", "options", "correctAspect"]
+                  : ["text", "correctAnswer", "explanation"],
+                additionalProperties: false
+              }
+            }
+          },
+          required: ["exercises"],
+          additionalProperties: false
+        }
+      }
+    };
+  }
+}
+
+function processAIResponseWithValidation(content: string, exerciseType: string) {
+  let parsedData: unknown;
   try {
-    exerciseData = JSON.parse(content);
+    parsedData = JSON.parse(content);
   } catch {
     console.error("Failed to parse AI response:", content);
     throw new Error("Invalid JSON response from AI");
   }
 
-  // Generate UUIDs for questions/exercises
-  if (exerciseType === "verbTenses" || exerciseType === "nounDeclension") {
-    const aiData = exerciseData as AIParagraphResponse;
-    const exerciseSet: ParagraphExerciseSet = {
-      id: uuidv4(),
-      paragraph: aiData.paragraph,
-      questions: aiData.questions.map((q) => ({
-        id: uuidv4(),
-        blankNumber: q.blankNumber,
-        baseForm: q.baseForm,
-        correctAnswer: q.correctAnswer,
-        explanation: q.explanation,
-        isPlural: q.isPlural,
-      })),
-    };
+  // Validate the response using Zod schemas
+  const validatedData = validateExerciseResponse(
+    parsedData, 
+    exerciseType as "verbTenses" | "nounDeclension" | "verbAspect" | "interrogativePronouns"
+  );
 
-    return NextResponse.json(exerciseSet);
+  // Generate UUIDs and transform to final format
+  if (exerciseType === "verbTenses" || exerciseType === "nounDeclension") {
+    // Type narrowing: we know this is a paragraph exercise response
+    if ('paragraph' in validatedData) {
+      const exerciseSet: ParagraphExerciseSet = {
+        id: uuidv4(),
+        paragraph: validatedData.paragraph,
+        questions: validatedData.questions.map((q) => ({
+          id: uuidv4(),
+          blankNumber: q.blankNumber,
+          baseForm: q.baseForm,
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation,
+          isPlural: q.isPlural,
+        })),
+      };
+
+      return NextResponse.json(exerciseSet);
+    }
   } else {
-    const aiData = exerciseData as AISentenceResponse;
-    const exercises: SentenceExercise[] = aiData.exercises.map((ex: AIExercise) => {
-      // Check if this is a verb aspect exercise and preserve the verb aspect properties
-      if (exerciseType === "verbAspect" && ex.exerciseSubType === "verb-aspect") {
+    // Type narrowing: we know this is a sentence exercise response
+    if ('exercises' in validatedData) {
+      const exercises: SentenceExercise[] = validatedData.exercises.map((ex) => {
+        // Check if this is a verb aspect exercise and preserve the verb aspect properties
+        if ('exerciseSubType' in ex && ex.exerciseSubType === "verb-aspect") {
+          return {
+            id: uuidv4(),
+            text: ex.text,
+            exerciseSubType: ex.exerciseSubType,
+            options: ex.options,
+            correctAspect: ex.correctAspect,
+            correctAnswer: ex.correctAnswer,
+            explanation: ex.explanation,
+            isPlural: ex.isPlural,
+          };
+        }
+        
+        // Default sentence exercise format
         return {
           id: uuidv4(),
           text: ex.text,
-          exerciseSubType: ex.exerciseSubType,
-          options: ex.options,
-          correctAspect: ex.correctAspect,
           correctAnswer: ex.correctAnswer,
           explanation: ex.explanation,
           isPlural: ex.isPlural,
         };
-      }
-      
-      // Default sentence exercise format
-      return {
+      });
+
+      // Add a set ID for consistent tracking
+      const exerciseSetWithId = {
         id: uuidv4(),
-        text: ex.text,
-        correctAnswer: ex.correctAnswer,
-        explanation: ex.explanation,
-        isPlural: ex.isPlural,
+        exercises,
       };
-    });
 
-    // Add a set ID for consistent tracking
-    const exerciseSetWithId = {
-      id: uuidv4(),
-      exercises,
-    };
-
-    return NextResponse.json(exerciseSetWithId);
+      return NextResponse.json(exerciseSetWithId);
+    }
   }
+  
+  throw new Error("Invalid exercise response format");
 }
+
