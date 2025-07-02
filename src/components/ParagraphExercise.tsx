@@ -10,7 +10,9 @@ import { useExercise } from "@/contexts/ExerciseContext";
 import { useResetExerciseState } from "@/hooks/useResetExerciseState";
 import { ParagraphExerciseSet, ExerciseType } from "@/types/exercise";
 import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
-import { Check, X, RefreshCw, AlertTriangle, RotateCcw, ArrowRight } from "lucide-react";
+import { Check, X, RefreshCw, RotateCcw, ArrowRight, AlertTriangle } from "lucide-react";
+import { getExerciseDescription } from "@/lib/exercise-descriptions";
+import { GenerateNewQuestionsCard } from "@/components/GenerateNewQuestionsCard";
 
 interface ParagraphExerciseProps {
   exerciseSet: ParagraphExerciseSet;
@@ -26,12 +28,11 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
   const [results, setResults] = useState<Record<string, ReturnType<typeof createExerciseResult>>>({});
   const [isChecking, setIsChecking] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
-  const [theme, setTheme] = useState("");
   const [isGeneratingNext, setIsGeneratingNext] = useState(false);
   const inputRefs = useRef<Record<string, HTMLInputElement>>({});
 
   // Reset component state when exercise set changes (new exercise loaded)
-  useResetExerciseState(exerciseSet.id, setAnswers, setResults, setHasChecked, setTheme);
+  useResetExerciseState(exerciseSet.id, setAnswers, setResults, setHasChecked, () => {});
 
   // Initialize answers from previous session in review mode
   useEffect(() => {
@@ -52,15 +53,6 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
-  const handleRegenerateExercise = async () => {
-    await forceRegenerateExercise(exerciseType, theme || undefined);
-    setTheme("");
-    // Reset all state for the new exercises
-    setAnswers({});
-    setResults({});
-    setHasChecked(false);
-  };
-
   const handleCheckAnswers = async () => {
     setIsChecking(true);
     const newResults: Record<string, ReturnType<typeof createExerciseResult>> = {};
@@ -71,13 +63,8 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
 
         if (isStaticExercise(question.id)) {
           // Handle static exercise locally
-          const result = createExerciseResult(
-            question.id,
-            userAnswer,
-            question.correctAnswer,
-            question.explanation
-          );
-          
+          const result = createExerciseResult(question.id, userAnswer, question.correctAnswer, question.explanation);
+
           newResults[question.id] = result;
           dispatch({ type: "ADD_RESULT", payload: result });
         } else {
@@ -114,7 +101,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
       markExerciseCompleted(
         exerciseSet.id,
         exerciseType,
-        theme || undefined,
+        undefined,
         { correct: correctCount, total: totalQuestions },
         title
       );
@@ -222,8 +209,9 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
         )}
 
         <Card className="mx-0 sm:mx-auto">
-          <CardHeader className="pb-3 sm:pb-6">
+          <CardHeader className="pb-1">
             <CardTitle className="text-lg sm:text-xl lg:text-2xl">{title}</CardTitle>
+            <p className="text-sm text-muted-foreground mt-2">{getExerciseDescription(exerciseType)}</p>
           </CardHeader>
           <CardContent className="space-y-3 sm:space-y-6 px-3 sm:px-6">
             {!hasChecked ? (
@@ -391,35 +379,12 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
           </CardContent>
         </Card>
 
-        {/* Separate Generate New Exercise section */}
+        {/* Generate New Questions section */}
         {!hasChecked && (
-          <Card>
-            <CardContent>
-              <div className="text-center space-y-3">
-                <p className="text-sm text-muted-foreground">Want a different exercise?</p>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-center gap-2">
-                  <Input
-                    type="text"
-                    placeholder="Optional theme..."
-                    value={theme}
-                    onChange={(e) => setTheme(e.target.value)}
-                    className="w-full sm:w-40"
-                    disabled={state.isGenerating}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRegenerateExercise}
-                    disabled={state.isGenerating}
-                    className="w-full sm:w-auto"
-                  >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${state.isGenerating ? "animate-spin" : ""}`} />
-                    Generate New Exercise
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <GenerateNewQuestionsCard
+            onRegenerate={async (theme) => await forceRegenerateExercise(exerciseType, theme)}
+            isGenerating={state.isGenerating}
+          />
         )}
       </div>
     </>

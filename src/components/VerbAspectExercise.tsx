@@ -10,7 +10,9 @@ import { Progress } from "@/components/ui/progress";
 import { useExercise } from "@/contexts/ExerciseContext";
 import type { VerbAspectExercise, SentenceExerciseSet, ExerciseType } from "@/types/exercise";
 import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
-import { Check, X, RefreshCw, RotateCcw, ArrowRight } from "lucide-react";
+import { Check, X, RotateCcw, ArrowRight } from "lucide-react";
+import { getExerciseDescription } from "@/lib/exercise-descriptions";
+import { GenerateNewQuestionsCard } from "@/components/GenerateNewQuestionsCard";
 
 interface VerbAspectExerciseSetProps {
   exerciseSet: SentenceExerciseSet & {
@@ -33,7 +35,6 @@ export function VerbAspectExerciseComponent({
   const [results, setResults] = useState<Record<string | number, ReturnType<typeof createExerciseResult>>>({});
   const [isChecking, setIsChecking] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
-  const [theme, setTheme] = useState("");
   const [isGeneratingNext, setIsGeneratingNext] = useState(false);
 
   // Extract exercises from the set
@@ -44,7 +45,6 @@ export function VerbAspectExerciseComponent({
     setAnswers({});
     setResults({});
     setHasChecked(false);
-    setTheme("");
   }, [exerciseSet.id]);
 
   // Initialize answers from previous session in review mode
@@ -61,15 +61,6 @@ export function VerbAspectExerciseComponent({
 
   const handleAnswerChange = (questionId: string | number, value: "perfective" | "imperfective") => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
-  };
-
-  const handleRegenerateExercise = async () => {
-    await forceRegenerateExercise(exerciseType, theme || undefined);
-    setTheme("");
-    // Reset all state for the new exercises
-    setAnswers({});
-    setResults({});
-    setHasChecked(false);
   };
 
   const handleCheckAllAnswers = async () => {
@@ -113,7 +104,7 @@ export function VerbAspectExerciseComponent({
       markExerciseCompleted(
         exerciseSet.id,
         exerciseType,
-        theme || undefined,
+        undefined,
         { correct: correctCount, total: exercises.length },
         title
       );
@@ -150,14 +141,14 @@ export function VerbAspectExerciseComponent({
   // Function to create shuffled options for each exercise consistently
   const getShuffledOptions = (exercise: VerbAspectExercise) => {
     // Use the exercise ID as a seed for consistent shuffling per exercise
-    const seed = typeof exercise.id === 'string' ? exercise.id.charCodeAt(0) : exercise.id;
+    const seed = typeof exercise.id === "string" ? exercise.id.charCodeAt(0) : exercise.id;
     const shouldReverse = seed % 2 === 0;
-    
+
     const options = [
-      { aspect: 'imperfective', text: exercise.options?.imperfective || "Loading..." },
-      { aspect: 'perfective', text: exercise.options?.perfective || "Loading..." }
+      { aspect: "imperfective", text: exercise.options?.imperfective || "Loading..." },
+      { aspect: "perfective", text: exercise.options?.perfective || "Loading..." },
     ];
-    
+
     return shouldReverse ? options.reverse() : options;
   };
 
@@ -175,23 +166,29 @@ export function VerbAspectExerciseComponent({
           <span>{parts[1] || ""}</span>
         </div>
 
-        <RadioGroup
-          value={selectedValue || ""}
-          onValueChange={(value) => handleAnswerChange(exercise.id, value as "perfective" | "imperfective")}
-          disabled={hasChecked}
-          className={`space-y-3 p-3 rounded-lg border-2 ${getRadioGroupStyling(result)}`}
+        <div
+          className={`space-y-3 p-3 rounded-lg border-2 ${getRadioGroupStyling(result)} ${result ? "relative" : ""}`}
         >
-          {shuffledOptions.map((option) => (
-            <div key={option.aspect} className="flex items-center space-x-2">
-              <RadioGroupItem value={option.aspect} id={`${exercise.id}-${option.aspect.substring(0, 4)}`} />
-              <Label htmlFor={`${exercise.id}-${option.aspect.substring(0, 4)}`} className="text-sm sm:text-base cursor-pointer flex-1">
-                <span className="font-mono font-semibold">{option.text}</span>
-              </Label>
-            </div>
-          ))}
-        </RadioGroup>
-
-        {result && <span className="ml-2">{getResultIcon(result)}</span>}
+          <RadioGroup
+            value={selectedValue || ""}
+            onValueChange={(value) => handleAnswerChange(exercise.id, value as "perfective" | "imperfective")}
+            disabled={hasChecked}
+            className="space-y-3"
+          >
+            {shuffledOptions.map((option) => (
+              <div key={option.aspect} className="flex items-center space-x-2">
+                <RadioGroupItem value={option.aspect} id={`${exercise.id}-${option.aspect.substring(0, 4)}`} />
+                <Label
+                  htmlFor={`${exercise.id}-${option.aspect.substring(0, 4)}`}
+                  className="text-sm sm:text-base cursor-pointer flex-1"
+                >
+                  <span className="font-mono font-semibold">{option.text}</span>
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+          {result && <div className="absolute top-2 right-2">{getResultIcon(result)}</div>}
+        </div>
       </div>
     );
   };
@@ -212,14 +209,17 @@ export function VerbAspectExerciseComponent({
         {hasChecked && (
           <div className="flex justify-end">
             <div className="text-xs sm:text-sm text-muted-foreground">
-              {`Final Score: ${correctAnswers}/${exercises.length} (${Math.round((correctAnswers / exercises.length) * 100)}%)`}
+              {`Final Score: ${correctAnswers}/${exercises.length} (${Math.round(
+                (correctAnswers / exercises.length) * 100
+              )}%)`}
             </div>
           </div>
         )}
 
         <Card className="mx-0 sm:mx-auto">
-          <CardHeader className="pb-3 sm:pb-6">
+          <CardHeader className="pb-1">
             <CardTitle className="text-lg sm:text-xl lg:text-2xl">{title}</CardTitle>
+            <p className="text-sm text-muted-foreground mt-2">{getExerciseDescription(exerciseType)}</p>
           </CardHeader>
           <CardContent className="space-y-4 sm:space-y-8 px-3 sm:px-6">
             <form onSubmit={handleFormSubmit}>
@@ -235,7 +235,7 @@ export function VerbAspectExerciseComponent({
                       </div>
 
                       {hasChecked && results[exercise.id] && (
-                        <div className="mt-2 sm:mt-3 border rounded-lg p-2 sm:p-3">
+                        <div className="mt-2 sm:mt-3 mb-4 border rounded-lg p-2 sm:p-3">
                           <div className="flex items-start gap-2">
                             {results[exercise.id].correct ? (
                               <Check className="h-5 w-5 text-green-600 mt-0.5" />
@@ -379,35 +379,12 @@ export function VerbAspectExerciseComponent({
           </CardContent>
         </Card>
 
-        {/* Separate Generate New Questions section */}
+        {/* Generate New Questions section */}
         {!hasChecked && (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center space-y-3">
-                <p className="text-sm text-muted-foreground">Want different questions?</p>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-center gap-2">
-                  <input
-                    type="text"
-                    placeholder="Optional theme..."
-                    value={theme}
-                    onChange={(e) => setTheme(e.target.value)}
-                    className="w-full sm:w-40 px-3 py-2 border rounded-md"
-                    disabled={state.isGenerating}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRegenerateExercise}
-                    disabled={state.isGenerating}
-                    className="w-full sm:w-auto"
-                  >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${state.isGenerating ? "animate-spin" : ""}`} />
-                    Generate New Questions
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <GenerateNewQuestionsCard
+            onRegenerate={async (theme) => await forceRegenerateExercise(exerciseType, theme)}
+            isGenerating={state.isGenerating}
+          />
         )}
       </div>
     </>
