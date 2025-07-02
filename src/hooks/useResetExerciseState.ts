@@ -22,5 +22,6 @@ export function useResetExerciseState(
     setResults({});
     setHasChecked(false);
     setTheme("");
-  }, [exerciseSetId, setAnswers, setResults, setHasChecked, setTheme]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exerciseSetId]);
 }

@@ -96,7 +96,9 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
           // Don't show error to user, just continue with static exercises
         });
     }
-  }, [exerciseType, state.apiKey, state.isGenerating, hasAttemptedGeneration, searchParams, forceRegenerateExercise, getCurrentExerciseData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exerciseType, state.apiKey, state.isGenerating, hasAttemptedGeneration, searchParams, forceRegenerateExercise]);
+  // Note: getCurrentExerciseData is intentionally excluded from dependencies to prevent infinite re-render loop
 
   const handleCompleteExercise = () => {
     // This is primarily used for review mode now, since the exercise components
