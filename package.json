@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "eval": "tsx src/evals/cli.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.55.0",
@@ -47,6 +48,7 @@
     "eslint-config-next": "15.3.4",
     "jsdom": "^26.1.0",
     "tailwindcss": "^4",
+    "tsx": "^4.20.3",
     "tw-animate-css": "^1.3.4",
     "typescript": "^5"
   }

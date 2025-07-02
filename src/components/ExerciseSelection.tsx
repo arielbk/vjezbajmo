@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExerciseType } from "@/types/exercise";
-import { BookOpen, MessageSquare, FileText, HelpCircle, History } from "lucide-react";
+import { BookOpen, MessageSquare, FileText, HelpCircle, History, BarChart3 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const exerciseTypes: Array<{
@@ -71,12 +71,20 @@ export function ExerciseSelection() {
         ))}
       </div>
 
-      {/* View Completed Exercises Button */}
-      <div className="flex justify-center mt-10">
+      {/* Action Buttons */}
+      <div className="flex justify-center gap-4 mt-10">
         <Button variant="outline" onClick={() => router.push("/completed")} className="flex items-center gap-2">
           <History className="h-4 w-4" />
           View Completed Exercises
         </Button>
+        
+        {/* Only show Model Evaluations in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <Button variant="outline" onClick={() => router.push("/evals")} className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Model Evaluations
+          </Button>
+        )}
       </div>
     </div>
   );
