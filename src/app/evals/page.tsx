@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { EvaluationRunner, ModelPerformance } from "@/evals/evaluation-runner";
 import { ALL_TEST_CASES } from "@/evals/test-cases";
 import { ModelConfig } from "@/evals/model-configs";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 // Only allow access in development mode
 export default function EvalsPage() {
@@ -34,6 +35,7 @@ function EvalsPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [currentStatus, setCurrentStatus] = useState<string>("");
+  const [expandedExplanations, setExpandedExplanations] = useState<Record<string, boolean>>({});
 
   // Load available models on mount
   useEffect(() => {
@@ -74,30 +76,31 @@ function EvalsPageContent() {
         setCurrentStatus(`Evaluating ${modelConfig.name}...`);
 
         try {
-          const performance = await runner.runEvaluation(modelConfig, ALL_TEST_CASES, (testProgress, currentTest) => {
-            // Calculate overall progress: (models completed + current model progress) / total models
-            const modelProgress = (i / selectedModelConfigs.length) * 100;
-            const currentModelProgress = (testProgress / 100) * (100 / selectedModelConfigs.length);
-            const totalProgress = modelProgress + currentModelProgress;
+          const performance = await runner.runModelTests(modelConfig, ALL_TEST_CASES);
 
-            setProgress(totalProgress);
-            setCurrentStatus(`${modelConfig.name}: ${currentTest || "Processing..."}`);
-          });
+          // Calculate progress
+          const modelProgress = ((i + 1) / selectedModelConfigs.length) * 100;
+          setProgress(modelProgress);
 
           results.push(performance);
-          setPerformances([...results].sort((a, b) => b.accuracy - a.accuracy));
+          setPerformances([...results].sort((a, b) => b.overallScore - a.overallScore));
         } catch (error) {
           console.error(`Failed to evaluate ${modelConfig.name}:`, error);
           // Add a failed result
           results.push({
             modelName: modelConfig.name,
-            accuracy: 0,
-            explanationQuality: 0,
-            totalTests: 0,
-            correctEvaluations: 0,
+            overallScore: 0,
+            structureScore: 0,
+            contentScore: 0,
+            explanationScore: 0,
+            themeScore: 0,
+            cefrScore: 0,
+            totalTests: ALL_TEST_CASES.length,
+            successfulGenerations: 0,
+            averageExecutionTime: 0,
             results: [],
           });
-          setPerformances([...results].sort((a, b) => b.accuracy - a.accuracy));
+          setPerformances([...results].sort((a, b) => b.overallScore - a.overallScore));
         }
       }
 
@@ -125,12 +128,19 @@ function EvalsPageContent() {
     setSelectedModels([]);
   };
 
+  const toggleExplanation = (resultId: string) => {
+    setExpandedExplanations(prev => ({
+      ...prev,
+      [resultId]: !prev[resultId]
+    }));
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Model Evaluations</h1>
         <p className="text-gray-600">
-          Evaluate AI models on Croatian grammar exercises. Only available in development mode.
+          Evaluate AI models on Croatian grammar exercise generation. Tests the quality, structure, and appropriateness of generated exercise sets. Only available in development mode.
         </p>
       </div>
 
@@ -144,9 +154,9 @@ function EvalsPageContent() {
         {/* Model Selection and Evaluation */}
         <Card>
           <CardHeader>
-            <CardTitle>Model Evaluation</CardTitle>
+            <CardTitle>Exercise Generation Evaluation</CardTitle>
             <CardDescription>
-              Select models to test on {ALL_TEST_CASES.length} Croatian grammar test cases. Found{" "}
+              Select models to test on {ALL_TEST_CASES.length} Croatian grammar exercise generation test cases. Found{" "}
               {availableModels.length} available models.
             </CardDescription>
           </CardHeader>
@@ -221,8 +231,7 @@ function EvalsPageContent() {
             <CardHeader>
               <CardTitle>Evaluation Results</CardTitle>
               <CardDescription>
-                Results sorted by accuracy. Higher accuracy means the model correctly identified whether answers were
-                right or wrong.
+                Results sorted by overall score. Higher scores indicate better exercise generation quality across structure, content, explanations, and CEFR level appropriateness.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -241,21 +250,35 @@ function EvalsPageContent() {
                       </div>
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
-                          <span className="text-gray-600">Accuracy:</span>
+                          <span className="text-gray-600">Overall Score:</span>
                           <br />
-                          <span className="font-medium">{perf.accuracy.toFixed(1)}%</span>
+                          <span className="font-medium">{(perf.overallScore * 100).toFixed(1)}%</span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Correct:</span>
+                          <span className="text-gray-600">Generated:</span>
                           <br />
                           <span className="font-medium">
-                            {perf.correctEvaluations}/{perf.totalTests}
+                            {perf.successfulGenerations}/{perf.totalTests}
                           </span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Explanation Quality:</span>
+                          <span className="text-gray-600">Avg Time:</span>
                           <br />
-                          <span className="font-medium">{perf.explanationQuality.toFixed(1)}/3.0</span>
+                          <span className="font-medium">{perf.averageExecutionTime.toFixed(0)}ms</span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-4 gap-4 text-xs mt-2 pt-2 border-t">
+                        <div>
+                          <span className="text-gray-500">Structure:</span> {(perf.structureScore * 100).toFixed(0)}%
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Content:</span> {(perf.contentScore * 100).toFixed(0)}%
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Explanations:</span> {(perf.explanationScore * 100).toFixed(0)}%
+                        </div>
+                        <div>
+                          <span className="text-gray-500">CEFR:</span> {(perf.cefrScore * 100).toFixed(0)}%
                         </div>
                       </div>
                     </div>
@@ -267,26 +290,85 @@ function EvalsPageContent() {
                     <div key={perf.modelName} className="space-y-2">
                       <h3 className="font-medium">{perf.modelName}</h3>
                       <div className="space-y-1 text-sm">
-                        {perf.results.map((result) => (
-                          <div
-                            key={result.testCaseId}
-                            className={`p-2 rounded ${result.actualCorrect ? "bg-green-50" : "bg-red-50"}`}
-                          >
-                            <div className="flex justify-between items-center">
-                              <span>{result.testCaseId}</span>
-                              <Badge variant={result.actualCorrect ? "default" : "destructive"}>
-                                {result.actualCorrect ? "Correct" : "Failed"}
-                              </Badge>
+                        {perf.results.map((result) => {
+                          const resultId = `${perf.modelName}-${result.testCaseId}`;
+                          const isExpanded = expandedExplanations[resultId];
+                          const hasErrors = result.errors.length > 0;
+                          const errorText = hasErrors ? result.errors.join('; ') : '';
+                          const shouldTruncateErrors = errorText.length > 100;
+                          
+                          return (
+                            <div
+                              key={result.testCaseId}
+                              className={`p-2 rounded ${result.exerciseGenerated ? "bg-green-50" : "bg-red-50"}`}
+                            >
+                              <div className="flex justify-between items-center">
+                                <span>{result.testCaseId}</span>
+                                <div className="flex gap-2">
+                                  <Badge 
+                                    variant={result.exerciseGenerated ? "default" : "destructive"}
+                                    className={result.exerciseGenerated ? "" : "bg-red-600 text-white hover:bg-red-700"}
+                                  >
+                                    {result.exerciseGenerated ? "Generated" : "Failed"}
+                                  </Badge>
+                                  {result.exerciseGenerated && (
+                                    <Badge variant="outline">
+                                      {(result.overallScore * 100).toFixed(0)}%
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {result.exerciseGenerated && (
+                                <div className="text-gray-600 mt-1 text-xs">
+                                  Structure: {(result.structureScore * 100).toFixed(0)}% | 
+                                  Content: {(result.contentScore * 100).toFixed(0)}% | 
+                                  Explanations: {(result.explanationScore * 100).toFixed(0)}% | 
+                                  CEFR: {(result.cefrScore * 100).toFixed(0)}%
+                                  {result.themeScore > 0 && ` | Theme: ${(result.themeScore * 100).toFixed(0)}%`}
+                                </div>
+                              )}
+                              
+                              {hasErrors && (
+                                <div className="text-xs text-red-600 mt-1">
+                                  {shouldTruncateErrors && !isExpanded ? (
+                                    <div className="flex items-center gap-1">
+                                      <span>Error: {errorText.slice(0, 100)}...</span>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => toggleExplanation(resultId)}
+                                        className="h-6 px-2 text-xs hover:bg-red-100"
+                                      >
+                                        <ChevronDown className="h-3 w-3 mr-1" />
+                                        see more
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-1">
+                                      <span>Error: {errorText}</span>
+                                      {shouldTruncateErrors && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => toggleExplanation(resultId)}
+                                          className="h-6 px-2 text-xs hover:bg-red-100"
+                                        >
+                                          <ChevronUp className="h-3 w-3 mr-1" />
+                                          see less
+                                        </Button>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              
+                              <div className="text-xs text-gray-500 mt-1">
+                                Execution time: {result.executionTime}ms
+                              </div>
                             </div>
-                            <div className="text-gray-600 mt-1">
-                              Expected: {result.expectedCorrect ? "Correct" : "Incorrect"} | AI said:{" "}
-                              {result.aiResponse.isCorrect ? "Correct" : "Incorrect"}
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              {result.aiResponse.explanation.slice(0, 100)}...
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   ))}

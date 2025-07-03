@@ -281,3 +281,191 @@ interface ExerciseSession {
   - **Spaced Repetition:** Easy access to review previously completed work with performance context
   - **Progress Tracking:** Detailed performance metrics help users identify strengths and weaknesses
   - **Learning Analytics:** Comprehensive data helps users optimize their learning strategy
+
+### **12. Exercise Generation Evaluation System (Evals)**
+
+The evaluation system provides a comprehensive framework for testing and improving the quality of AI-generated Croatian grammar exercise sets. This development-only feature enables systematic evaluation of different language models' performance in generating complete exercise sets with accurate structure, appropriate content, and pedagogically sound explanations.
+
+#### **12.1. Core Architecture**
+
+- **Development Environment Only:** The evals system is restricted to development environments to prevent accidental exposure in production.
+- **Multi-Model Support:** Supports both OpenAI and Anthropic models with dynamic model discovery and API key validation.
+- **Exercise Generation Focus:** Tests the complete exercise generation pipeline rather than individual answer validation.
+
+#### **12.2. Model Configuration & Discovery**
+
+**Dynamic Model Discovery:**
+- **OpenAI Models:** Automatically fetches latest available models via OpenAI API, filtering for chat completion models suitable for exercise generation.
+- **Anthropic Models:** Uses hardcoded model list with API key validation, including Claude 3.5 Sonnet, Claude 4, and other variants.
+- **Fallback Models:** Maintains curated lists of proven models as fallbacks when API discovery fails.
+
+**Model Configuration Structure:**
+```typescript
+interface ModelConfig {
+  name: string;
+  provider: "openai" | "anthropic";
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+```
+
+**Supported Model Categories:**
+- **OpenAI:** GPT-4o, GPT-4o-mini, GPT-4-turbo, O1 variants, and other latest releases
+- **Anthropic:** Claude 4 Opus/Sonnet, Claude 3.7 Sonnet, Claude 3.5 Sonnet/Haiku, Claude 3 Opus/Haiku
+
+#### **12.3. Test Case Framework**
+
+**Generation Test Case Structure:**
+```typescript
+interface GenerationTestCase {
+  id: string;
+  description: string;
+  request: {
+    exerciseType: "verbTenses" | "nounDeclension" | "verbAspect" | "interrogativePronouns";
+    cefrLevel: "A1" | "A2.1" | "A2.2" | "B1.1";
+    theme?: string;
+  };
+  expectedCriteria: {
+    // Structure requirements
+    minQuestions: number;
+    maxQuestions: number;
+    hasExplanations: boolean;
+    hasCorrectAnswers: boolean;
+    
+    // Content quality expectations
+    cefrLevelMatch: boolean;
+    themeAdherence?: boolean;
+    grammarAccuracy: boolean;
+    explanationQuality: "basic" | "good" | "excellent";
+    vocabularyAppropriate: boolean;
+    
+    // Exercise type specific criteria
+    exerciseTypeSpecific?: {
+      verbTenses?: {
+        coversDifferentTenses: boolean;
+        includesPersonalEndings: boolean;
+      };
+      // ... other exercise types
+    };
+  };
+}
+```
+
+**Test Case Categories:**
+- **Basic Level Tests:** A1-A2.1 exercises across all exercise types
+- **Themed Content Tests:** Specific themes like "food and cooking", "travel", "family"
+- **Advanced Level Tests:** A2.2-B1.1 exercises with higher complexity expectations
+- **Edge Cases:** Complex themes, no theme specification, unusual requirements
+- **Exercise Type Specific:** Specialized tests for each grammar focus area
+
+#### **12.4. Evaluation Runner**
+
+**Exercise Generation Evaluation Process:**
+1. **Exercise Generation:** Uses the actual `/api/generate-exercise-set` endpoint for each test case
+2. **Structure Validation:** Verifies generated exercises have proper format and required fields
+3. **Content Quality Assessment:** Evaluates grammar accuracy, vocabulary appropriateness, and CEFR level match
+4. **Explanation Quality:** Assesses clarity, accuracy, and pedagogical value of explanations
+5. **Theme Adherence:** Validates that themed exercises contain relevant vocabulary and context
+6. **Exercise Type Compliance:** Checks for exercise-specific requirements
+
+**Scoring System:**
+```typescript
+interface GenerationResult {
+  testCaseId: string;
+  exerciseGenerated: boolean;
+  structureScore: number; // 0-1
+  contentScore: number; // 0-1
+  explanationScore: number; // 0-1
+  themeScore: number; // 0-1 (only if theme specified)
+  cefrScore: number; // 0-1
+  overallScore: number; // 0-1 weighted average
+  errors: string[];
+  executionTime: number; // milliseconds
+}
+```
+
+**Quality Assessment Criteria:**
+- **Structure (25%):** Proper JSON format, required fields, valid data types, appropriate question count
+- **Content (25%):** Grammar accuracy, vocabulary appropriateness, exercise type compliance
+- **Explanations (20%):** Clarity, accuracy, appropriate length for CEFR level, pedagogical value
+- **Theme (15%):** Adherence to requested theme (if specified), relevant vocabulary usage
+- **CEFR Level (15%):** Appropriate difficulty and complexity for specified level
+
+#### **12.5. Command Line Interface**
+
+**CLI Features:**
+- **Model Discovery:** Automatically fetches and displays available models from both providers
+- **Comprehensive Testing:** Runs all test cases across all available models
+- **Detailed Reporting:** Shows overall scores, per-category breakdown, and execution times
+- **Failure Analysis:** Highlights failed generations and lowest-scoring successful cases
+- **Exercise Type Breakdown:** Performance analysis grouped by exercise type
+
+**Usage:**
+```bash
+# Run complete evaluation suite
+npm run evals
+
+# Set API keys
+export OPENAI_API_KEY="your-key"
+export ANTHROPIC_API_KEY="your-key"
+npm run evals
+```
+
+**CLI Output Sections:**
+- **Model Discovery:** List of available models with provider information
+- **Overall Results:** Ranked model performance with aggregate scores
+- **Category Breakdown:** Structure, content, explanation, theme, and CEFR scores
+- **Exercise Type Analysis:** Performance breakdown by verb tenses, noun declension, etc.
+- **Failure Analysis:** Details on failed generations and lowest-scoring cases
+
+#### **12.6. Implementation Details**
+
+**Core Components:**
+- **`evaluation-runner.ts`:** Main evaluation logic, API calls, and scoring algorithms
+- **`test-cases.ts`:** Comprehensive test case definitions with expected criteria
+- **`model-configs.ts`:** Model discovery, API key validation, and configuration management
+- **`cli.ts`:** Command-line interface with formatted output and progress tracking
+
+**API Integration:**
+- **Exercise Generation:** Uses existing `/api/generate-exercise-set` endpoint
+- **Force Regeneration:** Always generates fresh exercises for consistent testing
+- **Provider Switching:** Tests both OpenAI and Anthropic models using their respective APIs
+- **Error Handling:** Graceful handling of API failures, timeouts, and invalid responses
+
+**Scoring Algorithms:**
+- **Structure Scoring:** Validates JSON structure, required fields, and data type correctness
+- **Content Scoring:** Heuristic-based assessment of grammar and vocabulary appropriateness
+- **Explanation Scoring:** Length-based and keyword-based quality assessment
+- **Theme Scoring:** Keyword matching for thematic vocabulary and context
+- **CEFR Scoring:** Currently uses default assumptions, expandable for sophisticated analysis
+
+#### **12.7. Environment Configuration**
+
+**Required Environment Variables:**
+- `OPENAI_API_KEY`: OpenAI API access for GPT models
+- `ANTHROPIC_API_KEY`: Anthropic API access for Claude models
+- At least one API key is required for evaluation to run
+
+**Model Discovery Behavior:**
+- **Available API Keys:** Uses dynamic model discovery when possible
+- **Missing API Keys:** Falls back to hardcoded model lists with warnings
+- **API Validation:** Tests API connectivity before proceeding with evaluations
+
+#### **12.8. Future Enhancements**
+
+**Planned Improvements:**
+- **Advanced Grammar Validation:** Integration with Croatian grammar checking tools
+- **CEFR Vocabulary Analysis:** Automated vocabulary complexity assessment using CEFR word lists
+- **Sophisticated Theme Matching:** Enhanced theme adherence detection using semantic analysis
+- **Exercise Type Validation:** Detailed validation of exercise-specific requirements
+- **Historical Tracking:** Track model performance improvements over time
+- **Automated Regression Testing:** Run evaluations on every significant code change
+
+**Quality Improvements:**
+- **Native Speaker Validation:** Integration with human expert validation for reference standards
+- **Learner Feedback Integration:** Incorporate real learner feedback into evaluation criteria
+- **Pedagogical Assessment:** More sophisticated evaluation of educational value and progression
+- **Cultural Relevance Scoring:** Assessment of cultural appropriateness and authenticity
+
+The evaluation system ensures that AI-generated Croatian grammar exercises maintain high standards of accuracy, pedagogical value, and cultural appropriateness across all supported exercise types and difficulty levels. By systematically testing exercise generation quality, the system helps maintain consistent learner experience regardless of which AI model is used for content generation.
