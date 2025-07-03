@@ -49,8 +49,8 @@ async function main() {
     performances.forEach((perf, index) => {
       console.log(`${index + 1}. ${perf.modelName}`);
       console.log(`   Overall Score: ${perf.overallScore.toFixed(3)} (${perf.successfulGenerations}/${perf.totalTests} successful)`);
-      console.log(`   Structure: ${perf.structureScore.toFixed(3)} | Content: ${perf.contentScore.toFixed(3)} | Explanations: ${perf.explanationScore.toFixed(3)}`);
-      console.log(`   Theme: ${perf.themeScore.toFixed(3)} | CEFR: ${perf.cefrScore.toFixed(3)}`);
+      console.log(`   Answer Correctness: ${perf.criteria.answerCorrectness.toFixed(3)} | Exercise Design: ${perf.criteria.exerciseDesign.toFixed(3)} | Explanations: ${perf.criteria.explanationQuality.toFixed(3)}`);
+      console.log(`   Speed & Reliability: ${perf.criteria.speedReliability.toFixed(3)}${perf.criteria.costEfficiency ? ` | Cost Efficiency: ${perf.criteria.costEfficiency.toFixed(3)}` : ''}`);
       console.log(`   Avg Time: ${perf.averageExecutionTime.toFixed(0)}ms`);
       console.log('');
     });
@@ -115,7 +115,7 @@ async function main() {
         lowestScoring.forEach(result => {
           const testCase = ALL_TEST_CASES.find(tc => tc.id === result.testCaseId);
           console.log(`  • ${result.testCaseId}: ${result.overallScore.toFixed(3)} - ${testCase?.description || 'Unknown'}`);
-          console.log(`    Structure: ${result.structureScore.toFixed(3)} | Content: ${result.contentScore.toFixed(3)} | Explanations: ${result.explanationScore.toFixed(3)}`);
+          console.log(`    Answer Correctness: ${result.answerCorrectness.toFixed(3)} | Exercise Design: ${result.exerciseDesign.toFixed(3)} | Explanations: ${result.explanationQuality.toFixed(3)}`);
         });
       }
     });

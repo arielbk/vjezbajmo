@@ -14,7 +14,7 @@ async function testEvalsStructure() {
     console.log(`✅ Test cases loaded: ${ALL_TEST_CASES.length} cases`);
     
     // Test 2: Create evaluation runner
-    const runner = new EvaluationRunner();
+    new EvaluationRunner();
     console.log('✅ EvaluationRunner created successfully');
     
     // Test 3: Test model discovery (will use hardcoded fallbacks)
