@@ -9,6 +9,7 @@ import type { ParagraphExerciseSet, SentenceExerciseSet, ExerciseType, VerbAspec
 import { AlertTriangle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
+import { clientLogger } from "@/lib/client-logger";
 
 export default function ExerciseClient({ exerciseType }: { exerciseType: ExerciseType }) {
   const { state, dispatch, forceRegenerateExercise } = useExercise();
@@ -92,7 +93,7 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
       setHasAttemptedGeneration(true);
       forceRegenerateExercise(exerciseType)
         .catch((error) => {
-          console.error("Failed to auto-generate exercises:", error);
+          clientLogger.exercise.generateError(exerciseType, error);
           // Don't show error to user, just continue with static exercises
         });
     }

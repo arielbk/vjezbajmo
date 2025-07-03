@@ -3,12 +3,13 @@ import { z } from "zod";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { v4 as uuidv4 } from "uuid";
-import { ParagraphExerciseSet, SentenceExercise } from "@/types/exercise";
+import { ParagraphExerciseSet, SentenceExercise, ExerciseType, CefrLevel } from "@/types/exercise";
 import { cacheProvider, generateCacheKey, CachedExercise } from "@/lib/cache-provider";
 import { generatePrompt } from "@/lib/prompts";
 import { 
   validateExerciseResponse
 } from "@/lib/exercise-schemas";
+import { exerciseLogger } from "@/lib/logger";
 
 // Cache static exercise generation for 1 hour
 export const revalidate = 3600;
@@ -27,13 +28,19 @@ const generateExerciseSchema = z.object({
 
 
 export async function POST(request: NextRequest) {
+  let exerciseType: ExerciseType = 'verbTenses';
+  let cefrLevel: CefrLevel = 'A1';
+  let effectiveProvider: string = 'unknown';
+
   try {
     const body = await request.json();
-    const { exerciseType, cefrLevel, provider, apiKey, theme, userCompletedExercises, forceRegenerate } =
-      generateExerciseSchema.parse(body);
+    const parsed = generateExerciseSchema.parse(body);
+    exerciseType = parsed.exerciseType;
+    cefrLevel = parsed.cefrLevel;
+    const { provider, apiKey, theme, userCompletedExercises, forceRegenerate } = parsed;
 
     // Determine which API key and provider to use
-    const effectiveProvider = provider || (process.env.SITE_API_PROVIDER as "openai" | "anthropic") || "openai";
+    effectiveProvider = provider || (process.env.SITE_API_PROVIDER as "openai" | "anthropic") || "openai";
     let effectiveApiKey = apiKey;
     if (!effectiveApiKey) {
       // Fall back to environment variables based on provider
@@ -44,15 +51,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log("API Debug:", {
+    exerciseLogger.api.request('POST', '/api/generate-exercise-set', {
       hasApiKey: !!effectiveApiKey,
       provider: effectiveProvider,
-      apiKeyPrefix: effectiveApiKey?.substring(0, 10) + "...",
       exerciseType,
       cefrLevel,
       theme,
       userCompletedCount: userCompletedExercises?.length || 0,
-      userCompletedIds: userCompletedExercises,
       forceRegenerate,
     });
 
@@ -66,10 +71,10 @@ export async function POST(request: NextRequest) {
     // Skip cache if forceRegenerate is true
     if (!forceRegenerate) {
       // Try to serve from cache first
-      console.log("Generated cache key:", cacheKey);
+      exerciseLogger.debug('Generated cache key', { cacheKey });
 
       const cachedExercises = await cacheProvider.getCachedExercises(cacheKey);
-      console.log("Raw cached exercises:", cachedExercises.length);
+      exerciseLogger.debug('Retrieved cached exercises', { count: cachedExercises.length, cacheKey });
 
       // Filter out exercises the user has already completed
       // Check against the actual exercise data ID, not the cache wrapper ID
@@ -79,33 +84,27 @@ export async function POST(request: NextRequest) {
         const exerciseDataId = exercise.data.id;
         const isCompleted = completedSet.has(exerciseDataId);
 
-        console.log("Filtering exercise:", {
+        exerciseLogger.debug('Filtering cached exercise', {
           cacheId: exercise.id,
           dataId: exerciseDataId,
           isCompleted,
-          completedSet: Array.from(completedSet),
         });
 
         return !isCompleted;
       });
 
-      console.log("Cache filtering debug:", {
+      exerciseLogger.debug('Cache filtering results', {
         totalCached: cachedExercises.length,
         completedCount: completedSet.size,
         availableAfterFilter: availableExercises.length,
-        completedIds: Array.from(completedSet),
-        cachedIds: cachedExercises.map((ex) => ({
-          cacheId: ex.id,
-          dataId: ex.data.id,
-        })),
       });
 
       if (availableExercises.length > 0) {
         // Serve from cache
-        console.log(`Serving from cache: ${availableExercises.length} available exercises`);
         const selectedExercise = availableExercises[Math.floor(Math.random() * availableExercises.length)];
-
-        console.log("Selected cached exercise:", {
+        
+        exerciseLogger.cache.hit(cacheKey, availableExercises.length);
+        exerciseLogger.debug('Selected cached exercise', {
           cacheId: selectedExercise.id,
           dataId: selectedExercise.data.id,
           exerciseType: selectedExercise.exerciseType,
@@ -116,9 +115,9 @@ export async function POST(request: NextRequest) {
     }
 
     // No suitable cached exercises or force regeneration requested, generate new ones
-    console.log(
-      forceRegenerate ? "Force regeneration requested..." : "No suitable cached exercises found, generating new ones..."
-    );
+    const reason = forceRegenerate ? 'force_regeneration' : 'no_suitable_cache';
+    exerciseLogger.cache.miss(cacheKey, reason);
+    exerciseLogger.exerciseGeneration.start(exerciseType, cefrLevel, effectiveProvider, theme);
 
     // Route to appropriate provider
     let response;
@@ -141,7 +140,7 @@ export async function POST(request: NextRequest) {
       createdAt: Date.now(),
     };
 
-    console.log("Caching new exercise:", {
+    exerciseLogger.debug('Caching new exercise', {
       cacheId: cachedExercise.id,
       dataId: responseData.id,
       cacheKey,
@@ -151,11 +150,12 @@ export async function POST(request: NextRequest) {
     });
 
     await cacheProvider.setCachedExercise(cacheKey, cachedExercise);
-    console.log("Exercise cached successfully");
+    exerciseLogger.cache.store(cacheKey, responseData.id);
+    exerciseLogger.exerciseGeneration.success(exerciseType, cefrLevel, effectiveProvider, responseData.id);
 
     return NextResponse.json(responseData);
   } catch (error) {
-    console.error("Exercise generation error:", error);
+    exerciseLogger.exerciseGeneration.error(exerciseType, cefrLevel, effectiveProvider, error as Error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid request data", details: error.errors }, { status: 400 });
@@ -177,7 +177,7 @@ async function generateWithOpenAI(exerciseType: string, cefrLevel: string, apiKe
   // Determine the appropriate response schema based on exercise type
   const responseFormat = getOpenAIResponseFormat(exerciseType);
 
-  console.log("Using OpenAI Responses API with structured output for:", exerciseType);
+  exerciseLogger.debug('Using OpenAI structured output', { exerciseType });
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
@@ -199,7 +199,7 @@ async function generateWithOpenAI(exerciseType: string, cefrLevel: string, apiKe
 }
 
 async function generateWithAnthropic(exerciseType: string, cefrLevel: string, apiKey: string, theme?: string) {
-  console.log("Anthropic generation started:", { exerciseType, cefrLevel, theme });
+  exerciseLogger.debug('Anthropic generation started', { exerciseType, cefrLevel, theme });
 
   const anthropic = new Anthropic({ apiKey });
 
@@ -209,7 +209,7 @@ async function generateWithAnthropic(exerciseType: string, cefrLevel: string, ap
     theme
   );
 
-  console.log("Sending request to Anthropic...");
+  exerciseLogger.debug('Sending request to Anthropic');
 
   try {
     const message = await anthropic.messages.create({
@@ -225,7 +225,7 @@ async function generateWithAnthropic(exerciseType: string, cefrLevel: string, ap
       ],
     });
 
-    console.log("Received response from Anthropic");
+    exerciseLogger.debug('Received response from Anthropic');
     const content = message.content[0];
     if (content.type !== "text") {
       throw new Error("No text response from Anthropic");
@@ -233,7 +233,7 @@ async function generateWithAnthropic(exerciseType: string, cefrLevel: string, ap
 
     return processAIResponseWithValidation(content.text, exerciseType);
   } catch (error) {
-    console.error("Anthropic API error:", error);
+    exerciseLogger.error('Anthropic API error', error);
     throw error;
   }
 }
@@ -374,7 +374,7 @@ function processAIResponseWithValidation(content: string, exerciseType: string) 
   try {
     parsedData = JSON.parse(content);
   } catch {
-    console.error("Failed to parse AI response:", content);
+    exerciseLogger.error('Failed to parse AI response', { content: content.substring(0, 200) });
     throw new Error("Invalid JSON response from AI");
   }
 

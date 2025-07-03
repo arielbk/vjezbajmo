@@ -3,6 +3,7 @@ import { z } from "zod";
 import { checkAnswer } from "@/lib/exercise-utils";
 import { cacheProvider } from "@/lib/cache-provider";
 import { ParagraphExerciseSet, SentenceExerciseSet } from "@/types/exercise";
+import { exerciseLogger } from "@/lib/logger";
 
 // Cache answer validation for 1 hour since solutions don't change
 export const revalidate = 3600;
@@ -65,14 +66,24 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { questionId, userAnswer } = checkAnswerSchema.parse(body);
 
+    exerciseLogger.api.request('POST', '/api/check-answer', { questionId });
+
     // Find the solution within cached exercises
     const solution = await findSolutionForQuestion(questionId);
 
     if (!solution) {
+      exerciseLogger.warn('Question not found in cache', { questionId });
       return NextResponse.json({ error: "Question not found or expired" }, { status: 404 });
     }
 
     const { correct, diacriticWarning, matchedAnswer } = checkAnswer(userAnswer, solution.correctAnswer);
+
+    exerciseLogger.debug('Answer checked', { 
+      questionId, 
+      correct, 
+      diacriticWarning: !!diacriticWarning,
+      userAnswerLength: userAnswer.length 
+    });
 
     return NextResponse.json({
       correct,
@@ -82,7 +93,7 @@ export async function POST(request: NextRequest) {
       matchedAnswer,
     });
   } catch (error) {
-    console.error("Answer checking error:", error);
+    exerciseLogger.error("Answer checking error", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid request data", details: error.errors }, { status: 400 });

@@ -2,6 +2,7 @@
 // Allows switching between different cache backends (Vercel KV, Redis, etc.)
 
 import { ParagraphExerciseSet, SentenceExerciseSet, ExerciseType, CefrLevel } from "@/types/exercise";
+import { exerciseLogger } from "@/lib/logger";
 
 export interface CachedExercise {
   id: string;
@@ -70,7 +71,7 @@ class VercelKVCache implements CacheProvider {
       const { kv } = await import("@vercel/kv");
       return kv;
     } catch {
-      console.warn("Vercel KV not available, falling back to in-memory cache");
+      exerciseLogger.warn("Vercel KV not available, falling back to in-memory cache");
       return null;
     }
   }
@@ -90,7 +91,7 @@ class VercelKVCache implements CacheProvider {
       const exercises = await kv.get(`exercises:${key}`);
       return exercises || [];
     } catch (error) {
-      console.error("Failed to get cached exercises:", error);
+      exerciseLogger.error("Failed to get cached exercises", error);
       return [];
     }
   }
@@ -106,7 +107,7 @@ class VercelKVCache implements CacheProvider {
       // Store with 7-day expiration
       await kv.set(`exercises:${key}`, existing, { ex: 7 * 24 * 60 * 60 });
     } catch (error) {
-      console.error("Failed to cache exercise:", error);
+      exerciseLogger.error("Failed to cache exercise", error);
     }
   }
 
@@ -124,7 +125,7 @@ class VercelKVCache implements CacheProvider {
         await kv.set(`exercises:${key}`, filtered, { ex: 7 * 24 * 60 * 60 });
       }
     } catch (error) {
-      console.error("Failed to invalidate exercise:", error);
+      exerciseLogger.error("Failed to invalidate exercise", error);
     }
   }
 
@@ -135,7 +136,7 @@ class VercelKVCache implements CacheProvider {
     try {
       await kv.del(`exercises:${key}`);
     } catch (error) {
-      console.error("Failed to invalidate all exercises:", error);
+      exerciseLogger.error("Failed to invalidate all exercises", error);
     }
   }
 }
