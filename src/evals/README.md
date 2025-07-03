@@ -1,18 +1,68 @@
-# Croatian Grammar AI Model Evaluation System
+# AI Model Evaluation System for Croatian Grammar Exercise Generation
 
-This directory contains a comprehensive evaluation system for testing AI models on Croatian grammar exercises. The system allows you to compare different AI providers (OpenAI, Anthropic) and models to determine which performs best for Croatian language tasks.
+This directory contains a comprehensive evaluation system to systematically test and compare AI models for generating Croatian grammar exercises, as specified in issue #36. The system helps with current decision making, future monitoring, quality assurance, and performance optimization.
 
-## Features
+## 🎯 Objective
 
-- **Multiple AI Provider Support**: Test both OpenAI and Anthropic models
-- **Dynamic Model Discovery**: Automatically fetches available models from each provider's API including Claude 4 models
-- **Real-time Progress Updates**: Live progress tracking for individual test cases during evaluation
+Create a comprehensive evaluation system to:
+
+1. **Current Decision Making**: Choose the best model for immediate use
+2. **Future Monitoring**: Continuously evaluate new models as they become available  
+3. **Quality Assurance**: Ensure generated exercises maintain high standards
+4. **Performance Optimization**: Balance quality, speed, and cost for our use case
+
+## 🏗️ Core Features
+
+- **Multiple AI Provider Support**: Test both OpenAI and Anthropic models with easy expansion for future providers
+- **Dynamic Model Discovery**: Automatically fetches available models from each provider's API
+- **Real-time Progress Updates**: Live progress tracking for individual test cases during evaluation  
 - **Comprehensive Test Cases**: High-quality test cases covering all exercise types with multiple difficulty levels
-- **Multiple Correct Answers**: Support for alternative answers (e.g., Croatian vs Serbian variants)
+- **Weighted Scoring System**: Answer correctness (45%), explanation quality (15%), exercise design (15%), speed & reliability (15%), cost efficiency (10%)
+- **Export Functionality**: Preserve evaluation results across sessions with JSON/CSV/Report formats
 - **Development-Only Access**: Web UI is only accessible in development mode for security
 - **CLI and Web Interface**: Run evaluations from command line or browser
-- **Detailed Performance Metrics**: Accuracy scores and explanation quality assessment
-- **Separated API Keys**: Independent configuration for OpenAI and Anthropic API keys
+- **Croatian Language Expertise**: All validation grounded in authentic Croatian language standards
+
+## 📊 Evaluation Criteria (Weighted Priority)
+
+The evaluation system uses the following weighted criteria based on issue #36:
+
+### 🚨 Deal Breakers (Heavily Penalized)
+- **Answer Correctness (45% weight)** - MOST CRITICAL
+  - Generated correct answers are grammatically accurate in Croatian
+  - All valid Croatian answers are included (comprehensive multiple correct answers)
+  - Zero tolerance for incorrect answers marked as correct
+  - Proper diacritic usage and declension forms
+  - *Rationale*: User trust is fundamental - any incorrect "correct" answers immediately undermine system credibility
+
+### ⚡ Performance Factors (15% weight)
+- **Generation Speed & Reliability**
+  - Response time measurement and comparison across models
+  - Consistency of response times (avoid highly variable performance)
+  - Error rate and timeout handling
+  - *Rationale*: Important for user experience but not a deal-breaker
+
+### 📚 Quality Factors (30% weight)
+- **Explanation Quality (15% weight)**
+  - Grammatically accurate explanations in Croatian
+  - Pedagogically sound and helpful for language learners
+  - Appropriate complexity for selected CEFR level
+  - Clear reasoning for why answers are correct
+
+- **Exercise Design & Guideline Adherence (15% weight)**
+  - Vocabulary appropriate for selected CEFR level (A1, A2.1, A2.2, B1.1)
+  - Strong theme adherence when theme is specified by user
+  - Question variety and non-repetitive content
+  - Proper exercise structure and format
+  - Cultural relevance and authenticity for Croatian context
+
+### 💰 Cost Analysis (10% weight + Bonus Features)
+- **Cost Efficiency**
+  - Input/output token count and associated costs
+  - Cost per exercise generation comparison
+  - Quality-to-cost ratio analysis
+  - **Bonus**: Real-time pricing API integration
+  - **Bonus**: Automatic cost tracking and optimization recommendations
 
 ## Environment Setup
 
@@ -70,11 +120,12 @@ src/evals/
 ├── model-configs.ts         # Dynamic model configuration and fetching
 ├── evaluation-runner.ts     # Core evaluation logic
 ├── cli.ts                   # Command-line interface
+├── test-structure.ts        # Structure validation tools
+├── export-utils.ts          # Export functionality for results preservation
 └── index.ts                 # Module exports
 
 src/app/
-├── evals/page.tsx           # Web UI (development-only)
-└── api/evaluate-answer/route.ts  # AI evaluation API endpoint
+└── evals/page.tsx           # Web UI (development-only)
 ```
 
 ## Test Cases
@@ -160,13 +211,26 @@ The web interface provides:
 
 ## Evaluation Metrics
 
-### Accuracy
-Percentage of test cases where the AI correctly identified whether the student's answer was right or wrong.
+### Weighted Scoring System
+Based on issue #36 requirements, the evaluation uses the following weights:
 
-### Explanation Quality
+**Total Score = 100%**
+- 🚨 **Answer Correctness: 45%** - CRITICAL (Deal breaker if poor)
+- 📚 **Explanation Quality: 15%** - Important for pedagogy  
+- 🎯 **Exercise Design & Guidelines: 15%** - Important for CEFR compliance
+- ⚡ **Speed & Reliability: 15%** - Important for user experience
+- 💰 **Cost Efficiency: 10%** - Important for sustainability
+
+### Answer Correctness (45% - Most Critical)
+- Percentage of test cases where the AI correctly identified whether the student's answer was right or wrong
+- **Zero tolerance** for incorrect answers marked as correct
+- Support for multiple valid Croatian forms and regional variations
+- Proper diacritic usage and declension accuracy
+
+### Explanation Quality (15%)
 Scored from 1-3 based on:
-- **Good (3)**: Contains relevant grammar terms, detailed explanation, appropriate length
-- **Acceptable (2)**: Detailed explanation, relevant to the question
+- **Good (3)**: Contains relevant Croatian grammar terms, detailed explanation, appropriate length
+- **Acceptable (2)**: Detailed explanation, relevant to the question  
 - **Poor (1)**: Short, lacks detail, or irrelevant
 
 Quality assessment considers:
@@ -174,31 +238,79 @@ Quality assessment considers:
 - Explanation length and detail
 - Relevance to expected explanation
 - Coverage of specific grammar rules
+- Pedagogical appropriateness for CEFR level
 
-## API Endpoint
+### Exercise Design & Guidelines (15%)
+- Vocabulary appropriateness for specified CEFR level
+- Theme adherence when specified
+- Question variety and non-repetitive content
+- Cultural relevance and authenticity for Croatian context
+- Proper exercise structure and format
 
-The evaluation system uses a dedicated API endpoint at `/api/evaluate-answer`:
+### Speed & Reliability (15%)
+- Response time measurement and consistency
+- Error rate and timeout handling
+- Comparison of execution times across models
+- System reliability and stability
 
+### Cost Efficiency (10%)
+- Input/output token count analysis
+- Cost per exercise generation
+- Quality-to-cost ratio assessment
+- Total cost comparison across models
+
+## 📊 Export Functionality
+
+The evaluation system provides comprehensive export capabilities for data persistence and sharing:
+
+### Export Formats
+- **JSON**: Complete structured data with all evaluation details
+- **CSV**: Spreadsheet-compatible format for analysis
+- **Report**: Human-readable markdown report with rankings and analysis
+
+### Export Options
 ```typescript
-POST /api/evaluate-answer
-{
-  "exerciseType": "verbTenses",
-  "question": "Marko _____ (ići) u školu svaki dan.",
-  "userAnswer": "ide",
-  "provider": "openai", // optional
-  "model": "gpt-4o-mini", // optional
-  "alternativeAnswers": ["alternative"], // optional
-  "difficultyLevel": "easy" // optional
+interface ExportOptions {
+  format: 'json' | 'csv' | 'report';
+  includeFailedCases?: boolean;
+  includePerformanceDetails?: boolean;
+  includeCostAnalysis?: boolean;
 }
 ```
 
-Response:
+### Usage Example
 ```typescript
-{
-  "isCorrect": true,
-  "explanation": "Present tense, third person singular..."
-}
+import { exportToJSON, exportToCSV, exportToReport, downloadFile } from './export-utils';
+
+// Export to JSON
+const jsonData = exportToJSON(evaluationResults, { 
+  format: 'json',
+  includeFailedCases: true 
+});
+
+// Export to CSV for spreadsheet analysis
+const csvData = exportToCSV(evaluationResults, { 
+  format: 'csv',
+  includeCostAnalysis: true 
+});
+
+// Generate comprehensive report
+const report = exportToReport(evaluationResults, { 
+  format: 'report',
+  includePerformanceDetails: true,
+  includeFailedCases: true,
+  includeCostAnalysis: true 
+});
+
+// Download in browser
+downloadFile(report, 'evaluation-report.md', 'report');
 ```
+
+### Data Persistence Benefits
+- **Prevent Data Loss**: Save evaluation results across sessions
+- **Shareable Reports**: Generate formatted reports for team review
+- **Historical Tracking**: Maintain records for model performance trends
+- **Decision Documentation**: Preserve rationale for model selection decisions
 
 ## Development-Only Access
 
@@ -233,13 +345,26 @@ Example of a comprehensive test case:
 
 ## Performance Expectations
 
-Typical evaluation run:
+Typical evaluation run based on issue #36 criteria:
 - **Time**: 1-2 minutes per model (with rate limiting delays)
-- **API Calls**: 26 calls per model (one per test case)
+- **API Calls**: 11 calls per model (one per test case)
 - **Rate Limiting**: 1-second delay between requests to avoid API limits
 
-Strong models typically achieve:
-- **Accuracy**: 85-95% on correctly identifying right/wrong answers
-- **Explanation Quality**: 2.5-3.0 average score
-- **Best Performance**: Usually on easier cases (verb tenses, basic declensions)
-- **Challenging Areas**: Complex aspect distinctions, irregular declensions
+### Expected Model Performance (According to Issue #36 Weights):
+- **Answer Correctness (45% weight)**: 85-95% accuracy on Croatian grammar validation
+- **Explanation Quality (15% weight)**: 2.5-3.0 average score for pedagogical explanations
+- **Exercise Design (15% weight)**: 80-90% adherence to CEFR levels and themes
+- **Speed & Reliability (15% weight)**: Consistent response times under 10 seconds
+- **Cost Efficiency (10% weight)**: Balanced token usage vs quality
+
+### Challenging Areas:
+- **Complex Croatian Declensions**: Irregular noun forms and case endings
+- **Verb Aspects**: Perfective vs imperfective distinctions
+- **CEFR Vocabulary Matching**: Age-appropriate word selection
+- **Cultural Authenticity**: Croatian-specific contexts and references
+
+### Critical Success Factors:
+- **Zero Tolerance for Incorrect Answers**: Models failing answer correctness receive heavy penalties
+- **Croatian Language Expertise**: All validation must meet authentic Croatian standards
+- **Pedagogical Appropriateness**: Explanations must be suitable for language learners
+- **Export-Enabled Results**: All evaluation data can be preserved and shared

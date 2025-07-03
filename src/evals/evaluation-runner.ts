@@ -2,6 +2,7 @@
 
 import { ModelConfig, fetchAllModels } from './model-configs';
 import { GenerationTestCase } from './test-cases';
+import { calculateCost } from './models-pricing';
 
 // Type for generated exercise (can be paragraph or sentence exercise set)
 type GeneratedExercise = {
@@ -137,7 +138,7 @@ export class EvaluationRunner {
             const truncatedBody = errorBody.length > 200 ? errorBody.substring(0, 200) + '...' : errorBody;
             errorDetails += ` (${truncatedBody})`;
           }
-        } catch (parseError) {
+        } catch {
           // If we can't parse the error body, just use the status
         }
         
@@ -155,7 +156,7 @@ export class EvaluationRunner {
       result.explanationQuality = this.scoreExplanationQuality(generatedExercise, testCase);
       result.exerciseDesign = this.scoreExerciseDesign(generatedExercise, testCase);
       result.speedReliability = this.scoreSpeedReliability(result.executionTime, testCase);
-      result.costEfficiency = this.scoreCostEfficiency(result.tokenUsage, testCase);
+      result.costEfficiency = this.scoreCostEfficiency(model, result.tokenUsage, testCase);
 
       // Calculate weighted overall score
       const weights = {
@@ -227,6 +228,7 @@ export class EvaluationRunner {
    * Score answer correctness (45% weight) - MOST CRITICAL
    * This is the deal-breaker criterion
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private scoreAnswerCorrectness(exercise: GeneratedExercise, _testCase: GenerationTestCase): number {
     const questions = exercise.questions || exercise.exercises || [];
     if (questions.length === 0) return 0;
@@ -360,33 +362,38 @@ export class EvaluationRunner {
 
   /**
    * Score cost efficiency (10% weight) - Optional
-   * Token usage and cost-effectiveness
+   * Uses actual model pricing to calculate cost-effectiveness
    */
-  private scoreCostEfficiency(tokenUsage: { inputTokens?: number; outputTokens?: number } | undefined, testCase: GenerationTestCase): number | undefined {
-    if (!tokenUsage) return undefined;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private scoreCostEfficiency(model: ModelConfig, tokenUsage: { inputTokens?: number; outputTokens?: number } | undefined, _testCase: GenerationTestCase): number | undefined {
+    if (!tokenUsage || !tokenUsage.inputTokens || !tokenUsage.outputTokens) return undefined;
     
-    // This would need actual pricing data from providers
-    // For now, return a score based on token efficiency
-    const targetTokens = this.getTargetTokenCount(testCase);
-    const actualTokens = (tokenUsage.inputTokens || 0) + (tokenUsage.outputTokens || 0);
+    const modelApiName = model.name;
+    const costInfo = calculateCost(modelApiName, tokenUsage.inputTokens, tokenUsage.outputTokens);
     
-    if (actualTokens === 0) return undefined;
+    if (!costInfo) return undefined; // Model not found in pricing data
     
-    let score = 1.0;
+    const totalCost = costInfo.totalCost;
     
-    // Penalty for excessive token usage
-    if (actualTokens > targetTokens * 2) {
-      score = 0.5;
-    } else if (actualTokens > targetTokens * 1.5) {
-      score = 0.7;
-    } else if (actualTokens > targetTokens) {
-      score = 0.85;
+    // Define cost efficiency tiers based on total cost per exercise
+    // These thresholds are based on typical grammar exercise generation costs
+    if (totalCost <= 0.001) {        // Less than $0.001 per exercise
+      return 1.0;                    // Excellent cost efficiency
+    } else if (totalCost <= 0.005) { // $0.001-$0.005 per exercise  
+      return 0.9;                    // Very good cost efficiency
+    } else if (totalCost <= 0.01) {  // $0.005-$0.01 per exercise
+      return 0.8;                    // Good cost efficiency
+    } else if (totalCost <= 0.02) {  // $0.01-$0.02 per exercise
+      return 0.7;                    // Moderate cost efficiency
+    } else if (totalCost <= 0.05) {  // $0.02-$0.05 per exercise
+      return 0.5;                    // Poor cost efficiency
+    } else {                         // More than $0.05 per exercise
+      return 0.3;                    // Very poor cost efficiency
     }
-    
-    return score;
   }
 
   // Helper methods for the new scoring system
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private scoreCefrCompliance(exercise: GeneratedExercise, _testCase: GenerationTestCase): number {
     // This would need sophisticated CEFR vocabulary and grammar analysis
     // For now, return a reasonable default based on structure quality
@@ -413,6 +420,7 @@ export class EvaluationRunner {
     return Math.min(matchedKeywords / Math.max(themeKeywords.length * 0.3, 1), 1);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private scoreCulturalRelevance(exercise: GeneratedExercise, _testCase: GenerationTestCase): number {
     // Check for Croatian cultural context and authenticity
     const exerciseText = JSON.stringify(exercise).toLowerCase();
@@ -479,6 +487,7 @@ export class EvaluationRunner {
     return Math.min(score, 1);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private getTargetExecutionTime(_testCase: GenerationTestCase): number {
     // Target execution times in milliseconds based on complexity
     const baseTime = 5000; // 5 seconds base
