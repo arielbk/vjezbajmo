@@ -7,10 +7,18 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { EvaluationRunner, ModelPerformance } from "@/evals/evaluation-runner";
+import { EvaluationRunner, ModelPerformance, GenerationResult } from "@/evals/evaluation-runner";
 import { ALL_TEST_CASES } from "@/evals/test-cases";
 import { ModelConfig } from "@/evals/model-configs";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { 
+  EvaluationResult, 
+  exportToJSON, 
+  exportToCSV, 
+  exportToReport, 
+  downloadFile, 
+  generateExportFilename 
+} from "@/evals/export-utils";
+import { ChevronDown, ChevronUp, FileText, Table, FileCode } from "lucide-react";
 
 // Only allow access in development mode
 export default function EvalsPage() {
@@ -35,7 +43,69 @@ function EvalsPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [currentStatus, setCurrentStatus] = useState<string>("");
+  const [currentModel, setCurrentModel] = useState<string>("");
+  const [currentTestCase, setCurrentTestCase] = useState<string>("");
   const [expandedExplanations, setExpandedExplanations] = useState<Record<string, boolean>>({});
+
+  // Convert ModelPerformance to EvaluationResult for export
+  const convertToEvaluationResults = (performances: ModelPerformance[]): EvaluationResult[] => {
+    return performances.map(perf => ({
+      modelId: `${perf.provider}-${perf.modelName}`,
+      provider: perf.provider,
+      model: perf.modelName,
+      timestamp: new Date().toISOString(),
+      overallScore: perf.overallScore * 100, // Convert to percentage
+      criteria: {
+        answerCorrectness: perf.criteria.answerCorrectness * 100,
+        explanationQuality: perf.criteria.explanationQuality * 100,
+        exerciseDesign: perf.criteria.exerciseDesign * 100,
+        speedReliability: perf.criteria.speedReliability * 100,
+        costEfficiency: perf.criteria.costEfficiency ? perf.criteria.costEfficiency * 100 : undefined,
+      },
+      testCases: perf.results.map(result => ({
+        id: result.testCaseId,
+        exerciseType: 'unknown', // This would need to be extracted from test case
+        passed: result.exerciseGenerated,
+        explanation: result.errors.join('; ') || undefined,
+        executionTime: result.executionTime,
+        error: result.errors.length > 0 ? result.errors[0] : undefined,
+      })),
+      performance: {
+        totalTests: perf.totalTests,
+        passed: perf.successfulGenerations,
+        failed: perf.totalTests - perf.successfulGenerations,
+        averageExecutionTime: perf.averageExecutionTime,
+        totalExecutionTime: perf.results.reduce((sum, r) => sum + r.executionTime, 0),
+      },
+    }));
+  };
+
+  // Export functions
+  const handleExportJSON = () => {
+    const evaluationResults = convertToEvaluationResults(performances);
+    const jsonData = exportToJSON(evaluationResults);
+    const filename = generateExportFilename('json');
+    downloadFile(jsonData, filename, 'json');
+  };
+
+  const handleExportCSV = () => {
+    const evaluationResults = convertToEvaluationResults(performances);
+    const csvData = exportToCSV(evaluationResults);
+    const filename = generateExportFilename('csv');
+    downloadFile(csvData, filename, 'csv');
+  };
+
+  const handleExportReport = () => {
+    const evaluationResults = convertToEvaluationResults(performances);
+    const reportData = exportToReport(evaluationResults, {
+      format: 'report',
+      includePerformanceDetails: true,
+      includeFailedCases: true,
+      includeCostAnalysis: evaluationResults.some(r => r.criteria.costEfficiency !== undefined),
+    });
+    const filename = generateExportFilename('report');
+    downloadFile(reportData, filename, 'report');
+  };
 
   // Load available models on mount
   useEffect(() => {
@@ -65,50 +135,93 @@ function EvalsPageContent() {
     setPerformances([]);
     setProgress(0);
     setCurrentStatus("Starting evaluations...");
+    setCurrentModel("");
+    setCurrentTestCase("");
 
     try {
       const runner = new EvaluationRunner();
       const selectedModelConfigs = availableModels.filter((m) => selectedModels.includes(m.name));
       const results: ModelPerformance[] = [];
+      const totalTests = selectedModelConfigs.length * ALL_TEST_CASES.length;
+      let completedTests = 0;
 
       for (let i = 0; i < selectedModelConfigs.length; i++) {
         const modelConfig = selectedModelConfigs[i];
+        setCurrentModel(modelConfig.name);
         setCurrentStatus(`Evaluating ${modelConfig.name}...`);
 
+        // Create a custom function to track individual test progress
+        const performanceResults: GenerationResult[] = [];
+
         try {
-          const performance = await runner.runModelTests(modelConfig, ALL_TEST_CASES);
-
-          // Calculate progress
-          const modelProgress = ((i + 1) / selectedModelConfigs.length) * 100;
-          setProgress(modelProgress);
-
+          
+          for (let j = 0; j < ALL_TEST_CASES.length; j++) {
+            const testCase = ALL_TEST_CASES[j];
+            setCurrentTestCase(testCase.id);
+            setCurrentStatus(`Testing ${modelConfig.name} on ${testCase.id}`);
+            
+            try {
+              // Run individual test 
+              const testResult = await runner.runSingleTest(modelConfig, testCase);
+              performanceResults.push(testResult);
+              
+              completedTests++;
+              const overallProgress = (completedTests / totalTests) * 100;
+              setProgress(overallProgress);
+              
+              // Add a small delay for better UX (prevents flickering)
+              await new Promise(resolve => setTimeout(resolve, 100));
+            } catch (testError) {
+              console.error(`Failed test ${testCase.id} for ${modelConfig.name}:`, testError);
+              completedTests++;
+              const overallProgress = (completedTests / totalTests) * 100;
+              setProgress(overallProgress);
+            }
+          }
+          
+          // Now calculate the overall performance for this model
+          const performance = await runner.calculateModelPerformance(modelConfig, performanceResults);
           results.push(performance);
           setPerformances([...results].sort((a, b) => b.overallScore - a.overallScore));
+          
         } catch (error) {
           console.error(`Failed to evaluate ${modelConfig.name}:`, error);
           // Add a failed result
           results.push({
             modelName: modelConfig.name,
+            provider: modelConfig.provider,
             overallScore: 0,
-            structureScore: 0,
-            contentScore: 0,
-            explanationScore: 0,
-            themeScore: 0,
-            cefrScore: 0,
+            criteria: {
+              answerCorrectness: 0,
+              explanationQuality: 0,
+              exerciseDesign: 0,
+              speedReliability: 0,
+              costEfficiency: undefined,
+            },
             totalTests: ALL_TEST_CASES.length,
             successfulGenerations: 0,
             averageExecutionTime: 0,
             results: [],
           });
           setPerformances([...results].sort((a, b) => b.overallScore - a.overallScore));
+          
+          // Update progress even for failed models (skip remaining tests for this model)
+          const remainingTestsForThisModel = ALL_TEST_CASES.length - performanceResults.length;
+          completedTests += remainingTestsForThisModel;
+          const overallProgress = (completedTests / totalTests) * 100;
+          setProgress(overallProgress);
         }
       }
 
-      setCurrentStatus("Evaluation completed!");
+      setCurrentStatus("All evaluations completed!");
+      setCurrentModel("");
+      setCurrentTestCase("");
       setProgress(100);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Failed to run evaluations");
       setCurrentStatus("Evaluation failed");
+      setCurrentModel("");
+      setCurrentTestCase("");
     } finally {
       setIsRunning(false);
     }
@@ -218,6 +331,12 @@ function EvalsPageContent() {
                     <Progress value={progress} className="w-full transition-all duration-500 ease-out" />
                     <p className="text-sm text-gray-600 text-center">{progress.toFixed(0)}% complete</p>
                     <p className="text-xs text-gray-500 text-center">{currentStatus}</p>
+                    {currentModel && (
+                      <p className="text-xs text-gray-400 text-center">
+                        Current Model: {currentModel}
+                        {currentTestCase && ` • Testing: ${currentTestCase}`}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -228,11 +347,27 @@ function EvalsPageContent() {
         {/* Results */}
         {performances.length > 0 && (
           <Card>
-            <CardHeader>
-              <CardTitle>Evaluation Results</CardTitle>
-              <CardDescription>
-                Results sorted by overall score. Higher scores indicate better exercise generation quality across structure, content, explanations, and CEFR level appropriateness.
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Evaluation Results</CardTitle>
+                <CardDescription>
+                  Performance comparison using weighted scoring: Answer Correctness (45%), Explanation Quality (15%), Exercise Design (15%), Speed & Reliability (15%), Cost Efficiency (10%).
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleExportJSON}>
+                  <FileCode className="w-4 h-4 mr-2" />
+                  JSON
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleExportCSV}>
+                  <Table className="w-4 h-4 mr-2" />
+                  CSV
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleExportReport}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Report
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="summary">
@@ -242,12 +377,63 @@ function EvalsPageContent() {
                 </TabsList>
 
                 <TabsContent value="summary" className="space-y-4">
-                  {performances.map((perf, index) => (
-                    <div key={perf.modelName} className="p-4 border rounded">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium">{perf.modelName}</span>
-                        <Badge variant={index === 0 ? "default" : "secondary"}>#{index + 1}</Badge>
-                      </div>
+                  {/* API Error Summary */}
+                  {performances.length > 0 && (() => {
+                    const totalApiErrors = performances.reduce((sum, perf) => 
+                      sum + perf.results.filter(r => 
+                        r.errors.some(error => error.includes('API Error:') || error.includes('529') || error.includes('overloaded'))
+                      ).length, 0
+                    );
+                    const totalTests = performances.reduce((sum, perf) => sum + perf.totalTests, 0);
+                    
+                    if (totalApiErrors > 0) {
+                      return (
+                        <div className="p-4 border border-orange-200 rounded bg-orange-50">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="destructive" className="bg-orange-600 text-white">
+                              API Issues Detected
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-orange-800">
+                            <strong>{totalApiErrors}</strong> API errors occurred out of <strong>{totalTests}</strong> total tests 
+                            ({((totalApiErrors / totalTests) * 100).toFixed(1)}% failure rate). 
+                            Most appear to be service overload errors (HTTP 529) from provider APIs. 
+                            Consider running the evaluation again when API load is lower.
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  {performances.map((perf, index) => {
+                    const apiErrors = perf.results.filter(r => 
+                      r.errors.some(error => error.includes('API Error:') || error.includes('529') || error.includes('overloaded'))
+                    ).length;
+                    const otherErrors = perf.results.filter(r => r.errors.length > 0).length - apiErrors;
+                    
+                    return (
+                      <div key={perf.modelName} className="p-4 border rounded">
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{perf.modelName}</span>
+                            {(apiErrors > 0 || otherErrors > 0) && (
+                              <div className="flex gap-1">
+                                {apiErrors > 0 && (
+                                  <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300 text-xs">
+                                    {apiErrors} API error{apiErrors !== 1 ? 's' : ''}
+                                  </Badge>
+                                )}
+                                {otherErrors > 0 && (
+                                  <Badge variant="destructive" className="text-xs">
+                                    {otherErrors} other error{otherErrors !== 1 ? 's' : ''}
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <Badge variant={index === 0 ? "default" : "secondary"}>#{index + 1}</Badge>
+                        </div>
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
                           <span className="text-gray-600">Overall Score:</span>
@@ -267,78 +453,121 @@ function EvalsPageContent() {
                           <span className="font-medium">{perf.averageExecutionTime.toFixed(0)}ms</span>
                         </div>
                       </div>
-                      <div className="grid grid-cols-4 gap-4 text-xs mt-2 pt-2 border-t">
+                      <div className="grid grid-cols-5 gap-4 text-xs mt-2 pt-2 border-t">
                         <div>
-                          <span className="text-gray-500">Structure:</span> {(perf.structureScore * 100).toFixed(0)}%
+                          <span className="text-gray-500">Answer Correctness:</span> {(perf.criteria.answerCorrectness * 100).toFixed(0)}%
                         </div>
                         <div>
-                          <span className="text-gray-500">Content:</span> {(perf.contentScore * 100).toFixed(0)}%
+                          <span className="text-gray-500">Explanation Quality:</span> {(perf.criteria.explanationQuality * 100).toFixed(0)}%
                         </div>
                         <div>
-                          <span className="text-gray-500">Explanations:</span> {(perf.explanationScore * 100).toFixed(0)}%
+                          <span className="text-gray-500">Exercise Design:</span> {(perf.criteria.exerciseDesign * 100).toFixed(0)}%
                         </div>
                         <div>
-                          <span className="text-gray-500">CEFR:</span> {(perf.cefrScore * 100).toFixed(0)}%
+                          <span className="text-gray-500">Speed & Reliability:</span> {(perf.criteria.speedReliability * 100).toFixed(0)}%
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Cost Efficiency:</span> {perf.criteria.costEfficiency ? `${(perf.criteria.costEfficiency * 100).toFixed(0)}%` : 'N/A'}
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </TabsContent>
 
                 <TabsContent value="detailed" className="space-y-4">
-                  {performances.map((perf) => (
-                    <div key={perf.modelName} className="space-y-2">
-                      <h3 className="font-medium">{perf.modelName}</h3>
-                      <div className="space-y-1 text-sm">
-                        {perf.results.map((result) => {
-                          const resultId = `${perf.modelName}-${result.testCaseId}`;
-                          const isExpanded = expandedExplanations[resultId];
-                          const hasErrors = result.errors.length > 0;
-                          const errorText = hasErrors ? result.errors.join('; ') : '';
-                          const shouldTruncateErrors = errorText.length > 100;
-                          
-                          return (
-                            <div
-                              key={result.testCaseId}
-                              className={`p-2 rounded ${result.exerciseGenerated ? "bg-green-50" : "bg-red-50"}`}
-                            >
-                              <div className="flex justify-between items-center">
-                                <span>{result.testCaseId}</span>
-                                <div className="flex gap-2">
-                                  <Badge 
-                                    variant={result.exerciseGenerated ? "default" : "destructive"}
-                                    className={result.exerciseGenerated ? "" : "bg-red-600 text-white hover:bg-red-700"}
-                                  >
-                                    {result.exerciseGenerated ? "Generated" : "Failed"}
-                                  </Badge>
-                                  {result.exerciseGenerated && (
-                                    <Badge variant="outline">
-                                      {(result.overallScore * 100).toFixed(0)}%
+                  {performances.map((perf) => {
+                    // Calculate error summary for this model
+                    const totalErrors = perf.results.filter(r => r.errors.length > 0).length;
+                    const apiErrors = perf.results.filter(r => 
+                      r.errors.some(error => error.includes('API Error:') || error.includes('529') || error.includes('overloaded'))
+                    ).length;
+                    const otherErrors = totalErrors - apiErrors;
+                    
+                    return (
+                      <div key={perf.modelName} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <h3 className="font-medium">{perf.modelName}</h3>
+                          {totalErrors > 0 && (
+                            <div className="flex gap-2 text-xs">
+                              {apiErrors > 0 && (
+                                <Badge variant="destructive" className="bg-orange-600 text-white">
+                                  {apiErrors} API Error{apiErrors !== 1 ? 's' : ''}
+                                </Badge>
+                              )}
+                              {otherErrors > 0 && (
+                                <Badge variant="destructive">
+                                  {otherErrors} Other Error{otherErrors !== 1 ? 's' : ''}
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-1 text-sm">
+                          {perf.results.map((result) => {
+                            const resultId = `${perf.modelName}-${result.testCaseId}`;
+                            const isExpanded = expandedExplanations[resultId];
+                            const hasErrors = result.errors.length > 0;
+                            const errorText = hasErrors ? result.errors.join('; ') : '';
+                            const shouldTruncateErrors = errorText.length > 100;
+                            const hasApiError = hasErrors && result.errors.some(error => 
+                              error.includes('API Error:') || error.includes('529') || error.includes('overloaded')
+                            );
+                            
+                            return (
+                              <div
+                                key={result.testCaseId}
+                                className={`p-2 rounded border ${
+                                  result.exerciseGenerated 
+                                    ? "bg-green-50 border-green-200" 
+                                    : hasApiError 
+                                      ? "bg-orange-50 border-orange-200" 
+                                      : "bg-red-50 border-red-200"
+                                }`}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <span className="font-medium">{result.testCaseId}</span>
+                                  <div className="flex gap-2">
+                                    {hasApiError && (
+                                      <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300">
+                                        API Issue
+                                      </Badge>
+                                    )}
+                                    <Badge 
+                                      variant={result.exerciseGenerated ? "default" : "destructive"}
+                                      className={result.exerciseGenerated ? "" : "bg-red-600 text-white hover:bg-red-700"}
+                                    >
+                                      {result.exerciseGenerated ? "Generated" : "Failed"}
                                     </Badge>
-                                  )}
+                                    {result.exerciseGenerated && (
+                                      <Badge variant="outline">
+                                        {(result.overallScore * 100).toFixed(0)}%
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
                               
                               {result.exerciseGenerated && (
                                 <div className="text-gray-600 mt-1 text-xs">
-                                  Structure: {(result.structureScore * 100).toFixed(0)}% | 
-                                  Content: {(result.contentScore * 100).toFixed(0)}% | 
-                                  Explanations: {(result.explanationScore * 100).toFixed(0)}% | 
-                                  CEFR: {(result.cefrScore * 100).toFixed(0)}%
-                                  {result.themeScore > 0 && ` | Theme: ${(result.themeScore * 100).toFixed(0)}%`}
+                                  Answer Correctness: {(result.answerCorrectness * 100).toFixed(0)}% | 
+                                  Explanation Quality: {(result.explanationQuality * 100).toFixed(0)}% | 
+                                  Exercise Design: {(result.exerciseDesign * 100).toFixed(0)}% | 
+                                  Speed & Reliability: {(result.speedReliability * 100).toFixed(0)}%
+                                  {result.costEfficiency && ` | Cost Efficiency: ${(result.costEfficiency * 100).toFixed(0)}%`}
                                 </div>
                               )}
                               
                               {hasErrors && (
-                                <div className="text-xs text-red-600 mt-1">
+                                <div className={`text-xs mt-1 ${hasApiError ? 'text-orange-700' : 'text-red-600'}`}>
                                   {shouldTruncateErrors && !isExpanded ? (
                                     <div className="flex items-center gap-1">
-                                      <span>Error: {errorText.slice(0, 100)}...</span>
+                                      <span>{hasApiError ? 'API Error:' : 'Error:'} {errorText.slice(0, 100)}...</span>
                                       <Button
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => toggleExplanation(resultId)}
-                                        className="h-6 px-2 text-xs hover:bg-red-100"
+                                        className={`h-6 px-2 text-xs ${hasApiError ? 'hover:bg-orange-100' : 'hover:bg-red-100'}`}
                                       >
                                         <ChevronDown className="h-3 w-3 mr-1" />
                                         see more
@@ -346,13 +575,15 @@ function EvalsPageContent() {
                                     </div>
                                   ) : (
                                     <div className="space-y-1">
-                                      <span>Error: {errorText}</span>
+                                      <div className={`p-2 rounded text-xs ${hasApiError ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'}`}>
+                                        <strong>{hasApiError ? 'API Error:' : 'Error:'}</strong> {errorText}
+                                      </div>
                                       {shouldTruncateErrors && (
                                         <Button
                                           variant="ghost"
                                           size="sm"
                                           onClick={() => toggleExplanation(resultId)}
-                                          className="h-6 px-2 text-xs hover:bg-red-100"
+                                          className={`h-6 px-2 text-xs ${hasApiError ? 'hover:bg-orange-100' : 'hover:bg-red-100'}`}
                                         >
                                           <ChevronUp className="h-3 w-3 mr-1" />
                                           see less
@@ -369,9 +600,10 @@ function EvalsPageContent() {
                             </div>
                           );
                         })}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </TabsContent>
               </Tabs>
             </CardContent>

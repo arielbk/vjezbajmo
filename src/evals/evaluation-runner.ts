@@ -28,25 +28,33 @@ type GeneratedExercise = {
 export interface GenerationResult {
   testCaseId: string;
   exerciseGenerated: boolean;
-  structureScore: number; // 0-1
-  contentScore: number; // 0-1
-  explanationScore: number; // 0-1
-  themeScore: number; // 0-1 (only if theme specified)
-  cefrScore: number; // 0-1
-  overallScore: number; // 0-1
+  answerCorrectness: number; // 0-1 (45% weight)
+  explanationQuality: number; // 0-1 (15% weight)
+  exerciseDesign: number; // 0-1 (15% weight)
+  speedReliability: number; // 0-1 (15% weight)
+  costEfficiency?: number; // 0-1 (10% weight) - optional
+  overallScore: number; // 0-1 (weighted average)
   errors: string[];
   generatedExercise?: GeneratedExercise;
   executionTime: number; // milliseconds
+  tokenUsage?: {
+    inputTokens: number;
+    outputTokens: number;
+    totalCost?: number;
+  };
 }
 
 export interface ModelPerformance {
   modelName: string;
-  overallScore: number;
-  structureScore: number;
-  contentScore: number;
-  explanationScore: number;
-  themeScore: number;
-  cefrScore: number;
+  provider: string;
+  overallScore: number; // Weighted score according to issue #36
+  criteria: {
+    answerCorrectness: number; // 45% weight
+    explanationQuality: number; // 15% weight
+    exerciseDesign: number; // 15% weight
+    speedReliability: number; // 15% weight
+    costEfficiency?: number; // 10% weight
+  };
   totalTests: number;
   successfulGenerations: number;
   averageExecutionTime: number;
@@ -87,64 +95,19 @@ export class EvaluationRunner {
       results.push(result);
     }
 
-    // Calculate aggregate scores
-    const successfulResults = results.filter(r => r.exerciseGenerated);
-    const totalTests = results.length;
-    const successfulGenerations = successfulResults.length;
-
-    const overallScore = successfulResults.length > 0 
-      ? successfulResults.reduce((sum, r) => sum + r.overallScore, 0) / successfulResults.length
-      : 0;
-
-    const structureScore = successfulResults.length > 0
-      ? successfulResults.reduce((sum, r) => sum + r.structureScore, 0) / successfulResults.length
-      : 0;
-
-    const contentScore = successfulResults.length > 0
-      ? successfulResults.reduce((sum, r) => sum + r.contentScore, 0) / successfulResults.length
-      : 0;
-
-    const explanationScore = successfulResults.length > 0
-      ? successfulResults.reduce((sum, r) => sum + r.explanationScore, 0) / successfulResults.length
-      : 0;
-
-    const themeScore = successfulResults.length > 0
-      ? successfulResults.reduce((sum, r) => sum + r.themeScore, 0) / successfulResults.length
-      : 0;
-
-    const cefrScore = successfulResults.length > 0
-      ? successfulResults.reduce((sum, r) => sum + r.cefrScore, 0) / successfulResults.length
-      : 0;
-
-    const averageExecutionTime = results.length > 0
-      ? results.reduce((sum, r) => sum + r.executionTime, 0) / results.length
-      : 0;
-
-    return {
-      modelName: model.name,
-      overallScore,
-      structureScore,
-      contentScore,
-      explanationScore,
-      themeScore,
-      cefrScore,
-      totalTests,
-      successfulGenerations,
-      averageExecutionTime,
-      results,
-    };
+    return this.calculateModelPerformance(model, results);
   }
 
-  private async runSingleTest(model: ModelConfig, testCase: GenerationTestCase): Promise<GenerationResult> {
+  async runSingleTest(model: ModelConfig, testCase: GenerationTestCase): Promise<GenerationResult> {
     const startTime = Date.now();
     const result: GenerationResult = {
       testCaseId: testCase.id,
       exerciseGenerated: false,
-      structureScore: 0,
-      contentScore: 0,
-      explanationScore: 0,
-      themeScore: 0,
-      cefrScore: 0,
+      answerCorrectness: 0,
+      explanationQuality: 0,
+      exerciseDesign: 0,
+      speedReliability: 0,
+      costEfficiency: undefined,
       overallScore: 0,
       errors: [],
       executionTime: 0,
@@ -155,7 +118,31 @@ export class EvaluationRunner {
       const exerciseResponse = await this.generateExercise(model, testCase);
       
       if (!exerciseResponse.ok) {
-        result.errors.push(`API error: ${exerciseResponse.status} ${exerciseResponse.statusText}`);
+        // Try to get more detailed error information
+        let errorDetails = `${exerciseResponse.status} ${exerciseResponse.statusText}`;
+        try {
+          const errorBody = await exerciseResponse.text();
+          if (errorBody) {
+            // Parse common error patterns
+            if (errorBody.includes('"type":"overloaded_error"')) {
+              errorDetails += ' - Service Overloaded (try again later)';
+            } else if (errorBody.includes('"type":"rate_limit_error"')) {
+              errorDetails += ' - Rate Limit Exceeded';
+            } else if (errorBody.includes('"type":"authentication_error"')) {
+              errorDetails += ' - Authentication Failed';
+            } else if (errorBody.includes('"type":"invalid_request_error"')) {
+              errorDetails += ' - Invalid Request';
+            }
+            // Include the first part of the error message for context
+            const truncatedBody = errorBody.length > 200 ? errorBody.substring(0, 200) + '...' : errorBody;
+            errorDetails += ` (${truncatedBody})`;
+          }
+        } catch (parseError) {
+          // If we can't parse the error body, just use the status
+        }
+        
+        result.errors.push(`API Error: ${errorDetails}`);
+        result.executionTime = Date.now() - startTime;
         return result;
       }
 
@@ -163,37 +150,47 @@ export class EvaluationRunner {
       result.generatedExercise = generatedExercise;
       result.exerciseGenerated = true;
 
-      // Score the generated exercise against the test criteria
-      result.structureScore = this.scoreStructure(generatedExercise, testCase);
-      result.contentScore = this.scoreContent(generatedExercise, testCase);
-      result.explanationScore = this.scoreExplanations(generatedExercise, testCase);
-      result.themeScore = this.scoreTheme(generatedExercise, testCase);
-      result.cefrScore = this.scoreCefrLevel(generatedExercise, testCase);
+      // Score the generated exercise using the weighted criteria
+      result.answerCorrectness = this.scoreAnswerCorrectness(generatedExercise, testCase);
+      result.explanationQuality = this.scoreExplanationQuality(generatedExercise, testCase);
+      result.exerciseDesign = this.scoreExerciseDesign(generatedExercise, testCase);
+      result.speedReliability = this.scoreSpeedReliability(result.executionTime, testCase);
+      result.costEfficiency = this.scoreCostEfficiency(result.tokenUsage, testCase);
 
-      // Calculate overall score (weighted average)
+      // Calculate weighted overall score
       const weights = {
-        structure: 0.25,
-        content: 0.25,
-        explanation: 0.20,
-        theme: testCase.request.theme ? 0.15 : 0,
-        cefr: 0.15,
-        // Redistribute theme weight if no theme specified
+        answerCorrectness: 0.45, // 45% - Most critical (deal breaker)
+        explanationQuality: 0.15, // 15%
+        exerciseDesign: 0.15, // 15%
+        speedReliability: 0.15, // 15%
+        costEfficiency: 0.10, // 10%
       };
 
-      if (!testCase.request.theme) {
-        weights.content += 0.075;
-        weights.cefr += 0.075;
-      }
-
       result.overallScore = 
-        result.structureScore * weights.structure +
-        result.contentScore * weights.content +
-        result.explanationScore * weights.explanation +
-        result.themeScore * weights.theme +
-        result.cefrScore * weights.cefr;
+        result.answerCorrectness * weights.answerCorrectness +
+        result.explanationQuality * weights.explanationQuality +
+        result.exerciseDesign * weights.exerciseDesign +
+        result.speedReliability * weights.speedReliability +
+        (result.costEfficiency || 0) * weights.costEfficiency;
 
     } catch (error) {
-      result.errors.push(`Exception: ${error instanceof Error ? error.message : String(error)}`);
+      // Capture detailed error information
+      let errorMessage = `Exception: ${error instanceof Error ? error.message : String(error)}`;
+      
+      // Add more context for common error types
+      if (error instanceof Error) {
+        if (error.message.includes('529')) {
+          errorMessage += ' - Service temporarily overloaded, likely due to high demand';
+        } else if (error.message.includes('rate_limit')) {
+          errorMessage += ' - API rate limit exceeded';
+        } else if (error.message.includes('timeout')) {
+          errorMessage += ' - Request timed out';
+        } else if (error.message.includes('fetch')) {
+          errorMessage += ' - Network connection issue';
+        }
+      }
+      
+      result.errors.push(errorMessage);
     } finally {
       result.executionTime = Date.now() - startTime;
     }
@@ -226,78 +223,48 @@ export class EvaluationRunner {
     });
   }
 
-  private scoreStructure(exercise: GeneratedExercise, testCase: GenerationTestCase): number {
-    let score = 0;
-    const criteria = testCase.expectedCriteria;
-
-    // Check if exercise has required structure
-    if (!exercise || typeof exercise !== 'object') {
-      return 0;
-    }
-
-    // Check for ID
-    if (exercise.id) score += 0.2;
-
-    // Check for questions/exercises array
-    const questions = exercise.questions || exercise.exercises;
-    if (Array.isArray(questions)) {
-      score += 0.3;
-
-      // Check question count
-      if (questions.length >= criteria.minQuestions && questions.length <= criteria.maxQuestions) {
-        score += 0.2;
-      } else if (questions.length > 0) {
-        score += 0.1; // Partial credit
-      }
-
-      // Check if questions have required fields
-      let validQuestions = 0;
-      questions.forEach((q) => {
-        if (q && typeof q === 'object') {
-          let questionScore = 0;
-          if ('id' in q && q.id) questionScore += 0.25;
-          if (('blankNumber' in q && q.blankNumber) || ('id' in q && q.id)) questionScore += 0.25;
-          if (('text' in q && q.text) || ('baseForm' in q && q.baseForm)) questionScore += 0.25;
-          if ('correctAnswer' in q && q.correctAnswer) questionScore += 0.25;
-          if ('explanation' in q && q.explanation) questionScore += 0.25;
-          
-          if (questionScore >= 0.75) validQuestions++;
-        }
-      });
-
-      if (validQuestions === questions.length) {
-        score += 0.3;
-      } else if (validQuestions > questions.length / 2) {
-        score += 0.2; // Partial credit
-      } else if (validQuestions > 0) {
-        score += 0.1; // Minimal credit
-      }
-    }
-
-    return Math.min(score, 1);
-  }
-
-  private scoreContent(exercise: GeneratedExercise, testCase: GenerationTestCase): number {
-    let score = 0;
+  /**
+   * Score answer correctness (45% weight) - MOST CRITICAL
+   * This is the deal-breaker criterion
+   */
+  private scoreAnswerCorrectness(exercise: GeneratedExercise, _testCase: GenerationTestCase): number {
     const questions = exercise.questions || exercise.exercises || [];
-
     if (questions.length === 0) return 0;
 
-    // Check grammar accuracy (simplified heuristic)
-    const grammarScore = 0.8; // Default assumption, would need actual Croatian grammar validation
+    let correctAnswers = 0;
+    const totalQuestions = questions.length;
+
+    questions.forEach((q) => {
+      if ('correctAnswer' in q && q.correctAnswer) {
+        // This would need actual Croatian grammar validation
+        // For now, assume the answer is correct if it exists and follows basic patterns
+        const answer = Array.isArray(q.correctAnswer) ? q.correctAnswer[0] : q.correctAnswer;
+        
+        if (typeof answer === 'string' && answer.trim().length > 0) {
+          // Basic Croatian validation - contains Croatian characters and reasonable length
+          const croatianPattern = /^[a-zA-ZčćžšđČĆŽŠĐ\s-]+$/;
+          if (croatianPattern.test(answer) && answer.length >= 2 && answer.length <= 50) {
+            correctAnswers++;
+          }
+        }
+      }
+    });
+
+    const score = totalQuestions > 0 ? correctAnswers / totalQuestions : 0;
     
-    // Check vocabulary appropriateness for CEFR level
-    const vocabularyScore = 0.8; // Default assumption, would need CEFR vocabulary lists
-
-    // Check exercise type specific criteria
-    const typeSpecificScore = this.scoreExerciseTypeSpecific(exercise, testCase);
-
-    score = (grammarScore + vocabularyScore + typeSpecificScore) / 3;
-
-    return Math.min(score, 1);
+    // Apply heavy penalty for poor performance (deal breaker criterion)
+    if (score < 0.7) {
+      return score * 0.5; // Heavy penalty for low accuracy
+    }
+    
+    return score;
   }
 
-  private scoreExplanations(exercise: GeneratedExercise, testCase: GenerationTestCase): number {
+  /**
+   * Score explanation quality (15% weight)
+   * Pedagogically sound explanations in Croatian
+   */
+  private scoreExplanationQuality(exercise: GeneratedExercise, testCase: GenerationTestCase): number {
     const questions = exercise.questions || exercise.exercises || [];
     if (questions.length === 0) return 0;
 
@@ -311,39 +278,123 @@ export class EvaluationRunner {
         const explanation = q.explanation.trim();
         let explanationScore = 0;
 
-        // Basic criteria
-        if (explanation.length > 10) explanationScore += 0.3;
+        // Basic quality criteria
+        if (explanation.length > 20) explanationScore += 0.3;
         if (explanation.length > 50) explanationScore += 0.2;
         
-        // Quality criteria based on expected level
+        // Croatian grammar terminology
+        const grammarTerms = ['padež', 'vrijeme', 'rod', 'broj', 'osoba', 'infinitiv', 'prezent', 'aorist', 'imperativ'];
+        const hasGrammarTerms = grammarTerms.some(term => explanation.toLowerCase().includes(term));
+        if (hasGrammarTerms) explanationScore += 0.2;
+        
+        // Reasoning indicators
+        if (explanation.includes('jer') || explanation.includes('zato što') || explanation.includes('zbog')) {
+          explanationScore += 0.2;
+        }
+        
+        // Appropriate for CEFR level
         const expectedQuality = testCase.expectedCriteria.explanationQuality;
-        if (expectedQuality === 'basic' && explanation.length > 20) {
-          explanationScore += 0.5;
-        } else if (expectedQuality === 'good' && explanation.length > 40) {
-          explanationScore += 0.4;
-          if (explanation.includes('jer') || explanation.includes('zato što')) {
-            explanationScore += 0.1; // Contains reasoning
-          }
-        } else if (expectedQuality === 'excellent' && explanation.length > 60) {
-          explanationScore += 0.3;
-          if (explanation.includes('jer') || explanation.includes('zato što')) {
-            explanationScore += 0.1;
-          }
-          if (explanation.includes('primjer') || explanation.includes('slično')) {
-            explanationScore += 0.1; // Contains examples
-          }
+        if (expectedQuality === 'excellent' && explanation.length > 80) {
+          explanationScore += 0.1;
         }
 
         totalExplanationScore += Math.min(explanationScore, 1);
       }
     });
 
-    if (questionsWithExplanations === 0) return 0;
-
-    return totalExplanationScore / questionsWithExplanations;
+    return questionsWithExplanations > 0 ? totalExplanationScore / questionsWithExplanations : 0;
   }
 
-  private scoreTheme(exercise: GeneratedExercise, testCase: GenerationTestCase): number {
+  /**
+   * Score exercise design & guideline adherence (15% weight)
+   * CEFR level compliance, theme adherence, cultural relevance
+   */
+  private scoreExerciseDesign(exercise: GeneratedExercise, testCase: GenerationTestCase): number {
+    let score = 0;
+    
+    // CEFR level appropriateness (40% of this criterion)
+    const cefrScore = this.scoreCefrCompliance(exercise, testCase);
+    score += cefrScore * 0.4;
+    
+    // Theme adherence (30% of this criterion)
+    const themeScore = this.scoreThemeAdherence(exercise, testCase);
+    score += themeScore * 0.3;
+    
+    // Cultural relevance (20% of this criterion)
+    const culturalScore = this.scoreCulturalRelevance(exercise, testCase);
+    score += culturalScore * 0.2;
+    
+    // Exercise structure and format (10% of this criterion)
+    const structureScore = this.scoreExerciseStructure(exercise, testCase);
+    score += structureScore * 0.1;
+    
+    return Math.min(score, 1);
+  }
+
+  /**
+   * Score speed & reliability (15% weight)
+   * Response time consistency and error handling
+   */
+  private scoreSpeedReliability(executionTime: number, testCase: GenerationTestCase): number {
+    // Target execution time ranges based on complexity
+    const targetTime = this.getTargetExecutionTime(testCase);
+    
+    let score = 1.0;
+    
+    // Penalty for slow responses
+    if (executionTime > targetTime * 2) {
+      score = 0.5; // Heavy penalty for very slow responses
+    } else if (executionTime > targetTime * 1.5) {
+      score = 0.7; // Moderate penalty for slow responses
+    } else if (executionTime > targetTime) {
+      score = 0.85; // Light penalty for somewhat slow responses
+    }
+    
+    // Bonus for fast responses (but not too fast to be suspicious)
+    if (executionTime < targetTime * 0.5 && executionTime > 1000) {
+      score = Math.min(score + 0.1, 1.0);
+    }
+    
+    return score;
+  }
+
+  /**
+   * Score cost efficiency (10% weight) - Optional
+   * Token usage and cost-effectiveness
+   */
+  private scoreCostEfficiency(tokenUsage: { inputTokens?: number; outputTokens?: number } | undefined, testCase: GenerationTestCase): number | undefined {
+    if (!tokenUsage) return undefined;
+    
+    // This would need actual pricing data from providers
+    // For now, return a score based on token efficiency
+    const targetTokens = this.getTargetTokenCount(testCase);
+    const actualTokens = (tokenUsage.inputTokens || 0) + (tokenUsage.outputTokens || 0);
+    
+    if (actualTokens === 0) return undefined;
+    
+    let score = 1.0;
+    
+    // Penalty for excessive token usage
+    if (actualTokens > targetTokens * 2) {
+      score = 0.5;
+    } else if (actualTokens > targetTokens * 1.5) {
+      score = 0.7;
+    } else if (actualTokens > targetTokens) {
+      score = 0.85;
+    }
+    
+    return score;
+  }
+
+  // Helper methods for the new scoring system
+  private scoreCefrCompliance(exercise: GeneratedExercise, _testCase: GenerationTestCase): number {
+    // This would need sophisticated CEFR vocabulary and grammar analysis
+    // For now, return a reasonable default based on structure quality
+    const questions = exercise.questions || exercise.exercises || [];
+    return questions.length > 0 ? 0.8 : 0;
+  }
+
+  private scoreThemeAdherence(exercise: GeneratedExercise, testCase: GenerationTestCase): number {
     if (!testCase.request.theme) return 1; // No theme required, perfect score
 
     const theme = testCase.request.theme.toLowerCase();
@@ -362,21 +413,94 @@ export class EvaluationRunner {
     return Math.min(matchedKeywords / Math.max(themeKeywords.length * 0.3, 1), 1);
   }
 
-  private scoreCefrLevel(_exercise: GeneratedExercise, _testCase: GenerationTestCase): number {
-    // This would require sophisticated analysis of vocabulary and grammar complexity
-    // For now, return a default score assuming the model followed instructions
-    return 0.8;
+  private scoreCulturalRelevance(exercise: GeneratedExercise, _testCase: GenerationTestCase): number {
+    // Check for Croatian cultural context and authenticity
+    const exerciseText = JSON.stringify(exercise).toLowerCase();
+    
+    // Croatian place names, cultural references, typical Croatian contexts
+    const culturalIndicators = [
+      'zagreb', 'split', 'rijeka', 'dubrovnik', 'pula', 'zadar',
+      'kuna', 'euro', 'croatia', 'hrvatska', 'jadran',
+      'crkvica', 'tržnica', 'kafić', 'restoran'
+    ];
+    
+    let culturalScore = 0.7; // Base score
+    
+    const matches = culturalIndicators.filter(indicator => 
+      exerciseText.includes(indicator)
+    ).length;
+    
+    if (matches > 0) {
+      culturalScore = Math.min(0.7 + (matches * 0.1), 1.0);
+    }
+    
+    return culturalScore;
   }
 
-  private scoreExerciseTypeSpecific(_exercise: GeneratedExercise, testCase: GenerationTestCase): number {
-    const typeSpecific = testCase.expectedCriteria.exerciseTypeSpecific;
-    if (!typeSpecific) return 0.8;
+  private scoreExerciseStructure(exercise: GeneratedExercise, testCase: GenerationTestCase): number {
+    let score = 0;
+    const criteria = testCase.expectedCriteria;
+    const questions = exercise.questions || exercise.exercises || [];
 
-    const score = 0.8; // Base score
+    // Check if it has the right structure
+    if (exercise.paragraph && questions.length > 0) {
+      score += 0.3;
+    } else if (questions.length > 0) {
+      score += 0.3;
+    }
 
-    // This would need specific logic for each exercise type
-    // For now, return the base score
-    return score;
+    // Check question count
+    if (questions.length >= criteria.minQuestions && questions.length <= criteria.maxQuestions) {
+      score += 0.4;
+    } else if (questions.length > 0) {
+      score += 0.2; // Partial credit
+    }
+
+    // Check if questions have required fields
+    let validQuestions = 0;
+    questions.forEach((q) => {
+      if (q && typeof q === 'object') {
+        let questionScore = 0;
+        if ('id' in q && q.id) questionScore += 0.25;
+        if ('correctAnswer' in q && q.correctAnswer) questionScore += 0.25;
+        if ('explanation' in q && q.explanation) questionScore += 0.25;
+        if (('text' in q && q.text) || ('baseForm' in q && q.baseForm)) questionScore += 0.25;
+        
+        if (questionScore >= 0.75) validQuestions++;
+      }
+    });
+
+    if (validQuestions === questions.length) {
+      score += 0.3;
+    } else if (validQuestions > questions.length / 2) {
+      score += 0.2; // Partial credit
+    }
+
+    return Math.min(score, 1);
+  }
+
+  private getTargetExecutionTime(_testCase: GenerationTestCase): number {
+    // Target execution times in milliseconds based on complexity
+    const baseTime = 5000; // 5 seconds base
+    
+    // For now, use a default medium complexity since complexity property doesn't exist
+    // This would be enhanced based on actual test case properties
+    return baseTime;
+  }
+
+  private getTargetTokenCount(testCase: GenerationTestCase): number {
+    // Estimate target token count based on exercise type and complexity
+    const baseTokens = 1000;
+    
+    const exerciseType = testCase.request.exerciseType;
+    const multipliers: Record<string, number> = {
+      'verbTenses': 1.0,
+      'nounDeclension': 1.2,
+      'verbAspect': 0.8,
+      'interrogativePronouns': 0.9
+    };
+    
+    return baseTokens * (multipliers[exerciseType] || 1.0);
   }
 
   private getThemeKeywords(theme: string): string[] {
@@ -402,5 +526,66 @@ export class EvaluationRunner {
     });
 
     return keywords.length > 0 ? keywords : ['tema', 'sadržaj']; // Fallback
+  }
+
+  /**
+   * Calculate model performance from individual test results
+   */
+  async calculateModelPerformance(model: ModelConfig, results: GenerationResult[]): Promise<ModelPerformance> {
+    const totalTests = results.length;
+    const successfulGenerations = results.filter(r => r.exerciseGenerated).length;
+    
+    // Calculate average execution time
+    const totalExecutionTime = results.reduce((sum, r) => sum + r.executionTime, 0);
+    const averageExecutionTime = totalTests > 0 ? totalExecutionTime / totalTests : 0;
+    
+    // Calculate average scores for each criterion
+    const successfulResults = results.filter(r => r.exerciseGenerated);
+    const criteria = {
+      answerCorrectness: 0,
+      explanationQuality: 0,
+      exerciseDesign: 0,
+      speedReliability: 0,
+      costEfficiency: undefined as number | undefined,
+    };
+    
+    if (successfulResults.length > 0) {
+      criteria.answerCorrectness = successfulResults.reduce((sum, r) => sum + r.answerCorrectness, 0) / successfulResults.length;
+      criteria.explanationQuality = successfulResults.reduce((sum, r) => sum + r.explanationQuality, 0) / successfulResults.length;
+      criteria.exerciseDesign = successfulResults.reduce((sum, r) => sum + r.exerciseDesign, 0) / successfulResults.length;
+      criteria.speedReliability = successfulResults.reduce((sum, r) => sum + r.speedReliability, 0) / successfulResults.length;
+      
+      const costResults = successfulResults.filter(r => r.costEfficiency !== undefined);
+      if (costResults.length > 0) {
+        criteria.costEfficiency = costResults.reduce((sum, r) => sum + (r.costEfficiency || 0), 0) / costResults.length;
+      }
+    }
+    
+    // Calculate overall score using weighted averages
+    const weights = {
+      answerCorrectness: 0.45, // 45% - Most critical (deal breaker)
+      explanationQuality: 0.15, // 15%
+      exerciseDesign: 0.15, // 15%
+      speedReliability: 0.15, // 15%
+      costEfficiency: 0.10, // 10%
+    };
+
+    const overallScore = 
+      criteria.answerCorrectness * weights.answerCorrectness +
+      criteria.explanationQuality * weights.explanationQuality +
+      criteria.exerciseDesign * weights.exerciseDesign +
+      criteria.speedReliability * weights.speedReliability +
+      (criteria.costEfficiency || 0) * weights.costEfficiency;
+
+    return {
+      modelName: model.name,
+      provider: model.provider,
+      overallScore,
+      criteria,
+      totalTests,
+      successfulGenerations,
+      averageExecutionTime,
+      results,
+    };
   }
 }
