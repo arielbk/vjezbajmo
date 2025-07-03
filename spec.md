@@ -1,8 +1,12 @@
+Of course. Here is the fully revised technical specification, integrating all the feedback and clarifications we've discussed. This version is more robust, has clearer definitions for the MVP, and provides a more precise roadmap.
+
+---
+
 # **Technical Specification: "Vježbajmo" Croatian Practice App**
 
 ### **1. Overview**
 
-**"Vježbajmo"** is a web application designed to provide dynamic, repeatable grammar exercises for Croatian language learners. The app's core architecture is built on a **static-first principle**, providing a complete set of pre-written exercises for immediate, offline use. This core experience is optionally enhanced by an LLM, allowing users to generate new, unique exercise sets on demand.
+**"Vježbajmo"** is a web application designed to provide dynamic, repeatable grammar exercises for Croatian language learners. The application requires an active internet connection for all its features. Its core architecture is built on a **static-first principle**, providing a complete set of pre-written exercises for initial use. This core experience is optionally enhanced by an LLM, allowing users to generate new, unique exercise sets on demand.
 
 The app supports multiple LLM providers (**OpenAI** or **Anthropic**) and offers **configurable CEFR levels** (defaulting to A2.2) to tailor the difficulty. Users can use a site-wide API key for free access or provide their own for unlimited use.
 
@@ -13,6 +17,7 @@ The app supports multiple LLM providers (**OpenAI** or **Anthropic**) and offers
 - **Clean & Modern Aesthetics:** A professional look utilizing an accessible color palette, generous whitespace, and modern iconography (e.g., from `lucide-react`).
 - **Interactive Feedback:** The UI will include loading spinners, progress bars, and clear visual cues (e.g., inline icons for correct/incorrect answers).
 - **Accessibility (A11y):** Developed to meet WCAG 2.1 guidelines, ensuring full keyboard navigability and sufficient color contrast.
+- **Intuitive & Discoverable:** The initial user experience will be simple and focused. Exercises and core functionality will be clearly labeled, allowing new users to begin practicing immediately. Advanced features, such as API key configuration and themed generation, will be located in an easily accessible settings panel for organic discovery.
 - **Centralized Configuration:** User-specific settings like API keys, provider choice, and CEFR level are managed in a dedicated settings panel.
 
 ### **3. System Architecture & Data Flow**
@@ -21,30 +26,38 @@ The application is a monolithic **Next.js** application.
 
 **Core Principles:**
 
-1.  **Static Fallback:** The application is bundled with a complete set of static JSON exercises. It is fully functional on initial load.
+1.  **Static Fallback:** The application is bundled with a complete set of static JSON exercises. It is fully functional on initial load, provided the user is online.
 2.  **Flexible Generation:** Users can generate new exercises in two ways:
     - **Globally:** A "Regenerate All Exercises" button in the settings panel.
     - **Locally:** A "Regenerate" button on each individual exercise page.
-3.  **Tiered API Access:**
-    - **Default (Site Key):** If a user does not provide their own API key, the app will use a site-wide key configured via server-side environment variables (`SITE_API_KEY`, `SITE_API_PROVIDER`). This provides a free-to-try experience.
-    - **User Key:** Users can enter their own API key to bypass any potential limits on the site key.
-4.  **Multi-Tier Caching System:**
-    - **Server-Side Exercise Pool:** Generated exercises are cached in a persistent store (Vercel KV initially, designed for easy provider switching) organized by exercise type, CEFR level, and theme.
-    - **User Progress Tracking:** Individual user's completed exercises are tracked in localStorage. **Manual Completion:** Users explicitly mark exercises as completed after reviewing results, preventing premature completion tracking that causes cache filtering issues.
-    - **Smart Exercise Selection:** When users request exercises without specifying a theme, the system first attempts to serve from the cached pool of exercises they haven't marked as completed yet.
-    - **Cache Replenishment:** Only when users have exhausted available cached exercises does the system generate new ones, which are then added to the shared cache.
-    - **Review Completed Exercises:** Users can access and review previously completed exercises through a dedicated interface, enabling spaced repetition and progress review.
-5.  **Client-Side Session Caching:** Once exercises are served, they are cached in the client's state to minimize redundant API calls during the current session.
-6.  **Secure Answer Validation:** Solutions for **API-generated** exercises are cached on the server for secure validation. Solutions for **static** exercises are handled on the client for speed.
-7.  **Diacritic Tolerance:** The system recognizes that users may not have proper Croatian keyboard layouts. If an answer is correct except for diacritics (č, ć, đ, š, ž), it's marked as correct with a helpful warning reminder about proper Croatian spelling.
-8.  **Multiple Correct Answers:** The system supports exercises where multiple answers are acceptable (e.g., perfective/imperfective aspect variations depending on context).
+3.  **Phased User Management & API Access:**
+    - **Phase 1 (MVP): Anonymous Access with Site Key**
+      - **Default (Site Key):** All users are initially anonymous. The app uses a site-wide key (`SITE_API_KEY`) with global rate limits for a free-to-try experience.
+      - **User Key Override:** Users can optionally enter their own API key in the settings panel. This key is validated immediately upon entry by making a test API call. It is stored only in the user's `localStorage` and is never sent to our server for storage.
+    - **Phase 2 (Post-MVP): Clerk User Accounts**
+      - **Authenticated Users:** Users can optionally sign up or log in via Clerk to unlock higher daily generation limits.
+      - **Progress Sync:** Upon first login, any existing progress from `localStorage` will be migrated and synced to the user's account, ensuring a seamless transition and multi-device access.
+      - **Server-Side Progress Tracking:** For logged-in users, completed exercise tracking will be handled on the server, eliminating the need to send large arrays of completed IDs from the client.
+4.  **Robust Generation Fallback:** If an LLM-based exercise generation fails (due to an invalid API key, provider outage, or malformed response), the system will **not** fall back to a non-matching static exercise. Instead, it will display a clear, user-friendly error message explaining the issue.
+5.  **Multi-Tier Caching System:**
+    - **Server-Side Exercise Pool:** Generated exercises are cached in a persistent store (Vercel KV) organized by exercise type, CEFR level, and theme.
+    - **User Progress Tracking:** An individual user's completed exercises are tracked in `localStorage` (MVP) or via their user account (Post-MVP).
+    - **Automatic Completion:** Exercises are automatically marked as completed when a user reviews their results and proceeds to the next exercise or navigates away. This streamlines the user flow.
+    - **Smart Exercise Selection:** When users request exercises, the system first serves from the cached pool, filtering out exercises they have already completed.
+    - **Cache Replenishment:** Only when a user exhausts the available filtered cache does the system generate new exercises, which are then added to the shared cache.
+6.  **Secure Answer Validation:** Solutions for **API-generated** exercises are cached on the server for secure validation. Solutions for **static** exercises are bundled with the client for speed; reverse-engineering them is considered an acceptable trade-off.
+7.  **Diacritic Tolerance:** The system recognizes that users may not have proper Croatian keyboard layouts. If an answer is correct except for diacritics (č, ć, đ, š, ž), it's marked as correct with a helpful warning.
+8.  **Multiple Correct Answers:** The system supports exercises where multiple answers are acceptable.
+9.  **Comprehensive Logging:** The application uses **Pino** for structured logging with environment-specific configurations and Sentry integration for error monitoring.
 
 ### **4. Core Features & Exercise Types**
 
 1.  **Verb Tenses in Text (Paragraph Completion)**
 2.  **Noun & Adjective Declension (Paragraph Completion)**
-3.  **Verb Aspect (Isolated Sentences)**
-4.  **Interrogative Pronouns (Mid-sentence Fill-ins)** - Focus on koji/koja/koje forms in context
+3.  **Verb Aspect (Radio Button Selection)**
+4.  **Interrogative Pronouns (Mid-sentence Fill-ins)**
+
+**Architectural Note on Extensibility:** The system will be designed so that adding a new exercise type (e.g., "Preposition Usage") is a streamlined process. This involves creating a new Zod schema, a new prompt template, and a new React component, without requiring significant changes to the core caching or API generation logic.
 
 ### **5. Technology Stack**
 
@@ -53,32 +66,51 @@ The application is a monolithic **Next.js** application.
 - **Styling:** **Tailwind CSS**
 - **UI Primitives/Icons:** **Shadcn/UI**, `lucide-react`
 - **State Management:** React State & Context
+- **Package Manager:** **pnpm**
 - **Testing:** **Vitest** (Unit/Integration), **Playwright** (End-to-End)
 - **Schema Validation:** **Zod**
+- **Logging:** **Pino**
+- **Error Monitoring:** **Sentry**
 - **LLM Providers:** **OpenAI API**, **Anthropic API**
-- **Server-Side Cache:** **Vercel KV** (initially, designed for easy provider switching)
-- **Client-Side Storage:** **localStorage** for user progress and settings
+- **Server-Side Cache:** **Vercel KV**
+- **Client-Side Storage:** **localStorage**
 
 ### **6. Data Models & API Design**
 
 ```typescript
 // For isolated sentences
 interface SentenceExercise {
-  id: number | string;
+  id: string; // Unique ID for each question
   text: string;
-  correctAnswer: string | string[]; // Support multiple correct answers
+  correctAnswer: string | string[];
   explanation: string;
 }
 
-// For paragraph exercises
+// Specialized interface for verb aspect exercises
+interface VerbAspectExercise extends SentenceExercise {
+  exerciseSubType: "verb-aspect";
+  options: { imperfective: string; perfective: string };
+  correctAspect: "imperfective" | "perfective";
+}
+
+// A collection of sentence-based exercises, tracked as a single unit
+interface SentenceExerciseSet {
+  id: string; // UUID for the entire set
+  exerciseType: "verbAspect" | "interrogativePronouns";
+  cefrLevel: string;
+  theme?: string;
+  exercises: (SentenceExercise | VerbAspectExercise)[];
+}
+
+// For paragraph exercises, tracked as a single unit
 interface ParagraphExerciseSet {
-  id: string;
+  id: string; // UUID for the entire set
   paragraph: string;
   questions: {
-    id: string;
+    id: string; // Unique ID for each blank
     blankNumber: number;
     baseForm: string;
-    correctAnswer: string | string[]; // Support multiple correct answers
+    correctAnswer: string | string[];
     explanation: string;
   }[];
 }
@@ -88,384 +120,84 @@ interface CheckAnswerResponse {
   correct: boolean;
   explanation: string;
   correctAnswer?: string | string[];
-  diacriticWarning?: boolean; // True if correct except for diacritics
-  matchedAnswer?: string; // The specific correct answer that was matched
+  diacriticWarning?: boolean;
+  matchedAnswer?: string;
 }
 ```
 
 #### **6.1. `POST /api/generate-exercise-set`**
 
-- **Logic:** Called by both the global and local "Regenerate" buttons. Implements intelligent caching to serve pre-generated exercises when possible.
+- **Logic:** Called by "Regenerate" buttons. Implements intelligent caching to serve pre-generated exercises when possible, filtering out completed exercises.
 - **Request Body:**
   ```json
   {
     "exerciseType": "verbTenses" | "nounDeclension" | "verbAspect" | "interrogativePronouns",
     "cefrLevel": "A1" | "A2.1" | "A2.2" | "B1.1",
-    "provider"?: "openai" | "anthropic", // Optional. If absent, backend uses site provider.
-    "apiKey"?: "string",               // Optional. If absent, backend uses site key.
-    "theme"?: "string",                 // Optional. For generating themed content.
-    "userCompletedExercises"?: "string[]" // Optional. Array of exercise IDs user has completed.
+    "provider"?: "openai" | "anthropic",
+    "apiKey"?: "string",
+    "theme"?: "string",
+    "userCompletedExercises"?: "string[]" // For anonymous users
   }
   ```
-- **Backend Caching Logic:**
-  1. **Cache Key Construction:** `${exerciseType}:${cefrLevel}:${theme || 'default'}`
-  2. **Cache Lookup:** Check if cached exercises exist for the given parameters
-  3. **User Progress Filtering:** Filter out exercises the user has already completed (based on `userCompletedExercises`)
-  4. **Intelligent Serving:**
-     - If suitable cached exercises exist and user hasn't completed them all, serve from cache
-     - If no suitable cached exercises or user has completed all available ones, generate new exercises
-     - New exercises are added to the cache for future users
-  5. **Fallback Handling:** If cache is unavailable, fall back to direct generation
-- **Backend Logic:**
-  1.  When a request is received, the backend checks if `apiKey` and `provider` are present.
-  2.  If they are, it uses the user-provided credentials for the outbound LLM call. The user's key is **never stored**.
-  3.  If they are absent, the backend falls back to using the `SITE_API_KEY` and `SITE_API_PROVIDER` from its environment variables.
-- **Success Response (200):** Returns the full exercise object with UUIDs. The server caches solutions keyed by these UUIDs.
+- **Backend Logic:** Uses user-provided credentials if present; otherwise, falls back to the site key. For logged-in users (Post-MVP), `userCompletedExercises` will be fetched on the server.
 
 #### **6.2. Answer Checking Logic**
 
-- **Distinguishing Questions:** The `id` field will be used to route the check. If `typeof id === 'number'`, it's a static question checked on the client. If `typeof id === 'string'`, it's a generated question that requires a call to the `POST /api/check-answer` endpoint.
-- **`POST /api/check-answer`:** This backend route validates the `userAnswer` against the solution stored in the server-side cache, keyed by the question's UUID. Returns enhanced feedback including diacritic warnings and the specific matched answer.
-- **Answer Normalization & Diacritic Handling:** Before any comparison (client or server), answers are normalized (lowercase, trim whitespace). The system performs two-pass validation:
-  1. **Exact Match**: Checks for perfect answers with proper diacritics
-  2. **Diacritic-Tolerant Match**: Checks answers with diacritics removed (č→c, ć→c, đ→d, š→s, ž→z)
-- **Multiple Answer Support:** Both client-side and server-side validation handle arrays of correct answers, checking user input against all possibilities.
-- **Visual Feedback Enhancement:**
-  - Correct answers with proper diacritics: Green highlighting
-  - Correct answers with diacritic issues: Yellow highlighting with helpful reminder
-  - Incorrect answers: Red highlighting with explanations
+- **Distinguishing Questions:** The `id` field of an exercise set is used to determine its origin. Static exercises (pre-bundled) will have numerical IDs, while generated exercises will have string UUIDs.
+- **`POST /api/check-answer`:** This backend route validates the `userAnswer` against the solution stored in the server-side cache, keyed by the question's UUID, for generated exercises only.
+- **Answer Normalization:** All answers (user input and correct answers) are normalized (lowercase, trimmed whitespace) before comparison. The system performs two checks: an exact match, and a diacritic-tolerant match.
 
 ### **7. Frontend Architecture & State Management**
 
 - **Initial State:** App is initialized with static A2.2 exercises.
-- **Global Layout & Navigation:**
-
-  - **Unified Header:** A consistent header appears on all pages containing the app logo (Croatian flag 🇭🇷), app name "Vježbajmo", tagline "Croatian Language Practice", and settings button.
-  - **Navigation Pattern:** The entire header (logo, name, tagline) is clickable and navigates to the home page, eliminating the need for individual "Back to Selection" buttons throughout the app.
-  - **Clean UI:** This creates a cleaner, more intuitive navigation experience where users always know how to return to the main exercise selection.
-
-- **Settings & Configuration (`SettingsModal.tsx`)**
-
-  - A **Settings Modal** (or drawer), accessible via a gear icon in the header, is the central configuration hub.
-  - **CEFR Level:** A dropdown to select the desired CEFR level. Saved to `localStorage`.
-  - **Provider Selection:** A dropdown to select "OpenAI" or "Anthropic". Saved to `localStorage`.
-  - **API Key Input:** An input for the user's personal API key. Saved to `localStorage`.
-  - **Global Regeneration:** A "Regenerate All Exercises" button, accompanied by a text input for an optional **theme**. This button uses the currently selected settings (CEFR level, provider, key) to fetch new content for all exercise types.
-
+- **Global Layout & Navigation:** A unified, clickable header navigates users to the home page, creating a clean and intuitive experience.
+- **Settings & Configuration (`SettingsModal.tsx`):** A central modal for managing CEFR level, provider, API key, and global regeneration with an optional theme.
 - **Component Structure:**
-  - **`ParagraphExercise.tsx` & `SentenceExercise.tsx`**:
-    - These components are responsible for displaying the exercise and handling answers.
-    - **Automatic Completion Workflow:** After checking answers and reviewing results, exercises are automatically marked as "completed" when users click "Next Exercise". This streamlines the learning flow.
-    - Each component features its own **"Regenerate" button** (e.g., a refresh icon) that generates new exercises from the pool of uncompleted exercises.
-    - A small text input field allows users to specify an optional **theme** for regeneration.
-    - Clicking the regenerate button calls `/api/generate-exercise-set` for only that `exerciseType`.
-  - **`SentenceExercise.tsx` UX Update:** This component renders a **list of all sentence exercises** on a single page, not one at a time. A single **"Check My Work"** button validates all answers at once, creating a unified workflow consistent with paragraph exercises.
-  - **`ResultsDisplay.tsx`:** Handles showing feedback for multiple questions simultaneously with improved completion flow.
-  - **`CompletedExercisesView.tsx` (New):** Displays a list of previously completed exercises, allowing users to review their past work and practice spaced repetition.
+  - **`ParagraphExercise.tsx` & `SentenceExercise.tsx`:** Display exercises and handle user input. Each features a local "Regenerate" button.
+  - **`VerbAspectExercise.tsx`:** A specialized component using radio buttons for verb aspect selection.
+  - **Unified Workflow:** Both `ParagraphExercise.tsx` and `SentenceExercise.tsx` render all their questions on a single page with a single "Check My Work" button for a consistent user experience.
 
 ### **8. LLM Integration Strategy**
 
 - **Models:**
-  - **OpenAI:** **`gpt-4o-mini`** (The latest cost-effective and highly capable model).
-  - **Anthropic:** **`claude-3-5-sonnet-20240620`** (The latest and most intelligent Sonnet model, offering top-tier performance).
-- **Provider Abstraction:** The backend (`/api/generate-exercise-set`) will contain an abstraction layer to route requests to the correct provider function (`generateWithOpenAI` or `generateWithAnthropic`).
-- **Dynamic Prompts:** Prompts sent to the LLM will be dynamically constructed to include the specified **`cefrLevel`** and the optional **`theme`**, ensuring the generated content is tailored, relevant, and at the appropriate difficulty level.
-- **Error Handling:** If an API call fails, the app will show a user-friendly error and revert to the static version of the exercise.
+  - **OpenAI:** **`gpt-4o-mini`**
+  - **Anthropic:** **`claude-3-5-sonnet-latest`**
+- **Provider Abstraction:** A backend abstraction layer routes requests to the correct provider.
+- **Dynamic Prompts:** Prompts are dynamically constructed to include the specified `cefrLevel` and optional `theme`.
+- **Resilient Response Handling (MVP):** To ensure reliability, all LLM API calls will utilize the provider's native JSON mode (e.g., OpenAI's `response_format: { type: "json_object" }`). Upon receipt, all incoming data will be strictly validated against a Zod schema. If the response is malformed or fails validation, the generation will be treated as a failure.
+- **Future Enhancement (Post-MVP):** A retry mechanism with exponential backoff will be implemented to handle transient network issues or intermittent API errors.
 
-### **9. Enhancements for Learning Experience**
+### **9. MVP: Enhancements for Learning Experience**
 
-- **Unified Exercise Workflow:** Both paragraph and sentence exercises feature a "fill-in-multiple-blanks" and "check-all-at-once" workflow, providing a consistent and efficient user experience. This includes full `Tab`/`Shift+Tab` keyboard navigation between all input fields on the page.
-- **Streamlined Completion Flow:** Exercises are automatically marked as completed when users proceed to the next exercise, creating a more natural learning progression without manual intervention.
-- **Enhanced Review System:**
-  - **"Review Mistakes" Mode:** After checking a set, users can review mistakes in a focused mode where only incorrectly answered questions are shown.
-  - **Answer Pre-filling:** When reviewing mistakes, the system preserves user's previous answers for context and allows modification without starting completely fresh.
-  - **Smart Reset Options:** "Try Again" functionality marks exercises as incomplete for retry while preserving performance history for progress tracking.
-- **Completed Exercise Review:** Users can access a dedicated view to review previously completed exercises, enabling spaced repetition and progress assessment.
-- **"Hint" System (Future Enhancement):** A "Hint" button could make a targeted API call for a clue.
-- **Thematic Content:** Core feature allowing users to provide themes during regeneration to receive contextually rich exercises.
-- **Diacritic Learning Support:**
-  - Answers that are correct except for diacritics are marked as correct to avoid frustration
-  - Yellow warning badges and inline reminders help users learn proper Croatian spelling
-  - Separate "Diacritic Reminders" section in results shows proper spelling for educational purposes
-- **Multiple Answer Recognition:** The system intelligently handles cases where multiple forms might be correct (e.g., perfect vs. imperfect aspect based on context), providing a more realistic learning experience.
+- **Unified Exercise Workflow:** All exercise types (paragraph, sentence, verb aspect) present a set of questions to be answered at once, with a single "Check My Work" button. Full keyboard navigation (`Tab`/`Shift+Tab`) is supported.
+- **Streamlined Completion Flow:** Exercises are automatically marked as completed when users proceed to the next exercise after reviewing results, creating a natural learning progression.
+- **Diacritic Learning Support:** Answers correct except for diacritics are accepted but highlighted with a warning, providing a gentle learning opportunity.
+- **Multiple Answer Recognition:** The system handles cases where multiple forms (e.g., perfective/imperfective) are contextually correct.
 
-### **10. Progress Tracking & User Experience**
+### **10. Post-MVP: Advanced Progress Visualization**
 
-- **Dynamic Progress Bar:** For all exercise types, the progress bar reflects the completion status of input fields on the current page. Progress is calculated as: (filled fields / total fields) × 100.
-- **Real-time Updates:** Progress updates as users fill in answers, providing immediate visual feedback.
-- **Field Validation:** Empty or whitespace-only fields are not considered "filled" for progress calculation.
+- **Dynamic Progress Bar:** For all exercise types, a progress bar will reflect the completion status of input fields on the current page, calculated as (filled fields / total fields) × 100.
+- **Real-time Updates:** Progress will update as users fill in answers, providing immediate visual feedback.
+- **Field Validation:** Empty or whitespace-only fields will not be considered "filled."
 
-### **11. Completion Tracking & Exercise Review System**
-
-- **Enhanced Automatic Completion Workflow:**
-
-  1. User fills in answers and clicks "Check My Work"
-  2. Results are displayed with explanations and feedback
-  3. User reviews results and can click "Next Exercise" to proceed
-  4. Exercise is automatically marked as "completed" when proceeding to next exercise
-  5. Completion is tracked in localStorage with comprehensive performance data:
-     - Exercise ID and type
-     - Timestamp of completion
-     - Detailed score data (correct answers, total questions, percentage)
-     - Time spent on exercise (optional future enhancement)
-     - CEFR level and theme (if applicable)
+### **11. Post-MVP: Enhanced Review & Analytics System**
 
 - **Enhanced Review & Retry System:**
-
-  - **Answer Preservation:** When reviewing mistakes or retrying exercises, user's previous answers are pre-filled to provide context and avoid complete restart.
-  - **Smart Try Again:** "Try Again" functionality marks exercises as incomplete for retry while preserving best performance score in history.
-  - **Focused Mistake Review:** "Review Mistakes" mode shows only incorrectly answered questions with previous answers pre-filled for easy correction.
-
-- **Enhanced Completed Exercise Management:**
-
-  - **Exercise History View:** Dedicated interface showing completed exercises with:
-    - Exercise type and title
-    - Completion date
-    - Performance score (e.g., "8/10 - 80%")
-    - Quick retry button to re-attempt the same exercise
-    - Filtering by exercise type, date range, and performance score
-  - **Performance Analytics:**
-    - Average scores by exercise type
-    - Progress trends over time
-    - Identification of challenging exercise types
-    - Overall completion statistics
-  - **Re-attempt System:**
-    - Users can revisit completed exercises for practice
-    - Re-attempts don't overwrite original completion records
-    - Option to track improvement between attempts
-  - **Spaced Repetition Support:**
-    - Highlight exercises where user scored below 80% for review
-    - Suggest re-attempting exercises after time intervals
-    - Track performance improvement over multiple attempts
-
-- **Enhanced Data Model:**
-
-```typescript
-interface CompletedExerciseRecord {
-  exerciseId: string;
-  exerciseType: ExerciseType;
-  completedAt: number; // timestamp
-  score: {
-    correct: number;
-    total: number;
-    percentage: number;
-  };
-  cefrLevel: CefrLevel;
-  theme?: string;
-  attemptNumber: number; // Track multiple attempts at same exercise
-  bestScore?: number; // Track highest percentage achieved
-}
-
-interface ExerciseSession {
-  exerciseType: ExerciseType;
-  results: ExerciseResult[];
-  completed: boolean;
-  mistakeQuestions: any[];
-  previousAnswers?: Record<string, string>; // Store previous answers for review/retry
-}
-```
-
-- **Cache Filtering Logic:**
-
-  - Only automatically completed exercises (when users proceed to next exercise) are filtered out during regeneration requests
-  - Streamlined completion tracking eliminates race conditions
-  - Ensures reliable cache filtering based on natural user progression
-  - Supports both paragraph exercises (tracked by `exerciseSet.id`) and sentence exercises (tracked by `sentenceExerciseSet.id`)
-  - Enhanced filtering considers performance scores for intelligent exercise serving
-
-- **Benefits:**
-  - **Streamlined Flow:** Natural progression from exercise completion to next exercise without manual completion steps
-  - **Answer Continuity:** Pre-filled answers in review modes prevent frustrating restarts and provide learning context
-  - **Flexible Retry:** Easy re-attempts that preserve learning history while allowing improvement tracking
-  - **Performance History:** Comprehensive tracking of best scores and attempt history for motivation
-  - **Spaced Repetition:** Easy access to review previously completed work with performance context
-  - **Progress Tracking:** Detailed performance metrics help users identify strengths and weaknesses
-  - **Learning Analytics:** Comprehensive data helps users optimize their learning strategy
+  - **"Review Mistakes" Mode:** A focused mode showing only incorrectly answered questions.
+  - **Answer Pre-filling:** Preserves a user's previous answers when retrying for context.
+  - **Smart Reset Options:** A "Try Again" button marks an exercise as incomplete for a retry, while preserving performance history.
+- **Completed Exercise Management:**
+  - **Exercise History View:** A dedicated interface to review completed exercises with performance scores, dates, and retry options.
+  - **Performance Analytics:** Visualizations showing average scores by type, progress trends, and challenging areas.
 
 ### **12. Exercise Generation Evaluation System (Evals)**
 
-The evaluation system provides a comprehensive framework for testing and improving the quality of AI-generated Croatian grammar exercise sets. This development-only feature enables systematic evaluation of different language models' performance in generating complete exercise sets with accurate structure, appropriate content, and pedagogically sound explanations.
+The evaluation system is a development-only feature for testing and improving the quality of AI-generated exercises.
 
-#### **12.1. Core Architecture**
-
-- **Development Environment Only:** The evals system is restricted to development environments to prevent accidental exposure in production.
-- **Multi-Model Support:** Supports both OpenAI and Anthropic models with dynamic model discovery and API key validation.
-- **Exercise Generation Focus:** Tests the complete exercise generation pipeline rather than individual answer validation.
-
-#### **12.2. Model Configuration & Discovery**
-
-**Dynamic Model Discovery:**
-- **OpenAI Models:** Automatically fetches latest available models via OpenAI API, filtering for chat completion models suitable for exercise generation.
-- **Anthropic Models:** Uses hardcoded model list with API key validation, including Claude 3.5 Sonnet, Claude 4, and other variants.
-- **Fallback Models:** Maintains curated lists of proven models as fallbacks when API discovery fails.
-
-**Model Configuration Structure:**
-```typescript
-interface ModelConfig {
-  name: string;
-  provider: "openai" | "anthropic";
-  model: string;
-  temperature?: number;
-  maxTokens?: number;
-}
-```
-
-**Supported Model Categories:**
-- **OpenAI:** GPT-4o, GPT-4o-mini, GPT-4-turbo, O1 variants, and other latest releases
-- **Anthropic:** Claude 4 Opus/Sonnet, Claude 3.7 Sonnet, Claude 3.5 Sonnet/Haiku, Claude 3 Opus/Haiku
-
-#### **12.3. Test Case Framework**
-
-**Generation Test Case Structure:**
-```typescript
-interface GenerationTestCase {
-  id: string;
-  description: string;
-  request: {
-    exerciseType: "verbTenses" | "nounDeclension" | "verbAspect" | "interrogativePronouns";
-    cefrLevel: "A1" | "A2.1" | "A2.2" | "B1.1";
-    theme?: string;
-  };
-  expectedCriteria: {
-    // Structure requirements
-    minQuestions: number;
-    maxQuestions: number;
-    hasExplanations: boolean;
-    hasCorrectAnswers: boolean;
-    
-    // Content quality expectations
-    cefrLevelMatch: boolean;
-    themeAdherence?: boolean;
-    grammarAccuracy: boolean;
-    explanationQuality: "basic" | "good" | "excellent";
-    vocabularyAppropriate: boolean;
-    
-    // Exercise type specific criteria
-    exerciseTypeSpecific?: {
-      verbTenses?: {
-        coversDifferentTenses: boolean;
-        includesPersonalEndings: boolean;
-      };
-      // ... other exercise types
-    };
-  };
-}
-```
-
-**Test Case Categories:**
-- **Basic Level Tests:** A1-A2.1 exercises across all exercise types
-- **Themed Content Tests:** Specific themes like "food and cooking", "travel", "family"
-- **Advanced Level Tests:** A2.2-B1.1 exercises with higher complexity expectations
-- **Edge Cases:** Complex themes, no theme specification, unusual requirements
-- **Exercise Type Specific:** Specialized tests for each grammar focus area
-
-#### **12.4. Evaluation Runner**
-
-**Exercise Generation Evaluation Process:**
-1. **Exercise Generation:** Uses the actual `/api/generate-exercise-set` endpoint for each test case
-2. **Structure Validation:** Verifies generated exercises have proper format and required fields
-3. **Content Quality Assessment:** Evaluates grammar accuracy, vocabulary appropriateness, and CEFR level match
-4. **Explanation Quality:** Assesses clarity, accuracy, and pedagogical value of explanations
-5. **Theme Adherence:** Validates that themed exercises contain relevant vocabulary and context
-6. **Exercise Type Compliance:** Checks for exercise-specific requirements
-
-**Scoring System:**
-```typescript
-interface GenerationResult {
-  testCaseId: string;
-  exerciseGenerated: boolean;
-  structureScore: number; // 0-1
-  contentScore: number; // 0-1
-  explanationScore: number; // 0-1
-  themeScore: number; // 0-1 (only if theme specified)
-  cefrScore: number; // 0-1
-  overallScore: number; // 0-1 weighted average
-  errors: string[];
-  executionTime: number; // milliseconds
-}
-```
-
-**Quality Assessment Criteria:**
-- **Structure (25%):** Proper JSON format, required fields, valid data types, appropriate question count
-- **Content (25%):** Grammar accuracy, vocabulary appropriateness, exercise type compliance
-- **Explanations (20%):** Clarity, accuracy, appropriate length for CEFR level, pedagogical value
-- **Theme (15%):** Adherence to requested theme (if specified), relevant vocabulary usage
-- **CEFR Level (15%):** Appropriate difficulty and complexity for specified level
-
-#### **12.5. Command Line Interface**
-
-**CLI Features:**
-- **Model Discovery:** Automatically fetches and displays available models from both providers
-- **Comprehensive Testing:** Runs all test cases across all available models
-- **Detailed Reporting:** Shows overall scores, per-category breakdown, and execution times
-- **Failure Analysis:** Highlights failed generations and lowest-scoring successful cases
-- **Exercise Type Breakdown:** Performance analysis grouped by exercise type
-
-**Usage:**
-```bash
-# Run complete evaluation suite
-npm run evals
-
-# Set API keys
-export OPENAI_API_KEY="your-key"
-export ANTHROPIC_API_KEY="your-key"
-npm run evals
-```
-
-**CLI Output Sections:**
-- **Model Discovery:** List of available models with provider information
-- **Overall Results:** Ranked model performance with aggregate scores
-- **Category Breakdown:** Structure, content, explanation, theme, and CEFR scores
-- **Exercise Type Analysis:** Performance breakdown by verb tenses, noun declension, etc.
-- **Failure Analysis:** Details on failed generations and lowest-scoring cases
-
-#### **12.6. Implementation Details**
-
-**Core Components:**
-- **`evaluation-runner.ts`:** Main evaluation logic, API calls, and scoring algorithms
-- **`test-cases.ts`:** Comprehensive test case definitions with expected criteria
-- **`model-configs.ts`:** Model discovery, API key validation, and configuration management
-- **`cli.ts`:** Command-line interface with formatted output and progress tracking
-
-**API Integration:**
-- **Exercise Generation:** Uses existing `/api/generate-exercise-set` endpoint
-- **Force Regeneration:** Always generates fresh exercises for consistent testing
-- **Provider Switching:** Tests both OpenAI and Anthropic models using their respective APIs
-- **Error Handling:** Graceful handling of API failures, timeouts, and invalid responses
-
-**Scoring Algorithms:**
-- **Structure Scoring:** Validates JSON structure, required fields, and data type correctness
-- **Content Scoring:** Heuristic-based assessment of grammar and vocabulary appropriateness
-- **Explanation Scoring:** Length-based and keyword-based quality assessment
-- **Theme Scoring:** Keyword matching for thematic vocabulary and context
-- **CEFR Scoring:** Currently uses default assumptions, expandable for sophisticated analysis
-
-#### **12.7. Environment Configuration**
-
-**Required Environment Variables:**
-- `OPENAI_API_KEY`: OpenAI API access for GPT models
-- `ANTHROPIC_API_KEY`: Anthropic API access for Claude models
-- At least one API key is required for evaluation to run
-
-**Model Discovery Behavior:**
-- **Available API Keys:** Uses dynamic model discovery when possible
-- **Missing API Keys:** Falls back to hardcoded model lists with warnings
-- **API Validation:** Tests API connectivity before proceeding with evaluations
-
-#### **12.8. Future Enhancements**
-
-**Planned Improvements:**
-- **Advanced Grammar Validation:** Integration with Croatian grammar checking tools
-- **CEFR Vocabulary Analysis:** Automated vocabulary complexity assessment using CEFR word lists
-- **Sophisticated Theme Matching:** Enhanced theme adherence detection using semantic analysis
-- **Exercise Type Validation:** Detailed validation of exercise-specific requirements
-- **Historical Tracking:** Track model performance improvements over time
-- **Automated Regression Testing:** Run evaluations on every significant code change
-
-**Quality Improvements:**
-- **Native Speaker Validation:** Integration with human expert validation for reference standards
-- **Learner Feedback Integration:** Incorporate real learner feedback into evaluation criteria
-- **Pedagogical Assessment:** More sophisticated evaluation of educational value and progression
-- **Cultural Relevance Scoring:** Assessment of cultural appropriateness and authenticity
-
-The evaluation system ensures that AI-generated Croatian grammar exercises maintain high standards of accuracy, pedagogical value, and cultural appropriateness across all supported exercise types and difficulty levels. By systematically testing exercise generation quality, the system helps maintain consistent learner experience regardless of which AI model is used for content generation.
+- **Core Architecture:** Supports both OpenAI and Anthropic models with dynamic discovery and API key validation. Tests the entire exercise generation pipeline.
+- **Evaluation Runner & Scoring System:**
+  - **Judge LLM for Quality Assessment:** To achieve objective evaluation, the system will employ a powerful "Judge LLM" (e.g., GPT-4o). After an exercise is generated, it is passed to the Judge LLM with a detailed rubric to score it on grammatical correctness, pedagogical value, theme adherence, and CEFR level appropriateness. This provides a robust and repeatable method for scoring content quality.
+- **Command Line Interface:** A CLI tool to run the evaluation suite, discover models, and generate detailed reports on model performance.
+- **Future Enhancements:**
+  - **Prompt Evaluation:** The evals system will be extended to test multiple prompt variations for the same exercise request, allowing for A/B testing of prompt engineering strategies.
+  - **Golden Dataset:** A small, human-validated set of exercises will be used to calibrate the Judge LLM's accuracy.
