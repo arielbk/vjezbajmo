@@ -33,8 +33,16 @@ export async function POST(request: NextRequest) {
       generateExerciseSchema.parse(body);
 
     // Determine which API key and provider to use
-    const effectiveApiKey = apiKey || process.env.SITE_API_KEY;
     const effectiveProvider = provider || (process.env.SITE_API_PROVIDER as "openai" | "anthropic") || "openai";
+    let effectiveApiKey = apiKey;
+    if (!effectiveApiKey) {
+      // Fall back to environment variables based on provider
+      if (effectiveProvider === "openai") {
+        effectiveApiKey = process.env.OPENAI_API_KEY || process.env.SITE_API_KEY;
+      } else {
+        effectiveApiKey = process.env.ANTHROPIC_API_KEY || process.env.SITE_API_KEY;
+      }
+    }
 
     console.log("API Debug:", {
       hasApiKey: !!effectiveApiKey,
