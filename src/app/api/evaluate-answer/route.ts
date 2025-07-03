@@ -38,9 +38,12 @@ export async function POST(request: NextRequest) {
 
     // Get API key
     const apiKey = getApiKey(effectiveProvider);
+    console.log(`Using provider: ${effectiveProvider}, Model: ${effectiveModel}`);
+    console.log(`API key found: ${!!apiKey}`);
+    
     if (!apiKey) {
       return NextResponse.json(
-        { error: `API key not found for provider: ${effectiveProvider}` },
+        { error: `API key not found for provider: ${effectiveProvider}. Set ${effectiveProvider === 'openai' ? 'OPENAI_API_KEY' : 'ANTHROPIC_API_KEY'} environment variable.` },
         { status: 400 }
       );
     }
@@ -142,13 +145,23 @@ async function evaluateWithOpenAI(
 ): Promise<{ isCorrect: boolean; explanation: string }> {
   const openai = new OpenAI({ apiKey });
 
-  const completion = await openai.chat.completions.create({
+  // O1 models don't support temperature, system messages, or response_format
+  const isO1Model = model.includes('o1');
+  
+  const completionOptions: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
     model,
     messages: [{ role: "user", content: prompt }],
-    temperature,
     max_tokens: maxTokens,
-    response_format: { type: "json_object" },
-  });
+  };
+
+  // Only add temperature and response_format for non-O1 models
+  if (!isO1Model) {
+    completionOptions.temperature = temperature;
+    // Type assertion needed for response_format which isn't in all model types
+    Object.assign(completionOptions, { response_format: { type: "json_object" } });
+  }
+
+  const completion = await openai.chat.completions.create(completionOptions);
 
   const content = completion.choices[0]?.message?.content;
   if (!content) {
@@ -162,7 +175,17 @@ async function evaluateWithOpenAI(
       explanation: String(result.explanation || "No explanation provided"),
     };
   } catch {
-    throw new Error("Invalid JSON response from OpenAI");
+    // If JSON parsing fails (especially for O1 models), try to extract the information
+    console.log("JSON parsing failed, attempting to extract data from text:", content);
+    
+    // Simple text parsing as fallback
+    const isCorrectMatch = content.match(/(?:isCorrect|correct)["\s]*:\s*([^,}\n]+)/i);
+    const explanationMatch = content.match(/(?:explanation)["\s]*:\s*["]([^"]+)["]|(?:explanation)["\s]*:\s*([^,}\n]+)/i);
+    
+    return {
+      isCorrect: isCorrectMatch ? isCorrectMatch[1].trim().toLowerCase() === 'true' : false,
+      explanation: explanationMatch ? (explanationMatch[1] || explanationMatch[2] || content) : content,
+    };
   }
 }
 
@@ -185,13 +208,15 @@ async function evaluateWithAnthropic(
   const content = response.content[0];
   if (content.type !== "text") {
     throw new Error("Unexpected response type from Anthropic");
-  }    try {
-      const result = JSON.parse(content.text);
-      return {
-        isCorrect: Boolean(result.isCorrect),
-        explanation: String(result.explanation || "No explanation provided"),
-      };
-    } catch {
-      throw new Error("Invalid JSON response from Anthropic");
-    }
+  }
+
+  try {
+    const result = JSON.parse(content.text);
+    return {
+      isCorrect: Boolean(result.isCorrect),
+      explanation: String(result.explanation || "No explanation provided"),
+    };
+  } catch {
+    throw new Error("Invalid JSON response from Anthropic");
+  }
 }

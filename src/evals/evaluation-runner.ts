@@ -67,18 +67,22 @@ export class EvaluationRunner {
         await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (error) {
         console.error(`Error evaluating test case ${testCase.id} with ${modelConfig.name}:`, error);
+        
+        // For API errors, provide better context
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        
         results.push({
           testCaseId: testCase.id,
           modelName: modelConfig.name,
           userAnswer: testCase.userAnswer,
           aiResponse: {
             isCorrect: false,
-            explanation: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            explanation: `API Error: ${errorMessage}`,
           },
           expectedCorrect: testCase.expectedCorrect,
           actualCorrect: false,
-          explanationQuality: 'poor',
-          notes: `Error during evaluation: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          explanationQuality: 'poor', // Explicitly set to poor for errors
+          notes: `Evaluation failed: ${errorMessage}`,
         });
       }
     }
@@ -135,16 +139,27 @@ export class EvaluationRunner {
     aiExplanation: string,
     expectedExplanation?: string
   ): 'good' | 'acceptable' | 'poor' {
-    if (!aiExplanation || aiExplanation.length < 10) return 'poor';
+    if (!aiExplanation || aiExplanation.length < 10) {
+      return 'poor';
+    }
+    
+    // Skip quality assessment for API errors
+    if (aiExplanation.includes('API Error:') || aiExplanation.includes('Error:')) {
+      return 'poor';
+    }
     
     // Simple heuristics for explanation quality
-    const hasGrammarTerms = /\b(case|tense|aspect|gender|number|agreement|declension|conjugation|locative|accusative|instrumental|nominative|genitive|dative|vocative)\b/i.test(aiExplanation);
+    const hasGrammarTerms = /\b(case|tense|aspect|gender|number|agreement|declension|conjugation|locative|accusative|instrumental|nominative|genitive|dative|vocative|perfective|imperfective|masculine|feminine|neuter|singular|plural)\b/i.test(aiExplanation);
     const hasSpecificDetails = aiExplanation.length > 50;
     const isRelevant = expectedExplanation ? 
       this.calculateSimilarity(aiExplanation, expectedExplanation) > 0.3 : true;
 
-    if (hasGrammarTerms && hasSpecificDetails && isRelevant) return 'good';
-    if (hasSpecificDetails && isRelevant) return 'acceptable';
+    if (hasGrammarTerms && hasSpecificDetails && isRelevant) {
+      return 'good';
+    }
+    if (hasSpecificDetails && isRelevant) {
+      return 'acceptable';
+    }
     return 'poor';
   }
 
