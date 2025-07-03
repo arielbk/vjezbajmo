@@ -151,11 +151,14 @@ export class EvaluationRunner {
       result.generatedExercise = generatedExercise;
       result.exerciseGenerated = true;
 
+      // Calculate execution time before scoring
+      const currentExecutionTime = Date.now() - startTime;
+
       // Score the generated exercise using the weighted criteria
       result.answerCorrectness = this.scoreAnswerCorrectness(generatedExercise, testCase);
       result.explanationQuality = this.scoreExplanationQuality(generatedExercise, testCase);
       result.exerciseDesign = this.scoreExerciseDesign(generatedExercise, testCase);
-      result.speedReliability = this.scoreSpeedReliability(result.executionTime, testCase);
+      result.speedReliability = this.scoreSpeedReliability(currentExecutionTime, testCase);
       result.costEfficiency = this.scoreCostEfficiency(model, result.tokenUsage, testCase);
 
       // Calculate weighted overall score
@@ -368,7 +371,7 @@ export class EvaluationRunner {
   private scoreCostEfficiency(model: ModelConfig, tokenUsage: { inputTokens?: number; outputTokens?: number } | undefined, _testCase: GenerationTestCase): number | undefined {
     if (!tokenUsage || !tokenUsage.inputTokens || !tokenUsage.outputTokens) return undefined;
     
-    const modelApiName = model.name;
+    const modelApiName = model.model;
     const costInfo = calculateCost(modelApiName, tokenUsage.inputTokens, tokenUsage.outputTokens);
     
     if (!costInfo) return undefined; // Model not found in pricing data

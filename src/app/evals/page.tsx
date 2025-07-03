@@ -62,14 +62,17 @@ function EvalsPageContent() {
         speedReliability: perf.criteria.speedReliability * 100,
         costEfficiency: perf.criteria.costEfficiency ? perf.criteria.costEfficiency * 100 : undefined,
       },
-      testCases: perf.results.map((result) => ({
-        id: result.testCaseId,
-        exerciseType: "unknown", // This would need to be extracted from test case
-        passed: result.exerciseGenerated,
-        explanation: result.errors.join("; ") || undefined,
-        executionTime: result.executionTime,
-        error: result.errors.length > 0 ? result.errors[0] : undefined,
-      })),
+      testCases: perf.results.map((result) => {
+        const testCase = ALL_TEST_CASES.find(tc => tc.id === result.testCaseId);
+        return {
+          id: result.testCaseId,
+          exerciseType: testCase?.request.exerciseType || "unknown",
+          passed: result.exerciseGenerated,
+          explanation: result.errors.join("; ") || undefined,
+          executionTime: result.executionTime,
+          error: result.errors.length > 0 ? result.errors[0] : undefined,
+        };
+      }),
       performance: {
         totalTests: perf.totalTests,
         passed: perf.successfulGenerations,
