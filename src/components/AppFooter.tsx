@@ -13,7 +13,7 @@ export function AppFooter() {
           className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
         >
           <Github className="h-4 w-4" />
-          View on GitHub
+          See the code on GitHub
         </a>
       </div>
     </footer>

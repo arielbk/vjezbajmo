@@ -247,6 +247,92 @@ class UserProgressManager {
     };
   }
 
+  // Get performance data for a specific exercise
+  getExercisePerformance(exerciseId: string, exerciseType: ExerciseType, cefrLevel: CefrLevel, theme?: string): {
+    bestScore: number | null;
+    attempts: number;
+    records: CompletedExerciseRecord[];
+  } {
+    if (typeof window === "undefined") {
+      return { bestScore: null, attempts: 0, records: [] };
+    }
+
+    try {
+      const key = this.getStorageKey(exerciseType, cefrLevel, theme);
+      const stored = localStorage.getItem(key);
+      
+      if (!stored) {
+        return { bestScore: null, attempts: 0, records: [] };
+      }
+
+      const progress = this.migrateProgressData(JSON.parse(stored));
+      const exerciseRecords = progress.completedRecords.filter(r => r.exerciseId === exerciseId);
+      
+      if (exerciseRecords.length === 0) {
+        return { bestScore: null, attempts: 0, records: [] };
+      }
+
+      const bestScore = Math.max(...exerciseRecords.map(r => r.score.percentage));
+      
+      return {
+        bestScore,
+        attempts: exerciseRecords.length,
+        records: exerciseRecords.sort((a, b) => b.completedAt - a.completedAt)
+      };
+    } catch (error) {
+      console.error("Failed to get exercise performance:", error);
+      return { bestScore: null, attempts: 0, records: [] };
+    }
+  }
+
+  // Get performance summary for all exercises in a category
+  getCategoryPerformanceMap(exerciseType: ExerciseType, cefrLevel: CefrLevel, theme?: string): Map<string, {
+    bestScore: number | null;
+    attempts: number;
+    isCompleted: boolean;
+  }> {
+    const performanceMap = new Map();
+
+    if (typeof window === "undefined") {
+      return performanceMap;
+    }
+
+    try {
+      const key = this.getStorageKey(exerciseType, cefrLevel, theme);
+      const stored = localStorage.getItem(key);
+      
+      if (!stored) {
+        return performanceMap;
+      }
+
+      const progress = this.migrateProgressData(JSON.parse(stored));
+      
+      // Group records by exercise ID
+      const recordsByExercise = new Map<string, CompletedExerciseRecord[]>();
+      progress.completedRecords.forEach(record => {
+        if (!recordsByExercise.has(record.exerciseId)) {
+          recordsByExercise.set(record.exerciseId, []);
+        }
+        recordsByExercise.get(record.exerciseId)!.push(record);
+      });
+
+      // Calculate performance for each exercise
+      recordsByExercise.forEach((records, exerciseId) => {
+        const bestScore = Math.max(...records.map(r => r.score.percentage));
+        performanceMap.set(exerciseId, {
+          bestScore,
+          attempts: records.length,
+          isCompleted: true
+        });
+      });
+
+      return performanceMap;
+    } catch (error) {
+      console.error("Failed to get category performance map:", error);
+      return performanceMap;
+    }
+  }
+
   clearCompletedExercises(exerciseType: ExerciseType, cefrLevel: CefrLevel, theme?: string): void {
     if (typeof window === "undefined") return; // SSR safety
 

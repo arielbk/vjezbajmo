@@ -14,7 +14,8 @@ import { userProgressManager } from "@/lib/user-progress";
 import { 
   getNextStaticWorksheet, 
   hasRemainingStaticWorksheets, 
-  convertWorksheetToExerciseSet 
+  convertWorksheetToExerciseSet,
+  getStaticWorksheets
 } from "@/lib/static-worksheets";
 
 interface ExerciseState {
@@ -232,6 +233,7 @@ const ExerciseContext = createContext<{
   dispatch: React.Dispatch<ExerciseAction>;
   forceRegenerateExercise: (exerciseType: ExerciseType, theme?: string) => Promise<void>;
   loadNextStaticWorksheet: (exerciseType: ExerciseType, theme?: string) => boolean;
+  loadSpecificStaticWorksheet: (exerciseId: string, exerciseType: ExerciseType) => boolean;
   hasRemainingStaticWorksheets: (exerciseType: ExerciseType, theme?: string) => boolean;
   regenerateAllExercises: (theme?: string) => Promise<void>;
   checkAnswer: (questionId: string, userAnswer: string) => Promise<CheckAnswerResponse>;
@@ -312,6 +314,28 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
     });
     
     return true; // Successfully loaded static worksheet
+  };
+
+  const loadSpecificStaticWorksheet = (exerciseId: string, exerciseType: ExerciseType): boolean => {
+    // Use existing utility to get all static worksheets
+    const allWorksheets = getStaticWorksheets(exerciseType);
+    
+    const targetWorksheet = allWorksheets.find((w) => w.id === exerciseId && w.cefrLevel === state.cefrLevel);
+    
+    if (!targetWorksheet) {
+      return false; // Worksheet not found
+    }
+
+    // Convert worksheet to the format expected by components
+    const exerciseSet = convertWorksheetToExerciseSet(targetWorksheet, exerciseType);
+    
+    // Dispatch the loaded exercise data
+    dispatch({
+      type: "SET_GENERATED_EXERCISES",
+      payload: { exerciseType, data: exerciseSet }
+    });
+    
+    return true; // Successfully loaded specific worksheet
   };
 
   const forceRegenerateExercise = async (exerciseType: ExerciseType, theme?: string) => {
@@ -497,6 +521,7 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
         dispatch,
         forceRegenerateExercise,
         loadNextStaticWorksheet,
+        loadSpecificStaticWorksheet,
         hasRemainingStaticWorksheets: hasRemainingStaticWorksheetsFunc,
         regenerateAllExercises,
         checkAnswer,

@@ -13,7 +13,7 @@ import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
 import { getExerciseSourceInfo } from "@/lib/exercise-source-utils";
 import { Check, X, RefreshCw, RotateCcw, ArrowRight, AlertTriangle, BookOpen, Sparkles } from "lucide-react";
 import { getExerciseDescription } from "@/lib/exercise-descriptions";
-import { GenerateNewQuestionsCard } from "@/components/GenerateNewQuestionsCard";
+import { ExerciseInfoModal } from "@/components/ExerciseInfoModal";
 
 interface ParagraphExerciseProps {
   exerciseSet: ParagraphExerciseSet;
@@ -216,19 +216,25 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
           <CardHeader className="pb-1">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg sm:text-xl lg:text-2xl">{title}</CardTitle>
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                {sourceInfo.isStatic ? (
-                  <>
-                    <BookOpen className="h-4 w-4" />
-                    <span>{sourceInfo.indicator}</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4" />
-                    <span>{sourceInfo.indicator}</span>
-                  </>
-                )}
-              </div>
+              <ExerciseInfoModal 
+                exerciseId={exerciseSet.id}
+                exerciseType={exerciseType}
+                cefrLevel={state.cefrLevel}
+              >
+                <button className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                  {sourceInfo.isStatic ? (
+                    <>
+                      <BookOpen className="h-4 w-4" />
+                      <span>{sourceInfo.indicator}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      <span>{sourceInfo.indicator}</span>
+                    </>
+                  )}
+                </button>
+              </ExerciseInfoModal>
             </div>
             <p className="text-sm text-muted-foreground mt-2">{getExerciseDescription(exerciseType)}</p>
           </CardHeader>
@@ -411,14 +417,6 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
             )}
           </CardContent>
         </Card>
-
-        {/* Generate New Questions section */}
-        {!hasChecked && (
-          <GenerateNewQuestionsCard
-            onRegenerate={async (theme) => await forceRegenerateExercise(exerciseType, theme)}
-            isGenerating={state.isGenerating}
-          />
-        )}
       </div>
     </>
   );
