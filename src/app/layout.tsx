@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ExerciseProvider } from "@/contexts/ExerciseContext";
 import { AppHeader } from "@/components/AppHeader";
 import { AppFooter } from "@/components/AppFooter";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import "../instrumentation-client";
 
@@ -34,6 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="hr">
+      <Analytics />
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ExerciseProvider>
           <div className="min-h-screen">
