@@ -1,85 +1,592 @@
-{
-  "worksheets": [
-    {
-      "id": "verb-aspect-static-01",
-      "source": "static",
-      "exerciseType": "verbAspect",
-      "cefrLevel": "A2.2",
-      "title": "Basic Aspect Choices",
-      "exercises": [
-        {
-          "id": "va01-q1",
-          "text": "Marko _____ u školu svaki dan.",
-          "exerciseSubType": "verb-aspect",
-          "options": {
-            "imperfective": "ide",
-            "perfective": "pođe"
-          },
-          "correctAspect": "imperfective",
-          "correctAnswer": "ide",
-          "explanation": "For repeated, habitual actions ('svaki dan' - every day), we use the imperfective aspect. 'Ide' expresses ongoing, regular action."
-        },
-        {
-          "id": "va01-q2",
-          "text": "Ana _____ tu knjigu jučer.",
-          "exerciseSubType": "verb-aspect",
-          "options": {
-            "imperfective": "čitala",
-            "perfective": "pročitala"
-          },
-          "correctAspect": "perfective",
-          "correctAnswer": "pročitala",
-          "explanation": "The verb 'pročitala' (perfective) indicates that Ana completed reading the book. The perfective aspect emphasizes the completion of the action."
-        },
-        {
-          "id": "va01-q3",
-          "text": "Jučer sam _____ Petra u gradu.",
-          "exerciseSubType": "verb-aspect",
-          "options": {
-            "imperfective": "viđao",
-            "perfective": "vidio"
-          },
-          "correctAspect": "perfective",
-          "correctAnswer": "vidio",
-          "explanation": "The act of seeing someone at a specific time in the past is typically expressed with perfective aspect 'vidio', indicating a completed, momentary action."
-        },
-        {
-          "id": "va01-q4",
-          "text": "Sutra ću _____ novi automobil.",
-          "exerciseSubType": "verb-aspect",
-          "options": {
-            "imperfective": "kupovati",
-            "perfective": "kupiti"
-          },
-          "correctAspect": "perfective",
-          "correctAnswer": "kupiti",
-          "explanation": "Future actions that represent a single, completed transaction typically use perfective aspect. 'Kupiti' indicates the completion of buying a car."
-        },
-        {
-          "id": "va01-q5",
-          "text": "Djevojka _____ po parku svako jutro.",
-          "exerciseSubType": "verb-aspect",
-          "options": {
-            "imperfective": "trči",
-            "perfective": "potrči"
-          },
-          "correctAspect": "imperfective",
-          "correctAnswer": "trči",
-          "explanation": "Habitual actions ('svako jutro' - every morning) use imperfective aspect. 'Trči' expresses the ongoing, repeated nature of the activity."
-        },
-        {
-          "id": "va01-q6",
-          "text": "On je _____ zadatak za pet minuta.",
-          "exerciseSubType": "verb-aspect",
-          "options": {
-            "imperfective": "rješavao",
-            "perfective": "riješio"
-          },
-          "correctAspect": "perfective",
-          "correctAnswer": "riješio",
-          "explanation": "The time limit 'za pet minuta' (in five minutes) suggests completion. The perfective 'riješio' indicates the task was successfully completed."
-        }
-      ]
-    }
-  ]
-}
+[
+  {
+    "id": "verb-aspect-01",
+    "source": "static",
+    "exerciseType": "verbAspect",
+    "cefrLevel": "A2.2",
+    "title": "Dnevne navike",
+    "exercises": [
+      {
+        "id": "va01-q1",
+        "text": "Svaki dan _____ kavu ujutro.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "pijem", "perfective": "popijem" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["pijem"],
+        "explanation": "Imperfective is used for habitual/repeated action: 'Svaki dan pijem kavu.'",
+        "isPlural": false
+      },
+      {
+        "id": "va01-q2",
+        "text": "Jučer sam _____ cijelu knjigu.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "čitao", "perfective": "pročitao" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["pročitao", "pročitala"],
+        "explanation": "Perfective is used for completed past action. Both masculine and feminine accepted.",
+        "isPlural": false
+      },
+      {
+        "id": "va01-q3",
+        "text": "Dok sam bio dijete, često sam _____ vani.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "igrao se", "perfective": "poigrao se" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["igrao se", "igrala se"],
+        "explanation": "Imperfective is used for ongoing/habitual actions in the past.",
+        "isPlural": false
+      },
+      {
+        "id": "va01-q4",
+        "text": "Kad završiš ručak, _____ suđe.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "pereš", "perfective": "operi" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["operi"],
+        "explanation": "Perfective imperative for one-time future action: 'Operi suđe.'",
+        "isPlural": false
+      },
+      {
+        "id": "va01-q5",
+        "text": "Obično _____ biciklom do posla.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "idem", "perfective": "odem" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["idem"],
+        "explanation": "Imperfective for habitual action: 'Obično idem biciklom.'",
+        "isPlural": false
+      }
+    ]
+  },
+  {
+    "id": "verb-aspect-02",
+    "source": "static",
+    "exerciseType": "verbAspect",
+    "cefrLevel": "A2.2",
+    "title": "Putovanja",
+    "exercises": [
+      {
+        "id": "va02-q1",
+        "text": "Sutra ću _____ novu pjesmu.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "učiti", "perfective": "naučiti" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["naučiti"],
+        "explanation": "Perfective for future completed action: 'Naučiti pjesmu.'",
+        "isPlural": false
+      },
+      {
+        "id": "va02-q2",
+        "text": "Svako ljeto _____ na more s roditeljima.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "idem", "perfective": "odem" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["idem"],
+        "explanation": "Imperfective for regular repeated actions.",
+        "isPlural": false
+      },
+      {
+        "id": "va02-q3",
+        "text": "Prošle godine sam _____ u Pariz.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "putovao", "perfective": "otputovao" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["otputovao", "otputovala"],
+        "explanation": "Perfective for completed action in the past.",
+        "isPlural": false
+      },
+      {
+        "id": "va02-q4",
+        "text": "Kad imam vremena, _____ po muzeju.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "šetam", "perfective": "prošetam" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["šetam"],
+        "explanation": "Imperfective for ongoing, habitual activity.",
+        "isPlural": false
+      },
+      {
+        "id": "va02-q5",
+        "text": "Jučer smo svi zajedno _____ sladoled na rivi.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "jeli", "perfective": "pojeli" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["pojeli"],
+        "explanation": "Perfective for completed action (all ice cream eaten).",
+        "isPlural": true
+      }
+    ]
+  },
+  {
+    "id": "verb-aspect-03",
+    "source": "static",
+    "exerciseType": "verbAspect",
+    "cefrLevel": "A2.2",
+    "title": "Hrana i kuhanje",
+    "exercises": [
+      {
+        "id": "va03-q1",
+        "text": "Mama svaki dan _____ ručak.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "kuha", "perfective": "skuha" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["kuha"],
+        "explanation": "Imperfective for habitual daily actions.",
+        "isPlural": false
+      },
+      {
+        "id": "va03-q2",
+        "text": "Danas ćemo zajedno _____ kolač.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "praviti", "perfective": "napraviti" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["napraviti"],
+        "explanation": "Perfective for single, completed future action.",
+        "isPlural": false
+      },
+      {
+        "id": "va03-q3",
+        "text": "Prošle subote sam _____ tortu za rođendan.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "pravio", "perfective": "napravio" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["napravio", "napravila"],
+        "explanation": "Perfective for completed past event. Both genders accepted.",
+        "isPlural": false
+      },
+      {
+        "id": "va03-q4",
+        "text": "Obično _____ večeru oko sedam sati.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "jedem", "perfective": "pojedem" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["jedem"],
+        "explanation": "Imperfective for routine/habitual actions.",
+        "isPlural": false
+      },
+      {
+        "id": "va03-q5",
+        "text": "Jučer sam _____ salatu prije glavnog jela.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "jeo", "perfective": "pojeo" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["pojeo", "pojela"],
+        "explanation": "Perfective for completed past action.",
+        "isPlural": false
+      }
+    ]
+  },
+  {
+    "id": "verb-aspect-04",
+    "source": "static",
+    "exerciseType": "verbAspect",
+    "cefrLevel": "A2.2",
+    "title": "Posao i učenje",
+    "exercises": [
+      {
+        "id": "va04-q1",
+        "text": "Svaki dan _____ domaću zadaću.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "radim", "perfective": "napravim" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["radim"],
+        "explanation": "Imperfective for habitual/repeated action.",
+        "isPlural": false
+      },
+      {
+        "id": "va04-q2",
+        "text": "Jučer sam konačno _____ sve zadatke.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "radio", "perfective": "napravio" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["napravio", "napravila"],
+        "explanation": "Perfective for completed past action.",
+        "isPlural": false
+      },
+      {
+        "id": "va04-q3",
+        "text": "Obično _____ prezentacije za sastanke.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "pripremam", "perfective": "pripremim" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["pripremam"],
+        "explanation": "Imperfective for repeated/preparatory action.",
+        "isPlural": false
+      },
+      {
+        "id": "va04-q4",
+        "text": "Danas moram _____ važan e-mail.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "pisati", "perfective": "napisati" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["napisati"],
+        "explanation": "Perfective for planned, single completed action.",
+        "isPlural": false
+      },
+      {
+        "id": "va04-q5",
+        "text": "Svaki tjedan _____ izvještaje za šefa.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "pišem", "perfective": "napišem" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["pišem"],
+        "explanation": "Imperfective for regular/repeated actions.",
+        "isPlural": false
+      }
+    ]
+  },
+  {
+    "id": "verb-aspect-05",
+    "source": "static",
+    "exerciseType": "verbAspect",
+    "cefrLevel": "A2.2",
+    "title": "Zdravlje",
+    "exercises": [
+      {
+        "id": "va05-q1",
+        "text": "Svako jutro _____ zube.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "perem", "perfective": "operem" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["perem"],
+        "explanation": "Imperfective for habitual actions: 'perem zube'.",
+        "isPlural": false
+      },
+      {
+        "id": "va05-q2",
+        "text": "Jučer sam _____ ruke prije ručka.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "prao", "perfective": "oprao" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["oprao", "oprala"],
+        "explanation": "Perfective for completed past action.",
+        "isPlural": false
+      },
+      {
+        "id": "va05-q3",
+        "text": "Ako si bolestan, moraš _____ kod doktora.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "ići", "perfective": "otići" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["otići"],
+        "explanation": "Perfective for one-time, complete obligation.",
+        "isPlural": false
+      },
+      {
+        "id": "va05-q4",
+        "text": "Obično _____ puno vode tijekom dana.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "pijem", "perfective": "popijem" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["pijem"],
+        "explanation": "Imperfective for regular, ongoing action.",
+        "isPlural": false
+      },
+      {
+        "id": "va05-q5",
+        "text": "Prošlog tjedna sam _____ lijek protiv prehlade.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "uzimao", "perfective": "uzeo" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["uzeo", "uzela"],
+        "explanation": "Perfective for finished, one-time past event.",
+        "isPlural": false
+      }
+    ]
+  },
+  {
+    "id": "verb-aspect-06",
+    "source": "static",
+    "exerciseType": "verbAspect",
+    "cefrLevel": "A2.2",
+    "title": "Obitelj i odnosi",
+    "exercises": [
+      {
+        "id": "va06-q1",
+        "text": "Moji roditelji često _____ u park.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "šetaju", "perfective": "prošetaju" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["šetaju"],
+        "explanation": "Imperfective for repeated action: 'često šetaju'.",
+        "isPlural": true
+      },
+      {
+        "id": "va06-q2",
+        "text": "Jučer smo _____ do bake i djeda.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "išli", "perfective": "otišli" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["otišli"],
+        "explanation": "Perfective for completed past action (plural).",
+        "isPlural": true
+      },
+      {
+        "id": "va06-q3",
+        "text": "Djed svakog jutra _____ novine.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "čita", "perfective": "pročita" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["čita"],
+        "explanation": "Imperfective for daily habit.",
+        "isPlural": false
+      },
+      {
+        "id": "va06-q4",
+        "text": "Prošlog Božića smo svi zajedno _____ kolače.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "pekli", "perfective": "ispekli" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["ispekli"],
+        "explanation": "Perfective for one-time, completed event.",
+        "isPlural": true
+      },
+      {
+        "id": "va06-q5",
+        "text": "Obično _____ rođendane kod kuće.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "slavimo", "perfective": "proslavimo" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["slavimo"],
+        "explanation": "Imperfective for customary, repeated actions.",
+        "isPlural": true
+      }
+    ]
+  },
+  {
+    "id": "verb-aspect-07",
+    "source": "static",
+    "exerciseType": "verbAspect",
+    "cefrLevel": "A2.2",
+    "title": "Slobodno vrijeme",
+    "exercises": [
+      {
+        "id": "va07-q1",
+        "text": "Petkom navečer uvijek _____ film s prijateljima.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "gledam", "perfective": "pogledam" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["gledam"],
+        "explanation": "Imperfective for regular, repeated events.",
+        "isPlural": false
+      },
+      {
+        "id": "va07-q2",
+        "text": "Jučer smo _____ cijelu sezonu serije.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "gledali", "perfective": "pogledali" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["pogledali"],
+        "explanation": "Perfective for completed past action (plural).",
+        "isPlural": true
+      },
+      {
+        "id": "va07-q3",
+        "text": "Kad je lijepo vrijeme, često _____ na izlet.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "idem", "perfective": "odem" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["idem"],
+        "explanation": "Imperfective for habitual action.",
+        "isPlural": false
+      },
+      {
+        "id": "va07-q4",
+        "text": "Prošlog vikenda sam _____ planinu prvi put.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "penjao se", "perfective": "popenjao se" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["popenjao se", "popela se"],
+        "explanation": "Perfective for single, completed past event.",
+        "isPlural": false
+      },
+      {
+        "id": "va07-q5",
+        "text": "Obično _____ glazbu dok učim.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "slušam", "perfective": "poslušam" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["slušam"],
+        "explanation": "Imperfective for simultaneous, ongoing actions.",
+        "isPlural": false
+      }
+    ]
+  },
+  {
+    "id": "verb-aspect-08",
+    "source": "static",
+    "exerciseType": "verbAspect",
+    "cefrLevel": "A2.2",
+    "title": "Hobiji",
+    "exercises": [
+      {
+        "id": "va08-q1",
+        "text": "Svaki vikend _____ novu pjesmu na gitari.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "učim", "perfective": "naučim" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["učim"],
+        "explanation": "Imperfective for learning as a process/habit.",
+        "isPlural": false
+      },
+      {
+        "id": "va08-q2",
+        "text": "Jučer sam _____ sve note u pjesmi.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "učio", "perfective": "naučio" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["naučio", "naučila"],
+        "explanation": "Perfective for a finished past event.",
+        "isPlural": false
+      },
+      {
+        "id": "va08-q3",
+        "text": "Tijekom ljeta često _____ slike na plaži.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "crtam", "perfective": "nacrtam" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["crtam"],
+        "explanation": "Imperfective for regular/ongoing actions.",
+        "isPlural": false
+      },
+      {
+        "id": "va08-q4",
+        "text": "Prošle zime sam _____ roman.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "pisao", "perfective": "napisao" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["napisao", "napisala"],
+        "explanation": "Perfective for completed past action.",
+        "isPlural": false
+      },
+      {
+        "id": "va08-q5",
+        "text": "Obično _____ slike akvarelom.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "slikam", "perfective": "naslikam" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["slikam"],
+        "explanation": "Imperfective for repeated/ongoing activity.",
+        "isPlural": false
+      }
+    ]
+  },
+  {
+    "id": "verb-aspect-09",
+    "source": "static",
+    "exerciseType": "verbAspect",
+    "cefrLevel": "A2.2",
+    "title": "Škola",
+    "exercises": [
+      {
+        "id": "va09-q1",
+        "text": "Svako jutro _____ autobusom u školu.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "putujem", "perfective": "otputujem" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["putujem"],
+        "explanation": "Imperfective for routine/habitual activity.",
+        "isPlural": false
+      },
+      {
+        "id": "va09-q2",
+        "text": "Jučer sam _____ zadaću odmah nakon škole.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "radio", "perfective": "napravio" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["napravio", "napravila"],
+        "explanation": "Perfective for completed past action.",
+        "isPlural": false
+      },
+      {
+        "id": "va09-q3",
+        "text": "Obično _____ s prijateljima nakon nastave.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "razgovaram", "perfective": "razgovorim" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["razgovaram"],
+        "explanation": "Imperfective for habitual action.",
+        "isPlural": false
+      },
+      {
+        "id": "va09-q4",
+        "text": "U ponedjeljak ćemo _____ važan test.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "pisati", "perfective": "napisati" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["napisati"],
+        "explanation": "Perfective for single, planned future action.",
+        "isPlural": false
+      },
+      {
+        "id": "va09-q5",
+        "text": "Tijekom sata često _____ pitanja učitelju.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "postavljam", "perfective": "postavim" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["postavljam"],
+        "explanation": "Imperfective for repeated/ongoing activity.",
+        "isPlural": false
+      }
+    ]
+  },
+  {
+    "id": "verb-aspect-10",
+    "source": "static",
+    "exerciseType": "verbAspect",
+    "cefrLevel": "A2.2",
+    "title": "Priroda i okoliš",
+    "exercises": [
+      {
+        "id": "va10-q1",
+        "text": "U proljeće često _____ u parku.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "šetam", "perfective": "prošetam" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["šetam"],
+        "explanation": "Imperfective for habitual/ongoing action.",
+        "isPlural": false
+      },
+      {
+        "id": "va10-q2",
+        "text": "Jučer smo _____ drvo u vrtu.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "sadili", "perfective": "posadili" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["posadili"],
+        "explanation": "Perfective for completed past action (plural).",
+        "isPlural": true
+      },
+      {
+        "id": "va10-q3",
+        "text": "Često _____ ptice ujutro.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "slušam", "perfective": "poslušam" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["slušam"],
+        "explanation": "Imperfective for repeated, habitual activity.",
+        "isPlural": false
+      },
+      {
+        "id": "va10-q4",
+        "text": "Prošle godine smo _____ izlet na planinu.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "organizirali", "perfective": "organizirali" },
+        "correctAspect": "perfective",
+        "correctAnswer": ["organizirali"],
+        "explanation": "Perfective for one-time completed group action.",
+        "isPlural": true
+      },
+      {
+        "id": "va10-q5",
+        "text": "Ljeti obično _____ voće u vrtu.",
+        "exerciseSubType": "verb-aspect",
+        "options": { "imperfective": "berem", "perfective": "uberem" },
+        "correctAspect": "imperfective",
+        "correctAnswer": ["berem"],
+        "explanation": "Imperfective for customary, ongoing actions.",
+        "isPlural": false
+      }
+    ]
+  }
+]

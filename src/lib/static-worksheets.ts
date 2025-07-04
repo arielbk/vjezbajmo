@@ -38,23 +38,19 @@ interface StaticWorksheet {
   }>; // For paragraph exercises
 }
 
-interface StaticWorksheetData {
-  worksheets: StaticWorksheet[];
-}
-
 /**
  * Get static worksheets for a specific exercise type
  */
 export function getStaticWorksheets(exerciseType: ExerciseType): StaticWorksheet[] {
   switch (exerciseType) {
     case "verbTenses":
-      return (verbTensesWorksheets as StaticWorksheetData).worksheets;
+      return verbTensesWorksheets as StaticWorksheet[];
     case "nounDeclension":
-      return (nounDeclensionWorksheets as StaticWorksheetData).worksheets;
+      return nounDeclensionWorksheets as StaticWorksheet[];
     case "verbAspect":
-      return (verbAspectWorksheets as StaticWorksheetData).worksheets;
+      return verbAspectWorksheets as StaticWorksheet[];
     case "interrogativePronouns":
-      return (interrogativePronounsWorksheets as StaticWorksheetData).worksheets;
+      return interrogativePronounsWorksheets as StaticWorksheet[];
     default:
       return [];
   }
@@ -65,25 +61,25 @@ export function getStaticWorksheets(exerciseType: ExerciseType): StaticWorksheet
  * Returns null if all static worksheets are completed
  */
 export function getNextStaticWorksheet(
-  exerciseType: ExerciseType, 
-  cefrLevel: CefrLevel, 
+  exerciseType: ExerciseType,
+  cefrLevel: CefrLevel,
   theme?: string
 ): StaticWorksheet | null {
   const allWorksheets = getStaticWorksheets(exerciseType);
-  
+
   // Filter worksheets by CEFR level
-  const levelWorksheets = allWorksheets.filter(w => w.cefrLevel === cefrLevel);
-  
+  const levelWorksheets = allWorksheets.filter((w) => w.cefrLevel === cefrLevel);
+
   if (levelWorksheets.length === 0) {
     return null;
   }
-  
+
   // Get completed worksheet IDs for this user
   const completedIds = userProgressManager.getCompletedExercises(exerciseType, cefrLevel, theme);
-  
+
   // Find the first worksheet that hasn't been completed
-  const nextWorksheet = levelWorksheets.find(w => !completedIds.includes(w.id));
-  
+  const nextWorksheet = levelWorksheets.find((w) => !completedIds.includes(w.id));
+
   return nextWorksheet || null;
 }
 
@@ -91,8 +87,8 @@ export function getNextStaticWorksheet(
  * Check if there are any remaining static worksheets for a user
  */
 export function hasRemainingStaticWorksheets(
-  exerciseType: ExerciseType, 
-  cefrLevel: CefrLevel, 
+  exerciseType: ExerciseType,
+  cefrLevel: CefrLevel,
   theme?: string
 ): boolean {
   return getNextStaticWorksheet(exerciseType, cefrLevel, theme) !== null;
@@ -102,24 +98,22 @@ export function hasRemainingStaticWorksheets(
  * Get progress through static worksheets (e.g., "3/10")
  */
 export function getStaticWorksheetProgress(
-  exerciseType: ExerciseType, 
-  cefrLevel: CefrLevel, 
+  exerciseType: ExerciseType,
+  cefrLevel: CefrLevel,
   theme?: string
 ): { completed: number; total: number; progressText: string } {
   const allWorksheets = getStaticWorksheets(exerciseType);
-  const levelWorksheets = allWorksheets.filter(w => w.cefrLevel === cefrLevel);
+  const levelWorksheets = allWorksheets.filter((w) => w.cefrLevel === cefrLevel);
   const completedIds = userProgressManager.getCompletedExercises(exerciseType, cefrLevel, theme);
-  
-  const completed = completedIds.filter(id => 
-    levelWorksheets.some(w => w.id === id)
-  ).length;
-  
+
+  const completed = completedIds.filter((id) => levelWorksheets.some((w) => w.id === id)).length;
+
   const total = levelWorksheets.length;
-  
+
   return {
     completed,
     total,
-    progressText: `${completed}/${total}`
+    progressText: `${completed}/${total}`,
   };
 }
 
@@ -127,7 +121,7 @@ export function getStaticWorksheetProgress(
  * Convert a static worksheet to the format expected by exercise components
  */
 export function convertWorksheetToExerciseSet(
-  worksheet: StaticWorksheet, 
+  worksheet: StaticWorksheet,
   exerciseType: ExerciseType
 ): ParagraphExerciseSet | SentenceExerciseSet {
   switch (exerciseType) {
@@ -136,7 +130,7 @@ export function convertWorksheetToExerciseSet(
       // Paragraph exercises - return ParagraphExerciseSet
       const paragraph = worksheet.paragraph || "";
       const questions = worksheet.questions || [];
-      
+
       const result: ParagraphExerciseSet = {
         id: worksheet.id,
         paragraph: paragraph,
@@ -145,32 +139,32 @@ export function convertWorksheetToExerciseSet(
           blankNumber: q.blankNumber,
           baseForm: q.baseForm || "",
           correctAnswer: Array.isArray(q.correctAnswer) ? q.correctAnswer : [q.correctAnswer],
-          explanation: q.explanation
-        }))
+          explanation: q.explanation,
+        })),
       };
       return result;
     }
-      
+
     case "interrogativePronouns": {
       // Sentence exercises - return SentenceExerciseSet
       const exercises = worksheet.exercises || [];
-      
+
       const result: SentenceExerciseSet = {
         id: worksheet.id,
         exercises: exercises.map((ex) => ({
           id: ex.id,
           text: ex.text,
           correctAnswer: Array.isArray(ex.correctAnswer) ? ex.correctAnswer : [ex.correctAnswer],
-          explanation: ex.explanation
-        }))
+          explanation: ex.explanation,
+        })),
       };
       return result;
     }
-      
+
     case "verbAspect": {
       // Verb aspect exercises - return SentenceExerciseSet with VerbAspectExercise format
       const exercises = worksheet.exercises || [];
-      
+
       const result: SentenceExerciseSet = {
         id: worksheet.id,
         exercises: exercises.map((ex) => ({
@@ -180,12 +174,12 @@ export function convertWorksheetToExerciseSet(
           options: ex.options || { imperfective: "", perfective: "" },
           correctAspect: ex.correctAspect || "imperfective",
           correctAnswer: Array.isArray(ex.correctAnswer) ? ex.correctAnswer : [ex.correctAnswer],
-          explanation: ex.explanation
-        }))
+          explanation: ex.explanation,
+        })),
       };
       return result;
     }
-      
+
     default:
       throw new Error(`Unsupported exercise type: ${exerciseType}`);
   }
