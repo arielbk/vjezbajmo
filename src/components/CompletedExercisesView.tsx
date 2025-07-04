@@ -77,9 +77,10 @@ export function CompletedExercisesView({ onRetryExercise }: CompletedExercisesVi
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto space-y-6 pt-4 px-2 sm:px-4">
-        <div className="text-center py-8">
+        <div className="text-center py-8" role="status" aria-live="polite">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
           <p className="mt-2 text-sm text-muted-foreground">Loading your exercise history...</p>
+          <span className="sr-only">Loading exercise history, please wait</span>
         </div>
       </div>
     );
@@ -92,16 +93,19 @@ export function CompletedExercisesView({ onRetryExercise }: CompletedExercisesVi
       </div>
 
       {/* Performance Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <section aria-labelledby="performance-overview" className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <h2 id="performance-overview" className="sr-only">Performance Overview</h2>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center">
-              <Trophy className="h-4 w-4 mr-2 text-yellow-600" />
+              <Trophy className="h-4 w-4 mr-2 text-yellow-600" aria-hidden="true" />
               Total Completed
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCompleted}</div>
+            <div className="text-2xl font-bold" aria-label={`${stats.totalCompleted} exercises completed`}>
+              {stats.totalCompleted}
+            </div>
             <p className="text-xs text-muted-foreground">exercises finished</p>
           </CardContent>
         </Card>
@@ -109,12 +113,14 @@ export function CompletedExercisesView({ onRetryExercise }: CompletedExercisesVi
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center">
-              <Target className="h-4 w-4 mr-2 text-blue-600" />
+              <Target className="h-4 w-4 mr-2 text-blue-600" aria-hidden="true" />
               Average Score
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.averageScore}%</div>
+            <div className="text-2xl font-bold" aria-label={`Average score ${stats.averageScore} percent`}>
+              {stats.averageScore}%
+            </div>
             <p className="text-xs text-muted-foreground">across all exercises</p>
           </CardContent>
         </Card>
@@ -122,7 +128,7 @@ export function CompletedExercisesView({ onRetryExercise }: CompletedExercisesVi
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center">
-              <TrendingUp className="h-4 w-4 mr-2 text-green-600" />
+              <TrendingUp className="h-4 w-4 mr-2 text-green-600" aria-hidden="true" />
               Best Type
             </CardTitle>
           </CardHeader>
@@ -133,45 +139,45 @@ export function CompletedExercisesView({ onRetryExercise }: CompletedExercisesVi
                 .sort((a, b) => b[1].averageScore - a[1].averageScore)[0];
 
               return bestType ? (
-                <>
+                <div aria-label={`Best exercise type: ${getExerciseTypeDisplayName(bestType[0] as ExerciseType)} with ${bestType[1].averageScore} percent average`}>
                   <div className="text-sm font-bold">{getExerciseTypeDisplayName(bestType[0] as ExerciseType)}</div>
                   <p className="text-xs text-muted-foreground">{bestType[1].averageScore}% average</p>
-                </>
+                </div>
               ) : (
                 <div className="text-sm text-muted-foreground">No data yet</div>
               );
             })()}
           </CardContent>
         </Card>
-      </div>
+      </section>
 
       {/* Exercise Type Filter */}
       <Tabs value={selectedType} onValueChange={(value) => setSelectedType(value as ExerciseType | "all")}>
         <div className="overflow-x-auto">
-          <TabsList className="inline-flex w-max min-w-full justify-start gap-1 p-1">
-            <TabsTrigger value="all" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap">
+          <TabsList className="inline-flex w-max min-w-full justify-start gap-1 p-1" role="tablist" aria-label="Filter exercises by type">
+            <TabsTrigger value="all" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap" role="tab">
               All
             </TabsTrigger>
-            <TabsTrigger value="verbTenses" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap">
+            <TabsTrigger value="verbTenses" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap" role="tab">
               Verb Tenses
             </TabsTrigger>
-            <TabsTrigger value="nounDeclension" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap">
+            <TabsTrigger value="nounDeclension" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap" role="tab">
               Declension
             </TabsTrigger>
-            <TabsTrigger value="verbAspect" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap">
+            <TabsTrigger value="verbAspect" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap" role="tab">
               Verb Aspect
             </TabsTrigger>
-            <TabsTrigger value="interrogativePronouns" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap">
+            <TabsTrigger value="interrogativePronouns" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap" role="tab">
               Pronouns
             </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value={selectedType} className="space-y-4">
+        <TabsContent value={selectedType} className="space-y-4" role="tabpanel" aria-label={`Exercise history for ${selectedType === 'all' ? 'all exercise types' : getExerciseTypeDisplayName(selectedType as ExerciseType)}`}>
           {filteredRecords.length === 0 ? (
             <Card>
               <CardContent className="text-center py-8">
-                <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-semibold mb-2">No completed exercises</h3>
                 <p className="text-muted-foreground">
                   {selectedType === "all"
@@ -183,9 +189,9 @@ export function CompletedExercisesView({ onRetryExercise }: CompletedExercisesVi
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3" role="list" aria-label="Completed exercises">
               {filteredRecords.map((record, index) => (
-                <Card key={`${record.exerciseId}-${record.attemptNumber}-${index}`}>
+                <Card key={`${record.exerciseId}-${record.attemptNumber}-${index}`} role="listitem">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
@@ -193,16 +199,16 @@ export function CompletedExercisesView({ onRetryExercise }: CompletedExercisesVi
                           <h3 className="font-semibold text-sm">
                             {record.title || getExerciseTypeDisplayName(record.exerciseType)}
                           </h3>
-                          <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-transparent bg-secondary text-secondary-foreground">
+                          <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-transparent bg-secondary text-secondary-foreground" aria-label={`CEFR level ${record.cefrLevel}`}>
                             {record.cefrLevel}
                           </span>
                           {record.theme && (
-                            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-transparent bg-gray-100 text-gray-700">
+                            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-transparent bg-gray-100 text-gray-700" aria-label={`Theme: ${record.theme}`}>
                               {record.theme}
                             </span>
                           )}
                           {record.attemptNumber > 1 && (
-                            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold text-foreground">
+                            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold text-foreground" aria-label={`Attempt number ${record.attemptNumber}`}>
                               Attempt #{record.attemptNumber}
                             </span>
                           )}
@@ -210,10 +216,12 @@ export function CompletedExercisesView({ onRetryExercise }: CompletedExercisesVi
 
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            {formatDate(record.completedAt)}
+                            <Calendar className="h-3 w-3 mr-1" aria-hidden="true" />
+                            <time dateTime={new Date(record.completedAt).toISOString()}>
+                              {formatDate(record.completedAt)}
+                            </time>
                           </span>
-                          <span>
+                          <span aria-label={`Score: ${record.score.correct} correct out of ${record.score.total} total`}>
                             {record.score.correct}/{record.score.total} correct
                           </span>
                         </div>
@@ -224,6 +232,7 @@ export function CompletedExercisesView({ onRetryExercise }: CompletedExercisesVi
                           className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getScoreColor(
                             record.score.percentage
                           )} border`}
+                          aria-label={`Score: ${record.score.percentage} percent`}
                         >
                           {record.score.percentage}%
                         </span>
@@ -233,8 +242,9 @@ export function CompletedExercisesView({ onRetryExercise }: CompletedExercisesVi
                             size="sm"
                             onClick={() => onRetryExercise(record.exerciseType, record.exerciseId)}
                             className="h-8 w-8 p-0"
+                            aria-label={`Retry ${record.title || getExerciseTypeDisplayName(record.exerciseType)} exercise`}
                           >
-                            <RefreshCw className="h-3 w-3" />
+                            <RefreshCw className="h-3 w-3" aria-hidden="true" />
                           </Button>
                         )}
                       </div>
@@ -251,14 +261,15 @@ export function CompletedExercisesView({ onRetryExercise }: CompletedExercisesVi
                           const improvement = record.score.percentage - previousAttempt.score.percentage;
                           if (improvement > 0) {
                             return (
-                              <div className="mt-2 flex items-center text-xs text-green-600">
-                                <TrendingUp className="h-3 w-3 mr-1" />+{improvement}% improvement from previous attempt
+                              <div className="mt-2 flex items-center text-xs text-green-600" role="status" aria-label={`Improved by ${improvement} percent from previous attempt`}>
+                                <TrendingUp className="h-3 w-3 mr-1" aria-hidden="true" />
+                                +{improvement}% improvement from previous attempt
                               </div>
                             );
                           } else if (improvement < 0) {
                             return (
-                              <div className="mt-2 flex items-center text-xs text-red-600">
-                                <TrendingUp className="h-3 w-3 mr-1 rotate-180" />
+                              <div className="mt-2 flex items-center text-xs text-red-600" role="status" aria-label={`Decreased by ${Math.abs(improvement)} percent from previous attempt`}>
+                                <TrendingUp className="h-3 w-3 mr-1 rotate-180" aria-hidden="true" />
                                 {improvement}% from previous attempt
                               </div>
                             );

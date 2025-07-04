@@ -1,0 +1,74 @@
+# Page snapshot
+
+```yaml
+- link "Skip to main content":
+  - /url: "#main-content"
+- banner:
+  - link "Vježbajmo - Return to home page":
+    - /url: /
+    - heading "Vježbajmo" [level=1]
+    - paragraph: Croatian Language Practice
+  - button "Open settings to configure language level, AI provider, and API key": Settings
+- main:
+  - 'progressbar "Exercise progress: 0% complete"'
+  - text: Verb Aspect
+  - paragraph: Choose between perfective and imperfective verb forms.
+  - form "Verb aspect exercise":
+    - group "Exercise questions":
+      - text: 1. Marko _____ u školu svaki dan.
+      - 'group "Question 1: Choose the correct verb aspect for this sentence"':
+        - text: "Question 1: Choose the correct verb aspect for this sentence"
+        - 'radiogroup "Question 1: Choose the correct verb aspect for this sentence"':
+          - radio "ide"
+          - text: ide Imperfective aspect - ongoing or repeated action
+          - radio "pođe"
+          - text: pođe Perfective aspect - completed action
+      - text: 2. Ana _____ tu knjigu jučer.
+      - 'group "Question 2: Choose the correct verb aspect for this sentence"':
+        - text: "Question 2: Choose the correct verb aspect for this sentence"
+        - 'radiogroup "Question 2: Choose the correct verb aspect for this sentence"':
+          - radio "pročitala"
+          - text: pročitala Perfective aspect - completed action
+          - radio "čitala"
+          - text: čitala Imperfective aspect - ongoing or repeated action
+      - text: 3. Jučer sam _____ Petra u gradu.
+      - 'group "Question 3: Choose the correct verb aspect for this sentence"':
+        - text: "Question 3: Choose the correct verb aspect for this sentence"
+        - 'radiogroup "Question 3: Choose the correct verb aspect for this sentence"':
+          - radio "viđao"
+          - text: viđao Imperfective aspect - ongoing or repeated action
+          - radio "vidio"
+          - text: vidio Perfective aspect - completed action
+      - text: 4. Sutra ću _____ novi automobil.
+      - 'group "Question 4: Choose the correct verb aspect for this sentence"':
+        - text: "Question 4: Choose the correct verb aspect for this sentence"
+        - 'radiogroup "Question 4: Choose the correct verb aspect for this sentence"':
+          - radio "kupiti"
+          - text: kupiti Perfective aspect - completed action
+          - radio "kupovati"
+          - text: kupovati Imperfective aspect - ongoing or repeated action
+      - text: 5. Djevojka _____ po parku svako jutro.
+      - 'group "Question 5: Choose the correct verb aspect for this sentence"':
+        - text: "Question 5: Choose the correct verb aspect for this sentence"
+        - 'radiogroup "Question 5: Choose the correct verb aspect for this sentence"':
+          - radio "trči"
+          - text: trči Imperfective aspect - ongoing or repeated action
+          - radio "potrči"
+          - text: potrči Perfective aspect - completed action
+      - text: 6. On je _____ zadatak za pet minuta.
+      - 'group "Question 6: Choose the correct verb aspect for this sentence"':
+        - text: "Question 6: Choose the correct verb aspect for this sentence"
+        - 'radiogroup "Question 6: Choose the correct verb aspect for this sentence"':
+          - radio "riješio"
+          - text: riješio Perfective aspect - completed action
+          - radio "rješavao"
+          - text: rješavao Imperfective aspect - ongoing or repeated action
+    - button "Check My Work" [disabled]
+    - status: Please answer all questions before checking.
+  - paragraph: Want different questions?
+  - textbox "Optional theme..."
+  - button "Generate New Questions"
+- alert
+- button "Open Next.js Dev Tools":
+  - img
+```

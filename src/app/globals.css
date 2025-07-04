@@ -125,6 +125,50 @@
   }
 }
 
+/* Screen reader only utility class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Accessibility improvements for better contrast */
+.text-gray-500 {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Better accessible muted text */
+.text-muted-accessible {
+  color: oklch(0.45 0 0);
+}
+
+.dark .text-muted-accessible {
+  color: oklch(0.65 0 0);
+}
+
+/* Enhanced focus indicators */
+.focus-visible\:ring-2:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .text-gray-500 {
+    color: oklch(0.35 0 0) !important;
+  }
+  
+  .dark .text-gray-500 {
+    color: oklch(0.75 0 0) !important;
+  }
+}
+
 /* Safari mobile theme color */
 @media (prefers-color-scheme: light) {
   :root {

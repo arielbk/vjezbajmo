@@ -149,12 +149,19 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
     const paragraphParts = cleanParagraph.split(/___\d+___/);
     const inputs: React.ReactElement[] = [];
 
-    exerciseSet.questions.forEach((question) => {
+    exerciseSet.questions.forEach((question, index) => {
       const hasResult = hasChecked && results[question.id];
+      const inputId = `question-${question.id}`;
+      const labelId = `label-${question.id}`;
 
       inputs.push(
         <span key={question.id} className="inline-block mx-1">
+          <label htmlFor={inputId} id={labelId} className="sr-only">
+            Question {index + 1}: Enter the correct form of {question.baseForm}
+            {question.isPlural ? " in plural form" : ""}
+          </label>
           <Input
+            id={inputId}
             ref={(el) => {
               if (el) inputRefs.current[question.id] = el;
             }}
@@ -166,9 +173,20 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
               width: `${Math.max(120, (answers[question.id]?.length || question.baseForm?.length || 8) * 8 + 16)}px`,
             }}
             disabled={hasChecked}
+            aria-labelledby={labelId}
+            aria-describedby={hasResult ? `result-${question.id}` : `hint-${question.id}`}
+            aria-invalid={hasResult && !results[question.id]?.correct}
           />
-          {hasResult && <span className="ml-1">{getResultIcon(results[question.id])}</span>}
-          <span className="ml-1 text-xs text-muted-foreground italic">
+          {hasResult && (
+            <span 
+              id={`result-${question.id}`} 
+              className="ml-1" 
+              aria-label={results[question.id]?.correct ? "Correct answer" : "Incorrect answer"}
+            >
+              {getResultIcon(results[question.id])}
+            </span>
+          )}
+          <span id={`hint-${question.id}`} className="ml-1 text-xs text-muted-foreground italic">
             ({question.baseForm}
             {question.isPlural ? " - plural" : ""})
           </span>
@@ -202,7 +220,12 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
       <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 pt-4 px-2 sm:px-4">
         {hasChecked && (
           <div className="flex justify-end">
-            <div className="text-xs sm:text-sm text-muted-foreground">
+            <div 
+              className="text-xs sm:text-sm text-muted-foreground"
+              role="status"
+              aria-live="polite"
+              aria-label={`Exercise completed. Score: ${correctAnswers} out of ${totalQuestions} correct, ${Math.round(progress)} percent`}
+            >
               Score: {correctAnswers}/{totalQuestions} ({Math.round(progress)}%)
             </div>
           </div>
@@ -210,18 +233,42 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
 
         <Card className="mx-0 sm:mx-auto">
           <CardHeader className="pb-1">
-            <CardTitle className="text-lg sm:text-xl lg:text-2xl">{title}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-2">{getExerciseDescription(exerciseType)}</p>
+            <CardTitle className="text-lg sm:text-xl lg:text-2xl" id="exercise-title">
+              {title}
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-2" id="exercise-instructions">
+              {getExerciseDescription(exerciseType)}
+            </p>
           </CardHeader>
           <CardContent className="space-y-3 sm:space-y-6 px-3 sm:px-6">
             {!hasChecked ? (
-              <form onSubmit={handleFormSubmit} className="space-y-4" data-testid="exercise-form">
-                <div className="bg-muted/30 p-3 sm:p-6 rounded-lg">{renderParagraphWithInputs()}</div>
+              <form 
+                onSubmit={handleFormSubmit} 
+                className="space-y-4" 
+                data-testid="exercise-form"
+                aria-labelledby="exercise-title"
+                aria-describedby="exercise-instructions"
+              >
+                <div 
+                  className="bg-muted/30 p-3 sm:p-6 rounded-lg"
+                  role="group"
+                  aria-label="Exercise paragraph with fill-in-the-blank questions"
+                >
+                  {renderParagraphWithInputs()}
+                </div>
 
                 <div className="text-center">
-                  <Button type="submit" disabled={isChecking || Object.keys(answers).length === 0} size="lg">
+                  <Button 
+                    type="submit" 
+                    disabled={isChecking || Object.keys(answers).length === 0} 
+                    size="lg"
+                    aria-describedby="submit-help"
+                  >
                     {isChecking ? "Checking..." : "Check My Work"}
                   </Button>
+                  <div id="submit-help" className="sr-only">
+                    Submit your answers to see the results. {Object.keys(answers).length === 0 ? "You need to fill in at least one answer before submitting." : ""}
+                  </div>
                 </div>
 
                 {state.currentSession?.isReviewMode && (
@@ -239,15 +286,25 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
                       }}
                       size="sm"
                       className="mt-2"
+                      aria-describedby="clear-help"
                     >
                       Clear All Answers
                     </Button>
+                    <div id="clear-help" className="sr-only">
+                      Remove all your current answers and start fresh
+                    </div>
                   </div>
                 )}
               </form>
             ) : (
               <>
-                <div className="bg-muted/30 p-3 sm:p-6 rounded-lg">{renderParagraphWithInputs()}</div>
+                <div 
+                  className="bg-muted/30 p-3 sm:p-6 rounded-lg"
+                  role="group"
+                  aria-label="Exercise results - paragraph with your answers and corrections"
+                >
+                  {renderParagraphWithInputs()}
+                </div>
 
                 <div className="space-y-4">
                   <div className="text-center space-y-2">

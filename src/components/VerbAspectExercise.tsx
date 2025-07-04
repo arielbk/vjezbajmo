@@ -133,9 +133,9 @@ export function VerbAspectExerciseComponent({
   const getResultIcon = (result: ReturnType<typeof createExerciseResult> | undefined) => {
     if (!result) return null;
     if (result.correct) {
-      return <Check className="h-4 w-4 text-green-600 inline" />;
+      return <Check className="h-4 w-4 text-green-600 inline" aria-label="Correct answer" />;
     }
-    return <X className="h-4 w-4 text-red-600 inline" />;
+    return <X className="h-4 w-4 text-red-600 inline" aria-label="Incorrect answer" />;
   };
 
   // Function to create shuffled options for each exercise consistently
@@ -152,43 +152,72 @@ export function VerbAspectExerciseComponent({
     return shouldReverse ? options.reverse() : options;
   };
 
-  const renderVerbAspectQuestion = (exercise: VerbAspectExercise) => {
+  const renderVerbAspectQuestion = (exercise: VerbAspectExercise, index: number) => {
     const parts = exercise.text.split("_____");
     const result = results[exercise.id];
     const selectedValue = answers[exercise.id];
     const shuffledOptions = getShuffledOptions(exercise);
+    const fieldsetId = `fieldset-${exercise.id}`;
 
     return (
       <div className="space-y-4">
         <div className="text-sm sm:text-base lg:text-lg leading-relaxed mb-4">
           <span>{parts[0]}</span>
-          <span className="font-semibold text-blue-600">_____</span>
+          <span className="font-semibold text-blue-600" aria-label="blank to fill">_____</span>
           <span>{parts[1] || ""}</span>
         </div>
 
-        <div
+        <fieldset
+          id={fieldsetId}
           className={`space-y-3 p-3 rounded-lg border-2 ${getRadioGroupStyling(result)} ${result ? "relative" : ""}`}
+          aria-labelledby={`legend-${exercise.id}`}
+          aria-describedby={result ? `result-description-${exercise.id}` : undefined}
         >
+          <legend id={`legend-${exercise.id}`} className="sr-only">
+            Question {index + 1}: Choose the correct verb aspect for this sentence
+          </legend>
+          
           <RadioGroup
             value={selectedValue || ""}
             onValueChange={(value) => handleAnswerChange(exercise.id, value as "perfective" | "imperfective")}
             disabled={hasChecked}
             className="space-y-3"
+            aria-labelledby={`legend-${exercise.id}`}
           >
-            {shuffledOptions.map((option) => (
-              <div key={option.aspect} className="flex items-center space-x-2">
-                <RadioGroupItem value={option.aspect} id={`${exercise.id}-${option.aspect.substring(0, 4)}`} />
-                <Label
-                  htmlFor={`${exercise.id}-${option.aspect.substring(0, 4)}`}
-                  className="text-sm sm:text-base cursor-pointer flex-1"
-                >
-                  <span className="font-mono font-semibold">{option.text}</span>
-                </Label>
-              </div>
-            ))}
+            {shuffledOptions.map((option) => {
+              const optionId = `${exercise.id}-${option.aspect.substring(0, 4)}`;
+              return (
+                <div key={option.aspect} className="flex items-center space-x-2">
+                  <RadioGroupItem 
+                    value={option.aspect} 
+                    id={optionId} 
+                    aria-describedby={`option-description-${optionId}`}
+                  />
+                  <Label
+                    htmlFor={optionId}
+                    className="text-sm sm:text-base cursor-pointer flex-1"
+                  >
+                    <span className="font-mono font-semibold">{option.text}</span>
+                  </Label>
+                  <div id={`option-description-${optionId}`} className="sr-only">
+                    {option.aspect === "perfective" ? "Perfective aspect - completed action" : "Imperfective aspect - ongoing or repeated action"}
+                  </div>
+                </div>
+              );
+            })}
           </RadioGroup>
-          {result && <div className="absolute top-2 right-2">{getResultIcon(result)}</div>}
-        </div>
+          
+          {result && (
+            <>
+              <div className="absolute top-2 right-2" aria-hidden="true">
+                {getResultIcon(result)}
+              </div>
+              <div id={`result-description-${exercise.id}`} className="sr-only">
+                {result.correct ? "Correct answer" : `Incorrect. The correct answer is ${exercise.correctAspect}`}
+              </div>
+            </>
+          )}
+        </fieldset>
       </div>
     );
   };
@@ -202,12 +231,12 @@ export function VerbAspectExerciseComponent({
     <>
       {/* Fixed progress bar at top of viewport */}
       <div className="fixed top-0 left-0 right-0 z-50">
-        <Progress value={progress} className="w-full h-1 rounded-none border-none bg-transparent" />
+        <Progress value={progress} className="w-full h-1 rounded-none border-none bg-transparent" aria-label={`Exercise progress: ${Math.round(progress)}% complete`} />
       </div>
 
       <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 pt-4 px-2 sm:px-4">
         {hasChecked && (
-          <div className="flex justify-end">
+          <div className="flex justify-end" role="status" aria-live="polite">
             <div className="text-xs sm:text-sm text-muted-foreground">
               {`Final Score: ${correctAnswers}/${exercises.length} (${Math.round(
                 (correctAnswers / exercises.length) * 100
@@ -222,27 +251,31 @@ export function VerbAspectExerciseComponent({
             <p className="text-sm text-muted-foreground mt-2">{getExerciseDescription(exerciseType)}</p>
           </CardHeader>
           <CardContent className="space-y-4 sm:space-y-8 px-3 sm:px-6">
-            <form onSubmit={handleFormSubmit}>
-              {exercises.map((exercise, index) => (
-                <div key={exercise.id} className="space-y-2 sm:space-y-4">
-                  <div className="flex items-start gap-2 sm:gap-3">
-                    <span className="text-sm font-medium text-muted-foreground mt-1 min-w-[1.2rem] sm:min-w-[2rem] flex-shrink-0">
-                      {index + 1}.
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="bg-muted/30 p-2 sm:p-4 rounded-lg">
-                        {renderVerbAspectQuestion(exercise as VerbAspectExercise)}
-                      </div>
+            <form onSubmit={handleFormSubmit} role="form" aria-label="Verb aspect exercise">
+              <div role="group" aria-label="Exercise questions">
+                {exercises.map((exercise, index) => (
+                  <div key={exercise.id} className="space-y-2 sm:space-y-4">
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <span className="text-sm font-medium text-muted-foreground mt-1 min-w-[1.2rem] sm:min-w-[2rem] flex-shrink-0" aria-label={`Question ${index + 1}`}>
+                        {index + 1}.
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="bg-muted/30 p-2 sm:p-4 rounded-lg">
+                          {renderVerbAspectQuestion(exercise as VerbAspectExercise, index)}
+                        </div>
 
                       {hasChecked && results[exercise.id] && (
-                        <div className="mt-2 sm:mt-3 mb-4 border rounded-lg p-2 sm:p-3">
+                        <div className="mt-2 sm:mt-3 mb-4 border rounded-lg p-2 sm:p-3" role="region" aria-labelledby={`result-${exercise.id}`}>
                           <div className="flex items-start gap-2">
                             {results[exercise.id].correct ? (
-                              <Check className="h-5 w-5 text-green-600 mt-0.5" />
+                              <Check className="h-5 w-5 text-green-600 mt-0.5" aria-label="Correct answer" />
                             ) : (
-                              <X className="h-5 w-5 text-red-600 mt-0.5" />
+                              <X className="h-5 w-5 text-red-600 mt-0.5" aria-label="Incorrect answer" />
                             )}
                             <div className="flex-1">
+                              <div id={`result-${exercise.id}`} className="sr-only">
+                                {results[exercise.id].correct ? "Correct answer" : "Incorrect answer"}
+                              </div>
                               {!results[exercise.id].correct && (
                                 <div className="mb-2 text-sm">
                                   Your answer: <span className="font-mono">{results[exercise.id].userAnswer}</span>
@@ -260,16 +293,17 @@ export function VerbAspectExerciseComponent({
                   </div>
                 </div>
               ))}
+              </div>
 
               <div className="pt-4 border-t">
                 {!hasChecked ? (
                   <div className="space-y-4">
                     <div className="text-center">
-                      <Button type="submit" disabled={isChecking || !allAnswered} size="lg">
+                      <Button type="submit" disabled={isChecking || !allAnswered} size="lg" aria-describedby="submit-instructions">
                         {isChecking ? "Checking..." : "Check My Work"}
                       </Button>
                       {!allAnswered && (
-                        <p className="text-sm text-muted-foreground mt-2">
+                        <p id="submit-instructions" className="text-sm text-muted-foreground mt-2" role="status">
                           Please answer all questions before checking.
                         </p>
                       )}
@@ -289,6 +323,7 @@ export function VerbAspectExerciseComponent({
                           }}
                           size="sm"
                           className="mt-2"
+                          aria-label="Clear all answers and start over"
                         >
                           Clear All Answers
                         </Button>
@@ -296,7 +331,7 @@ export function VerbAspectExerciseComponent({
                     )}
                   </div>
                 ) : (
-                  <div className="text-center space-y-4">
+                  <div className="text-center space-y-4" role="status" aria-live="polite">
                     {state.currentSession?.isReviewMode ? (
                       <>
                         <div className="text-lg font-semibold">
@@ -320,17 +355,18 @@ export function VerbAspectExerciseComponent({
                             }}
                             variant="outline"
                             size="lg"
+                            aria-label="Try the exercise again with new attempt"
                           >
                             Try Again
                           </Button>
-                          <Button onClick={onComplete} size="lg">
+                          <Button onClick={onComplete} size="lg" aria-label="Return to results page">
                             Back to Results
                           </Button>
                         </div>
                       </>
                     ) : (
                       <div className="space-y-3">
-                        <div className="text-lg font-semibold">
+                        <div className="text-lg font-semibold" aria-label={`Exercise completed with score ${correctAnswers} out of ${exercises.length}, ${Math.round((correctAnswers / exercises.length) * 100)} percent`}>
                           Exercise Complete! Final Score: {correctAnswers}/{exercises.length} (
                           {Math.round((correctAnswers / exercises.length) * 100)}%)
                         </div>
@@ -344,8 +380,9 @@ export function VerbAspectExerciseComponent({
                             }}
                             variant="outline"
                             size="lg"
+                            aria-label="Retry this exercise"
                           >
-                            <RotateCcw className="h-4 w-4 mr-2" />
+                            <RotateCcw className="h-4 w-4 mr-2" aria-hidden="true" />
                             Try Again
                           </Button>
 
@@ -365,8 +402,9 @@ export function VerbAspectExerciseComponent({
                             }}
                             size="lg"
                             disabled={isGeneratingNext}
+                            aria-label={isGeneratingNext ? "Generating new exercise, please wait" : "Generate and start next exercise"}
                           >
-                            <ArrowRight className="h-4 w-4 mr-2" />
+                            <ArrowRight className="h-4 w-4 mr-2" aria-hidden="true" />
                             {isGeneratingNext ? "Generating..." : "Next Exercise"}
                           </Button>
                         </div>

@@ -101,20 +101,39 @@ export function ResultsDisplay({ onRestart, onReviewMistakes, onNextExercise }: 
     <div className="max-w-4xl mx-auto space-y-6">
       <Card>
         <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">{getScoreIcon(percentage)}</div>
-          <CardTitle className="text-2xl">Exercise Complete!</CardTitle>
-          <CardDescription>{getScoreDescription(percentage)}</CardDescription>
+          <div className="flex justify-center mb-4" aria-hidden="true">
+            {getScoreIcon(percentage)}
+          </div>
+          <CardTitle className="text-2xl" id="results-title">
+            Exercise Complete!
+          </CardTitle>
+          <CardDescription id="results-description">
+            {getScoreDescription(percentage)}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center space-y-4">
-            <div className={`text-4xl font-bold ${getScoreColor(percentage)}`}>
+            <div 
+              className={`text-4xl font-bold ${getScoreColor(percentage)}`}
+              aria-labelledby="score-label"
+            >
+              <span id="score-label" className="sr-only">
+                Your score: {correct} correct out of {total} total questions
+              </span>
               {correct}/{total}
             </div>
-            <div className={`text-xl ${getScoreColor(percentage)}`}>{percentage}% Correct</div>
-            <Progress value={percentage} className="w-full max-w-md mx-auto" />
+            <div className={`text-xl ${getScoreColor(percentage)}`}>
+              {percentage}% Correct
+            </div>
+            <Progress 
+              value={percentage} 
+              className="w-full max-w-md mx-auto" 
+              aria-label={`Progress: ${percentage} percent correct`}
+            />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center" role="group" aria-labelledby="score-breakdown">
+            <h3 id="score-breakdown" className="sr-only">Score Breakdown</h3>
             <div className="p-4 bg-green-50 rounded-lg">
               <div className="text-2xl font-bold text-green-600">{correct}</div>
               <div className="text-sm text-green-700">Correct</div>
@@ -129,33 +148,65 @@ export function ResultsDisplay({ onRestart, onReviewMistakes, onNextExercise }: 
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2 justify-center">
-            <Button onClick={onRestart} size="lg" variant="outline" disabled={isGenerating}>
-              <RotateCcw className="h-4 w-4 mr-2" />
+          <div className="flex flex-col sm:flex-row gap-2 justify-center" role="group" aria-labelledby="action-buttons">
+            <h3 id="action-buttons" className="sr-only">Action Buttons</h3>
+            <Button 
+              onClick={onRestart} 
+              size="lg" 
+              variant="outline" 
+              disabled={isGenerating}
+              aria-describedby="restart-description"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" aria-hidden="true" />
               Try Again
             </Button>
+            <div id="restart-description" className="sr-only">
+              Reset the exercise and try answering the questions again
+            </div>
 
             {onNextExercise && (
-              <Button onClick={handleNextExercise} size="lg" variant="default" disabled={isGenerating}>
-                {isGenerating ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <ArrowRight className="h-4 w-4 mr-2" />
-                    Next Exercise
-                  </>
-                )}
-              </Button>
+              <>
+                <Button 
+                  onClick={handleNextExercise} 
+                  size="lg" 
+                  variant="default" 
+                  disabled={isGenerating}
+                  aria-describedby="next-description"
+                >
+                  {isGenerating ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowRight className="h-4 w-4 mr-2" aria-hidden="true" />
+                      Next Exercise
+                    </>
+                  )}
+                </Button>
+                <div id="next-description" className="sr-only">
+                  Generate and move to a new exercise of the same type
+                </div>
+              </>
             )}
 
             {hasMistakes && (
-              <Button variant="outline" onClick={onReviewMistakes} size="lg" disabled={isGenerating}>
-                <Target className="h-4 w-4 mr-2" />
-                Review Mistakes ({mistakes.length})
-              </Button>
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={onReviewMistakes} 
+                  size="lg" 
+                  disabled={isGenerating}
+                  aria-describedby="review-description"
+                >
+                  <Target className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Review Mistakes ({mistakes.length})
+                </Button>
+                <div id="review-description" className="sr-only">
+                  Review the {mistakes.length} questions you answered incorrectly
+                </div>
+              </>
             )}
           </div>
         </CardContent>
@@ -164,15 +215,15 @@ export function ResultsDisplay({ onRestart, onReviewMistakes, onNextExercise }: 
       {mistakes.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Review Your Mistakes</CardTitle>
-            <CardDescription>
+            <CardTitle id="mistakes-title">Review Your Mistakes</CardTitle>
+            <CardDescription id="mistakes-description">
               Here are the questions you got wrong. Review them to improve your understanding.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-4" role="list" aria-labelledby="mistakes-title">
               {mistakes.map((mistake, index) => (
-                <div key={index} className="border rounded-lg p-4 bg-red-50">
+                <div key={index} className="border rounded-lg p-4 bg-red-50" role="listitem">
                   <div className="space-y-2">
                     <div className="font-medium">Question {index + 1}</div>
                     <div className="text-sm">

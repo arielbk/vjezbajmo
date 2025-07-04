@@ -93,18 +93,23 @@ export function SettingsModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Settings className="h-4 w-4" />
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="gap-2"
+          aria-label="Open settings to configure language level, AI provider, and API key"
+        >
+          <Settings className="h-4 w-4" aria-hidden="true" />
           Settings
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby="settings-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
+            <Settings className="h-5 w-5" aria-hidden="true" />
             Settings
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="settings-description">
             Configure your learning preferences and optionally provide your own API key for unlimited exercise
             generation.
           </DialogDescription>
@@ -112,34 +117,40 @@ export function SettingsModal() {
 
         <div className="space-y-6">
           {/* CEFR Level Selection */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium">CEFR Level</h4>
-            <div className="grid grid-cols-4 gap-2">
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-medium">CEFR Level</legend>
+            <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-labelledby="cefr-level-description">
               {(["A1", "A2.1", "A2.2", "B1.1"] as CefrLevel[]).map((level) => (
                 <Button
                   key={level}
                   variant={state.cefrLevel === level ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleCefrLevelChange(level)}
+                  role="radio"
+                  aria-checked={state.cefrLevel === level}
+                  aria-describedby="cefr-level-description"
                 >
                   {level}
                 </Button>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p id="cefr-level-description" className="text-xs text-muted-foreground">
               Select your Croatian language level. This affects the difficulty of generated exercises.
             </p>
-          </div>
+          </fieldset>
 
           {/* Provider Selection */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium">AI Provider</h4>
-            <div className="grid grid-cols-2 gap-2">
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-medium">AI Provider</legend>
+            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby="provider-description">
               <Button
                 variant={state.selectedProvider === "openai" ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleProviderChange("openai")}
                 className="justify-start"
+                role="radio"
+                aria-checked={state.selectedProvider === "openai"}
+                aria-describedby="provider-description"
               >
                 OpenAI
               </Button>
@@ -148,19 +159,22 @@ export function SettingsModal() {
                 size="sm"
                 onClick={() => handleProviderChange("anthropic")}
                 className="justify-start"
+                role="radio"
+                aria-checked={state.selectedProvider === "anthropic"}
+                aria-describedby="provider-description"
               >
                 Anthropic
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">{getProviderDescription()}</p>
-          </div>
+            <p id="provider-description" className="text-xs text-muted-foreground">{getProviderDescription()}</p>
+          </fieldset>
 
           {/* API Key Section */}
           <div className="space-y-3">
-            <h4 className="text-sm font-medium flex items-center gap-2">
+            <h3 className="text-sm font-medium flex items-center gap-2">
               <Key className="h-4 w-4" />
               {getApiKeyLabel()} (Optional)
-            </h4>
+            </h3>
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="text-xs">
@@ -197,6 +211,8 @@ export function SettingsModal() {
                     value={tempApiKey}
                     onChange={(e) => setTempApiKey(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSaveApiKey()}
+                    aria-label={`Enter your ${getApiKeyLabel()}`}
+                    aria-describedby="api-key-help"
                   />
                   <Button onClick={handleSaveApiKey} disabled={!tempApiKey.trim()} size="sm">
                     Save
@@ -209,7 +225,7 @@ export function SettingsModal() {
                 </div>
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
+                  <AlertDescription id="api-key-help">
                     Your API key is stored only in your browser and used exclusively to communicate with{" "}
                     {state.selectedProvider} servers.
                   </AlertDescription>
@@ -220,7 +236,7 @@ export function SettingsModal() {
 
           {/* Regenerate All Exercises */}
           <div className="space-y-3 pt-3 border-t">
-            <h4 className="text-sm font-medium">Generate New Exercises</h4>
+            <h3 className="text-sm font-medium">Generate New Exercises</h3>
             <div className="space-y-2">
               <Input
                 type="text"
@@ -241,7 +257,7 @@ export function SettingsModal() {
 
           {/* Clear Progress */}
           <div className="space-y-3 pt-3 border-t">
-            <h4 className="text-sm font-medium">Progress Management</h4>
+            <h3 className="text-sm font-medium">Progress Management</h3>
             <div className="space-y-2">
               <Button
                 onClick={handleClearProgress}
