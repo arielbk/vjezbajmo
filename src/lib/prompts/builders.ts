@@ -18,10 +18,10 @@ import {
 } from './templates';
 
 // Import static exercise examples
-import verbTensesData from "@/data/verb-tenses-paragraph.json";
-import nounAdjectiveData from "@/data/noun-adjective-paragraph.json";
-import verbAspectData from "@/data/verb-aspect-exercises.json";
-import interrogativePronounsData from "@/data/interrogative-pronouns-exercises.json";
+import verbTensesData from "@/data/verb-tenses-worksheets.json";
+import nounDeclinationData from "@/data/noun-declension-worksheets.json";
+import verbAspectData from "@/data/verb-aspect-worksheets.json";
+import interrogativePronounsData from "@/data/interrogative-pronouns-worksheets.json";
 
 export class VerbTensesPromptBuilder implements PromptBuilder {
   buildSystemPrompt(context: PromptContext): string {
@@ -30,7 +30,7 @@ export class VerbTensesPromptBuilder implements PromptBuilder {
 
   buildUserPrompt(context: PromptContext): string {
     const themeText = formatThemeText(context.theme);
-    const exampleExercise = JSON.stringify(verbTensesData, null, 2);
+    const exampleExercise = JSON.stringify(verbTensesData[0], null, 2);
     
     return `Create a Croatian verb tenses paragraph exercise. Generate a connected story with 6 blanks where students fill in correct verb forms.${themeText}
 
@@ -92,7 +92,7 @@ export class NounDeclensionPromptBuilder implements PromptBuilder {
 
   buildUserPrompt(context: PromptContext): string {
     const themeText = formatThemeText(context.theme);
-    const exampleExercise = JSON.stringify(nounAdjectiveData, null, 2);
+    const exampleExercise = JSON.stringify(nounDeclinationData[0], null, 2);
     
     return `Create a Croatian noun-adjective declension paragraph exercise. Generate a connected story with 6 blanks where students fill in correctly declined noun-adjective pairs.${themeText}
 
@@ -147,7 +147,7 @@ export class VerbAspectPromptBuilder implements PromptBuilder {
 
   buildUserPrompt(context: PromptContext): string {
     const themeText = formatThemeText(context.theme);
-    const exampleExercises = JSON.stringify({ exercises: verbAspectData.exercises.slice(0, 3) }, null, 2);
+    const exampleExercises = JSON.stringify({ exercises: verbAspectData[0].exercises.slice(0, 3) }, null, 2);
     
     return `Create 5 Croatian verb aspect exercises. Each should be a sentence with one blank where students choose between perfective/imperfective verb forms.${themeText}
 
@@ -205,7 +205,7 @@ export class InterrogativePronounsPromptBuilder implements PromptBuilder {
 
   buildUserPrompt(context: PromptContext): string {
     const themeText = formatThemeText(context.theme);
-    const exampleExercises = JSON.stringify({ exercises: interrogativePronounsData.exercises.slice(0, 3) }, null, 2);
+    const exampleExercises = JSON.stringify({ exercises: interrogativePronounsData[0].exercises.slice(0, 3) }, null, 2);
     
     return `Create 5 Croatian interrogative pronoun exercises. Each should be a sentence with one blank where students fill in the correct form of koji/koja/koje ONLY.${themeText}
 

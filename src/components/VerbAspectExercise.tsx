@@ -31,7 +31,7 @@ export function VerbAspectExerciseComponent({
   title,
 }: VerbAspectExerciseSetProps) {
   const router = useRouter();
-  const { dispatch, forceRegenerateExercise, state, markExerciseCompleted } = useExercise();
+  const { dispatch, forceRegenerateExercise, state, markExerciseCompleted, loadNextStaticWorksheet, hasRemainingStaticWorksheets } = useExercise();
   const [answers, setAnswers] = useState<Record<string | number, "perfective" | "imperfective">>({});
   const [results, setResults] = useState<Record<string | number, ReturnType<typeof createExerciseResult>>>({});
   const [isChecking, setIsChecking] = useState(false);
@@ -371,13 +371,27 @@ export function VerbAspectExerciseComponent({
                           <Button
                             onClick={async () => {
                               setIsGeneratingNext(true);
-                              // Generate new exercise and navigate to it
                               try {
+                                // First, check if there are remaining static worksheets
+                                const hasMoreStatic = hasRemainingStaticWorksheets(exerciseType);
+                                
+                                if (hasMoreStatic) {
+                                  // Load the next static worksheet
+                                  const success = loadNextStaticWorksheet(exerciseType);
+                                  if (success) {
+                                    // Start new session and navigate to exercise
+                                    dispatch({ type: "START_SESSION", payload: { exerciseType } });
+                                    router.push(`/exercise/${exerciseType}`);
+                                    return;
+                                  }
+                                }
+                                
+                                // If no static worksheets remain, generate a new exercise
                                 await forceRegenerateExercise(exerciseType);
                                 dispatch({ type: "START_SESSION", payload: { exerciseType } });
                                 router.push(`/exercise/${exerciseType}`);
                               } catch (error) {
-                                console.error("Failed to generate next exercise:", error);
+                                console.error("Failed to load next exercise:", error);
                               } finally {
                                 setIsGeneratingNext(false);
                               }
