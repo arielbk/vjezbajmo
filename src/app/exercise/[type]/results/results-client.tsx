@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import type { ExerciseType } from "@/types/exercise";
 
 export default function ResultsClient({ exerciseType }: { exerciseType: ExerciseType }) {
-  const { state, dispatch, forceRegenerateExercise } = useExercise();
+  const { state, dispatch, forceRegenerateExercise, loadNextStaticWorksheet, hasRemainingStaticWorksheets } = useExercise();
   const router = useRouter();
 
   const handleRestartExercise = () => {
@@ -21,13 +21,27 @@ export default function ResultsClient({ exerciseType }: { exerciseType: Exercise
   const handleNextExercise = async () => {
     if (exerciseType) {
       try {
-        // Generate a new exercise for the same type
+        // First, check if there are remaining static worksheets
+        const hasMoreStatic = hasRemainingStaticWorksheets(exerciseType);
+        
+        if (hasMoreStatic) {
+          // Load the next static worksheet
+          const success = loadNextStaticWorksheet(exerciseType);
+          if (success) {
+            // Start new session and navigate to exercise
+            dispatch({ type: "START_SESSION", payload: { exerciseType } });
+            router.push(`/exercise/${exerciseType}`);
+            return;
+          }
+        }
+        
+        // If no static worksheets remain, generate a new exercise
         await forceRegenerateExercise(exerciseType);
         // Start new session and navigate to exercise
         dispatch({ type: "START_SESSION", payload: { exerciseType } });
         router.push(`/exercise/${exerciseType}`);
       } catch (error) {
-        console.error("Failed to generate next exercise:", error);
+        console.error("Failed to load next exercise:", error);
       }
     }
   };

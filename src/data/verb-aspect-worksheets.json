@@ -1,0 +1,85 @@
+{
+  "worksheets": [
+    {
+      "id": "verb-aspect-static-01",
+      "source": "static",
+      "exerciseType": "verbAspect",
+      "cefrLevel": "A2.2",
+      "title": "Basic Aspect Choices",
+      "exercises": [
+        {
+          "id": "va01-q1",
+          "text": "Marko _____ u školu svaki dan.",
+          "exerciseSubType": "verb-aspect",
+          "options": {
+            "imperfective": "ide",
+            "perfective": "pođe"
+          },
+          "correctAspect": "imperfective",
+          "correctAnswer": "ide",
+          "explanation": "For repeated, habitual actions ('svaki dan' - every day), we use the imperfective aspect. 'Ide' expresses ongoing, regular action."
+        },
+        {
+          "id": "va01-q2",
+          "text": "Ana _____ tu knjigu jučer.",
+          "exerciseSubType": "verb-aspect",
+          "options": {
+            "imperfective": "čitala",
+            "perfective": "pročitala"
+          },
+          "correctAspect": "perfective",
+          "correctAnswer": "pročitala",
+          "explanation": "The verb 'pročitala' (perfective) indicates that Ana completed reading the book. The perfective aspect emphasizes the completion of the action."
+        },
+        {
+          "id": "va01-q3",
+          "text": "Jučer sam _____ Petra u gradu.",
+          "exerciseSubType": "verb-aspect",
+          "options": {
+            "imperfective": "viđao",
+            "perfective": "vidio"
+          },
+          "correctAspect": "perfective",
+          "correctAnswer": "vidio",
+          "explanation": "The act of seeing someone at a specific time in the past is typically expressed with perfective aspect 'vidio', indicating a completed, momentary action."
+        },
+        {
+          "id": "va01-q4",
+          "text": "Sutra ću _____ novi automobil.",
+          "exerciseSubType": "verb-aspect",
+          "options": {
+            "imperfective": "kupovati",
+            "perfective": "kupiti"
+          },
+          "correctAspect": "perfective",
+          "correctAnswer": "kupiti",
+          "explanation": "Future actions that represent a single, completed transaction typically use perfective aspect. 'Kupiti' indicates the completion of buying a car."
+        },
+        {
+          "id": "va01-q5",
+          "text": "Djevojka _____ po parku svako jutro.",
+          "exerciseSubType": "verb-aspect",
+          "options": {
+            "imperfective": "trči",
+            "perfective": "potrči"
+          },
+          "correctAspect": "imperfective",
+          "correctAnswer": "trči",
+          "explanation": "Habitual actions ('svako jutro' - every morning) use imperfective aspect. 'Trči' expresses the ongoing, repeated nature of the activity."
+        },
+        {
+          "id": "va01-q6",
+          "text": "On je _____ zadatak za pet minuta.",
+          "exerciseSubType": "verb-aspect",
+          "options": {
+            "imperfective": "rješavao",
+            "perfective": "riješio"
+          },
+          "correctAspect": "perfective",
+          "correctAnswer": "riješio",
+          "explanation": "The time limit 'za pet minuta' (in five minutes) suggests completion. The perfective 'riješio' indicates the task was successfully completed."
+        }
+      ]
+    }
+  ]
+}

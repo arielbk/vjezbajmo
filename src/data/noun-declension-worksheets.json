@@ -1,0 +1,524 @@
+{
+  "worksheets": [
+    {
+      "id": "noun-declension-01",
+      "source": "static",
+      "exerciseType": "nounDeclension",
+      "cefrLevel": "A2.2",
+      "title": "Daily Life and Family",
+      "paragraph": "Marko živi u velikoj ___1___ (kuća). Svaki dan ide u ___2___ (škola) autobusom. Na putu sreta svoju ___3___ (prijateljica) Anu. Oni razgovaraju o ___4___ (zadaća) za sutra. Nakon škole, Marko kupuje ___5___ (kruh) u pekari. Večer provodi s ___6___ (obitelj) gledajući televiziju.",
+      "questions": [
+        {
+          "id": "nd01-q1",
+          "blankNumber": 1,
+          "baseForm": "kuća",
+          "correctAnswer": ["kući"],
+          "explanation": "Lokativ jednine ženskog roda - 'u kući' (where he lives)"
+        },
+        {
+          "id": "nd01-q2",
+          "blankNumber": 2,
+          "baseForm": "škola",
+          "correctAnswer": ["školu"],
+          "explanation": "Akuzativ jednine ženskog roda - 'ide u školu' (direction/goal)"
+        },
+        {
+          "id": "nd01-q3",
+          "blankNumber": 3,
+          "baseForm": "prijateljica",
+          "correctAnswer": ["prijateljicu"],
+          "explanation": "Akuzativ jednine ženskog roda - 'sreta prijateljicu' (direct object)"
+        },
+        {
+          "id": "nd01-q4",
+          "blankNumber": 4,
+          "baseForm": "zadaća",
+          "correctAnswer": ["zadaći"],
+          "explanation": "Lokativ jednine ženskog roda - 'o zadaći' (about the homework)"
+        },
+        {
+          "id": "nd01-q5",
+          "blankNumber": 5,
+          "baseForm": "kruh",
+          "correctAnswer": ["kruh"],
+          "explanation": "Akuzativ jednine muškog roda - 'kupuje kruh' (direct object, same as nominativ)"
+        },
+        {
+          "id": "nd01-q6",
+          "blankNumber": 6,
+          "baseForm": "obitelj",
+          "correctAnswer": ["obitelji"],
+          "explanation": "Instrumental jednine ženskog roda - 's obitelji' (with family)"
+        }
+      ]
+    },
+    {
+      "id": "noun-declension-02",
+      "source": "static",
+      "exerciseType": "nounDeclension",
+      "cefrLevel": "A2.2",
+      "title": "Animals and Nature",
+      "paragraph": "Ana čita zanimljivu ___1___ (knjiga) o životinjama. U ___2___ (knjiga) piše o velikim ___3___ (slon) iz Afrike. Također spominje male ___4___ (miš) koji žive u polju. Ana pokazuje ___5___ (slika) svojoj ___6___ (sestra) koja voli životinje.",
+      "questions": [
+        {
+          "id": "nd02-q1",
+          "blankNumber": 1,
+          "baseForm": "knjiga",
+          "correctAnswer": ["knjigu"],
+          "explanation": "Akuzativ jednine ženskog roda - 'čita knjigu' (direct object)"
+        },
+        {
+          "id": "nd02-q2",
+          "blankNumber": 2,
+          "baseForm": "knjiga",
+          "correctAnswer": ["knjizi"],
+          "explanation": "Lokativ jednine ženskog roda - 'u knjizi' (in the book)"
+        },
+        {
+          "id": "nd02-q3",
+          "blankNumber": 3,
+          "baseForm": "slon",
+          "correctAnswer": ["slonovima"],
+          "explanation": "Lokativ množine muškog roda - 'o slonovima' (about elephants)"
+        },
+        {
+          "id": "nd02-q4",
+          "blankNumber": 4,
+          "baseForm": "miš",
+          "correctAnswer": ["miševi"],
+          "explanation": "Nominativ množine muškog roda - 'mali miševi' (small mice, subject)"
+        },
+        {
+          "id": "nd02-q5",
+          "blankNumber": 5,
+          "baseForm": "slika",
+          "correctAnswer": ["slike"],
+          "explanation": "Akuzativ množine ženskog roda - 'pokazuje slike' (shows pictures)"
+        },
+        {
+          "id": "nd02-q6",
+          "blankNumber": 6,
+          "baseForm": "sestra",
+          "correctAnswer": ["sestri"],
+          "explanation": "Dativ jednine ženskog roda - 'svojoj sestri' (to her sister)"
+        }
+      ]
+    },
+    {
+      "id": "noun-declension-03",
+      "source": "static",
+      "exerciseType": "nounDeclension",
+      "cefrLevel": "A2.2",
+      "title": "Shopping and Commerce",
+      "paragraph": "Petar radi u novoj ___1___ (trgovina) u centru grada. Prodaje različite ___2___ (voće) i povrće. Kupci dolaze po svježu ___3___ (jabuka) i slatku ___4___ (banana). Petar razgovara s ___5___ (kupac) o kvaliteti proizvoda. Na kraju dana, sprema sve ___6___ (proizvod) u hladnjak.",
+      "questions": [
+        {
+          "id": "nd03-q1",
+          "blankNumber": 1,
+          "baseForm": "trgovina",
+          "correctAnswer": ["trgovini"],
+          "explanation": "Lokativ jednine ženskog roda - 'u trgovini' (in the store)"
+        },
+        {
+          "id": "nd03-q2",
+          "blankNumber": 2,
+          "baseForm": "voće",
+          "correctAnswer": ["voće"],
+          "explanation": "Akuzativ jednine srednjeg roda - 'prodaje voće' (sells fruit, same as nominativ)"
+        },
+        {
+          "id": "nd03-q3",
+          "blankNumber": 3,
+          "baseForm": "jabuka",
+          "correctAnswer": ["jabuke"],
+          "explanation": "Instrumental množine ženskog roda - 'po jabuke' (for apples)"
+        },
+        {
+          "id": "nd03-q4",
+          "blankNumber": 4,
+          "baseForm": "banana",
+          "correctAnswer": ["banane"],
+          "explanation": "Instrumental množine ženskog roda - 'po banane' (for bananas)"
+        },
+        {
+          "id": "nd03-q5",
+          "blankNumber": 5,
+          "baseForm": "kupac",
+          "correctAnswer": ["kupcima"],
+          "explanation": "Instrumental množine muškog roda - 's kupcima' (with customers)"
+        },
+        {
+          "id": "nd03-q6",
+          "blankNumber": 6,
+          "baseForm": "proizvod",
+          "correctAnswer": ["proizvode"],
+          "explanation": "Akuzativ množine muškog roda - 'sprema proizvode' (stores products)"
+        }
+      ]
+    },
+    {
+      "id": "noun-declension-04",
+      "source": "static",
+      "exerciseType": "nounDeclension",
+      "cefrLevel": "A2.2",
+      "title": "Education and Study",
+      "paragraph": "Marija studira na ___1___ (fakultet) za ekonomiju. Svaki tjedan ide u ___2___ (knjižnica) gdje čita o novim ___3___ (teorija). Piše važne bilješke u svoj ___4___ (bilježnica). Često se sastaje s ___5___ (kolega) da raspravlja o ___6___ (predavanje) profesora.",
+      "questions": [
+        {
+          "id": "nd04-q1",
+          "blankNumber": 1,
+          "baseForm": "fakultet",
+          "correctAnswer": ["fakultetu"],
+          "explanation": "Lokativ jednine muškog roda - 'na fakultetu' (at the faculty)"
+        },
+        {
+          "id": "nd04-q2",
+          "blankNumber": 2,
+          "baseForm": "knjižnica",
+          "correctAnswer": ["knjižnicu"],
+          "explanation": "Akuzativ jednine ženskog roda - 'ide u knjižnicu' (goes to library)"
+        },
+        {
+          "id": "nd04-q3",
+          "blankNumber": 3,
+          "baseForm": "teorija",
+          "correctAnswer": ["teorijama"],
+          "explanation": "Lokativ množine ženskog roda - 'o teorijama' (about theories)"
+        },
+        {
+          "id": "nd04-q4",
+          "blankNumber": 4,
+          "baseForm": "bilježnica",
+          "correctAnswer": ["bilježnicu"],
+          "explanation": "Akuzativ jednine ženskog roda - 'u bilježnicu' (into notebook)"
+        },
+        {
+          "id": "nd04-q5",
+          "blankNumber": 5,
+          "baseForm": "kolega",
+          "correctAnswer": ["kolegama"],
+          "explanation": "Instrumental množine muškog roda - 's kolegama' (with colleagues)"
+        },
+        {
+          "id": "nd04-q6",
+          "blankNumber": 6,
+          "baseForm": "predavanje",
+          "correctAnswer": ["predavanjima"],
+          "explanation": "Lokativ množine srednjeg roda - 'o predavanjima' (about lectures)"
+        }
+      ]
+    },
+    {
+      "id": "noun-declension-05",
+      "source": "static",
+      "exerciseType": "nounDeclension",
+      "cefrLevel": "A2.2",
+      "title": "Travel and Places",
+      "paragraph": "Luka voli putovati po različitim ___1___ (zemlja). Prošlog ljeta bio je u ___2___ (Italija) gdje je posjetio stare ___3___ (grad). Fotografirao je prekrasne ___4___ (crkva) i šetao po uskim ___5___ (ulica). Sve slike pokazao je svojoj ___6___ (mama) kada se vratio kući.",
+      "questions": [
+        {
+          "id": "nd05-q1",
+          "blankNumber": 1,
+          "baseForm": "zemlja",
+          "correctAnswer": ["zemljama"],
+          "explanation": "Lokativ množine ženskog roda - 'po zemljama' (through countries)"
+        },
+        {
+          "id": "nd05-q2",
+          "blankNumber": 2,
+          "baseForm": "Italija",
+          "correctAnswer": ["Italiji"],
+          "explanation": "Lokativ jednine ženskog roda - 'u Italiji' (in Italy)"
+        },
+        {
+          "id": "nd05-q3",
+          "blankNumber": 3,
+          "baseForm": "grad",
+          "correctAnswer": ["gradove"],
+          "explanation": "Akuzativ množine muškog roda - 'posjetio gradove' (visited cities)"
+        },
+        {
+          "id": "nd05-q4",
+          "blankNumber": 4,
+          "baseForm": "crkva",
+          "correctAnswer": ["crkve"],
+          "explanation": "Akuzativ množine ženskog roda - 'fotografirao crkve' (photographed churches)"
+        },
+        {
+          "id": "nd05-q5",
+          "blankNumber": 5,
+          "baseForm": "ulica",
+          "correctAnswer": ["ulicama"],
+          "explanation": "Lokativ množine ženskog roda - 'po ulicama' (through streets)"
+        },
+        {
+          "id": "nd05-q6",
+          "blankNumber": 6,
+          "baseForm": "mama",
+          "correctAnswer": ["mami"],
+          "explanation": "Dativ jednine ženskog roda - 'svojoj mami' (to his mom)"
+        }
+      ]
+    },
+    {
+      "id": "noun-declension-06",
+      "source": "static",
+      "exerciseType": "nounDeclension",
+      "cefrLevel": "A2.2",
+      "title": "Teaching and Learning",
+      "paragraph": "Nina radi kao ___1___ (učiteljica) u osnovnoj školi. Predaje ___2___ (matematika) djeci od sedam do deset godina. U ___3___ (razred) ima dvadeset pet ___4___ (učenik). Nina objašnjava nove ___5___ (zadatak) na ___6___ (ploča) kako bi svi razumjeli.",
+      "questions": [
+        {
+          "id": "nd06-q1",
+          "blankNumber": 1,
+          "baseForm": "učiteljica",
+          "correctAnswer": ["učiteljica"],
+          "explanation": "Nominativ jednine ženskog roda - 'radi kao učiteljica' (works as teacher)"
+        },
+        {
+          "id": "nd06-q2",
+          "blankNumber": 2,
+          "baseForm": "matematika",
+          "correctAnswer": ["matematiku"],
+          "explanation": "Akuzativ jednine ženskog roda - 'predaje matematiku' (teaches math)"
+        },
+        {
+          "id": "nd06-q3",
+          "blankNumber": 3,
+          "baseForm": "razred",
+          "correctAnswer": ["razredu"],
+          "explanation": "Lokativ jednine muškog roda - 'u razredu' (in the classroom)"
+        },
+        {
+          "id": "nd06-q4",
+          "blankNumber": 4,
+          "baseForm": "učenik",
+          "correctAnswer": ["učenika"],
+          "explanation": "Genitiv množine muškog roda - 'dvadeset pet učenika' (twenty-five students)"
+        },
+        {
+          "id": "nd06-q5",
+          "blankNumber": 5,
+          "baseForm": "zadatak",
+          "correctAnswer": ["zadatke"],
+          "explanation": "Akuzativ množine muškog roda - 'objašnjava zadatke' (explains tasks)"
+        },
+        {
+          "id": "nd06-q6",
+          "blankNumber": 6,
+          "baseForm": "ploča",
+          "correctAnswer": ["ploči"],
+          "explanation": "Lokativ jednine ženskog roda - 'na ploči' (on the board)"
+        }
+      ]
+    },
+    {
+      "id": "noun-declension-07",
+      "source": "static",
+      "exerciseType": "nounDeclension",
+      "cefrLevel": "A2.2",
+      "title": "Food and Restaurant",
+      "paragraph": "Stefan je otvorio novi ___1___ (restoran) u staroj ___2___ (zgrada) u centru. Sprema ukusne ___3___ (jelo) za svoje ___4___ (gost). Posebno je ponosan na svoju ___5___ (juha) od rajčice. Gosti često hvale kvalitetu njegovih ___6___ (desert).",
+      "questions": [
+        {
+          "id": "nd07-q1",
+          "blankNumber": 1,
+          "baseForm": "restoran",
+          "correctAnswer": ["restoran"],
+          "explanation": "Akuzativ jednine muškog roda - 'otvorio restoran' (opened restaurant, same as nominativ)"
+        },
+        {
+          "id": "nd07-q2",
+          "blankNumber": 2,
+          "baseForm": "zgrada",
+          "correctAnswer": ["zgradi"],
+          "explanation": "Lokativ jednine ženskog roda - 'u zgradi' (in the building)"
+        },
+        {
+          "id": "nd07-q3",
+          "blankNumber": 3,
+          "baseForm": "jelo",
+          "correctAnswer": ["jela"],
+          "explanation": "Akuzativ množine srednjeg roda - 'sprema jela' (prepares dishes)"
+        },
+        {
+          "id": "nd07-q4",
+          "blankNumber": 4,
+          "baseForm": "gost",
+          "correctAnswer": ["goste"],
+          "explanation": "Akuzativ množine muškog roda - 'za goste' (for guests)"
+        },
+        {
+          "id": "nd07-q5",
+          "blankNumber": 5,
+          "baseForm": "juha",
+          "correctAnswer": ["juhu"],
+          "explanation": "Akuzativ jednine ženskog roda - 'na juhu' (on his soup)"
+        },
+        {
+          "id": "nd07-q6",
+          "blankNumber": 6,
+          "baseForm": "desert",
+          "correctAnswer": ["deserata"],
+          "explanation": "Genitiv množine muškog roda - 'kvalitetu deserata' (quality of desserts)"
+        }
+      ]
+    },
+    {
+      "id": "noun-declension-08",
+      "source": "static",
+      "exerciseType": "nounDeclension",
+      "cefrLevel": "A2.2",
+      "title": "Shopping for Food",
+      "paragraph": "Marta ide u ___1___ (trgovina) da kupi potrebne ___2___ (namirnica) za ručak. Treba joj svjež ___3___ (krumpir) i crvenu ___4___ (paprika). Također kupuje bijeli ___5___ (kruh) i kvalitetno ___6___ (meso) za glavno jelo.",
+      "questions": [
+        {
+          "id": "nd08-q1",
+          "blankNumber": 1,
+          "baseForm": "trgovina",
+          "correctAnswer": ["trgovinu"],
+          "explanation": "Akuzativ jednine ženskog roda - 'ide u trgovinu' (goes to store)"
+        },
+        {
+          "id": "nd08-q2",
+          "blankNumber": 2,
+          "baseForm": "namirnica",
+          "correctAnswer": ["namirnice"],
+          "explanation": "Akuzativ množine ženskog roda - 'kupi namirnice' (buy groceries)"
+        },
+        {
+          "id": "nd08-q3",
+          "blankNumber": 3,
+          "baseForm": "krumpir",
+          "correctAnswer": ["krumpir"],
+          "explanation": "Akuzativ jednine muškog roda - 'svjež krumpir' (fresh potato, same as nominativ)"
+        },
+        {
+          "id": "nd08-q4",
+          "blankNumber": 4,
+          "baseForm": "paprika",
+          "correctAnswer": ["papriku"],
+          "explanation": "Akuzativ jednine ženskog roda - 'crvenu papriku' (red pepper)"
+        },
+        {
+          "id": "nd08-q5",
+          "blankNumber": 5,
+          "baseForm": "kruh",
+          "correctAnswer": ["kruh"],
+          "explanation": "Akuzativ jednine muškog roda - 'bijeli kruh' (white bread, same as nominativ)"
+        },
+        {
+          "id": "nd08-q6",
+          "blankNumber": 6,
+          "baseForm": "meso",
+          "correctAnswer": ["meso"],
+          "explanation": "Akuzativ jednine srednjeg roda - 'kvalitetno meso' (quality meat, same as nominativ)"
+        }
+      ]
+    },
+    {
+      "id": "noun-declension-09",
+      "source": "static",
+      "exerciseType": "nounDeclension",
+      "cefrLevel": "A2.2",
+      "title": "Healthcare and Medicine",
+      "paragraph": "Tomislav radi u velikoj ___1___ (bolnica) kao medicinski ___2___ (tehničar). Pomaže ___3___ (doktor) u pregledu ___4___ (pacijent). Svaki dan priprema potrebne ___5___ (instrument) i vodi računa o ___6___ (higijena) u ambulanti.",
+      "questions": [
+        {
+          "id": "nd09-q1",
+          "blankNumber": 1,
+          "baseForm": "bolnica",
+          "correctAnswer": ["bolnici"],
+          "explanation": "Lokativ jednine ženskog roda - 'u bolnici' (in the hospital)"
+        },
+        {
+          "id": "nd09-q2",
+          "blankNumber": 2,
+          "baseForm": "tehničar",
+          "correctAnswer": ["tehničar"],
+          "explanation": "Nominativ jednine muškog roda - 'kao tehničar' (as technician)"
+        },
+        {
+          "id": "nd09-q3",
+          "blankNumber": 3,
+          "baseForm": "doktor",
+          "correctAnswer": ["doktorima"],
+          "explanation": "Dativ množine muškog roda - 'pomaže doktorima' (helps doctors)"
+        },
+        {
+          "id": "nd09-q4",
+          "blankNumber": 4,
+          "baseForm": "pacijent",
+          "correctAnswer": ["pacijenata"],
+          "explanation": "Genitiv množine muškog roda - 'pregledu pacijenata' (examination of patients)"
+        },
+        {
+          "id": "nd09-q5",
+          "blankNumber": 5,
+          "baseForm": "instrument",
+          "correctAnswer": ["instrumente"],
+          "explanation": "Akuzativ množine muškog roda - 'priprema instrumente' (prepares instruments)"
+        },
+        {
+          "id": "nd09-q6",
+          "blankNumber": 6,
+          "baseForm": "higijena",
+          "correctAnswer": ["higijeni"],
+          "explanation": "Lokativ jednine ženskog roda - 'o higijeni' (about hygiene)"
+        }
+      ]
+    },
+    {
+      "id": "noun-declension-10",
+      "source": "static",
+      "exerciseType": "nounDeclension",
+      "cefrLevel": "A2.2",
+      "title": "Reading and Literature",
+      "paragraph": "Elena voli čitati različite ___1___ (roman) u svojem slobodnom ___2___ (vrijeme). Često ide u lokalnu ___3___ (knjižara) da kupi nova ___4___ (izdanje). Posebno voli romane o ___5___ (ljubav) i ___6___ (pustolovine) mladih heroja.",
+      "questions": [
+        {
+          "id": "nd10-q1",
+          "blankNumber": 1,
+          "baseForm": "roman",
+          "correctAnswer": ["romane"],
+          "explanation": "Akuzativ množine muškog roda - 'čitati romane' (read novels)"
+        },
+        {
+          "id": "nd10-q2",
+          "blankNumber": 2,
+          "baseForm": "vrijeme",
+          "correctAnswer": ["vremenu"],
+          "explanation": "Lokativ jednine srednjeg roda - 'u vremenu' (in her free time)"
+        },
+        {
+          "id": "nd10-q3",
+          "blankNumber": 3,
+          "baseForm": "knjižara",
+          "correctAnswer": ["knjižaru"],
+          "explanation": "Akuzativ jednine ženskog roda - 'ide u knjižaru' (goes to bookstore)"
+        },
+        {
+          "id": "nd10-q4",
+          "blankNumber": 4,
+          "baseForm": "izdanje",
+          "correctAnswer": ["izdanja"],
+          "explanation": "Akuzativ množine srednjeg roda - 'kupi izdanja' (buy editions)"
+        },
+        {
+          "id": "nd10-q5",
+          "blankNumber": 5,
+          "baseForm": "ljubav",
+          "correctAnswer": ["ljubavi"],
+          "explanation": "Lokativ jednine ženskog roda - 'o ljubavi' (about love)"
+        },
+        {
+          "id": "nd10-q6",
+          "blankNumber": 6,
+          "baseForm": "pustolovine",
+          "correctAnswer": ["pustolovinama"],
+          "explanation": "Lokativ množine ženskog roda - 'o pustolovinama' (about adventures)"
+        }
+      ]
+    }
+  ]
+}

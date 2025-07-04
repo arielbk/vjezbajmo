@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ExerciseProvider } from "@/contexts/ExerciseContext";
 import { AppHeader } from "@/components/AppHeader";
+import { AppFooter } from "@/components/AppFooter";
 import "./globals.css";
 import "../instrumentation-client";
 
@@ -18,7 +19,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Vježbajmo Hrvatski - Croatian Grammar Practice",
   description: "Practice Croatian grammar with dynamic exercises",
-  viewport: "width=device-width, initial-scale=1",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
   themeColor: "#eff6ff", // blue-50 for Safari status bar
 };
 
@@ -35,6 +40,7 @@ export default function RootLayout({
             <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
               <AppHeader />
               {children}
+              <AppFooter />
             </div>
           </div>
         </ExerciseProvider>

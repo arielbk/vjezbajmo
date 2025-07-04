@@ -5,11 +5,13 @@ import { SentenceExercise as SentenceExerciseComponent } from "@/components/Sent
 import { VerbAspectExerciseComponent } from "@/components/VerbAspectExercise";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useExercise } from "@/contexts/ExerciseContext";
-import type { ParagraphExerciseSet, SentenceExerciseSet, ExerciseType, VerbAspectExercise } from "@/types/exercise";
-import { AlertTriangle } from "lucide-react";
+import type { ParagraphExerciseSet, SentenceExerciseSet, VerbAspectExercise, ExerciseType } from "@/types/exercise";
+import { getGenerationMessage } from "@/lib/exercise-source-utils";
+import { AlertTriangle, Sparkles } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { clientLogger } from "@/lib/client-logger";
+import { hasRemainingStaticWorksheets } from "@/lib/static-worksheets";
 
 export default function ExerciseClient({ exerciseType }: { exerciseType: ExerciseType }) {
   const { state, dispatch, forceRegenerateExercise } = useExercise();
@@ -63,7 +65,7 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
     }
   }, [exerciseType, dispatch, searchParams]);
 
-  // Auto-generate exercises if we're serving static exercises and user has API key
+  // Auto-generate exercises if no static worksheets are available and user has API key
   useEffect(() => {
     const shouldGenerateExercises = () => {
       // Don't generate if already attempted or currently generating
@@ -75,18 +77,12 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
       // Only generate if user has API key
       if (!state.apiKey) return false;
       
-      // Check if we're currently serving static exercises
+      // Check if we have valid exercise data loaded
       const currentData = getCurrentExerciseData();
-      if (!currentData) return false;
+      if (!currentData || currentData.id === "loading") return false;
       
-      // Static exercise IDs are predictable
-      const isServingStaticExercise = 
-        (exerciseType === "verbAspect" && currentData.id === "static-verb-aspect") ||
-        (exerciseType === "interrogativePronouns" && currentData.id === "static-interrogative-pronouns") ||
-        (exerciseType === "verbTenses" && currentData.id === "verb-tenses-static-1") ||
-        (exerciseType === "nounDeclension" && currentData.id === "noun-adjective-static-1");
-      
-      return isServingStaticExercise;
+      // Check if there are more static worksheets available
+      return !hasRemainingStaticWorksheets(exerciseType, state.cefrLevel);
     };
 
     if (shouldGenerateExercises()) {
@@ -148,8 +144,8 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
   if (state.isGenerating && hasAttemptedGeneration) {
     return (
       <Alert>
-        <AlertTriangle className="h-4 w-4" />
-        <AlertDescription>Generating personalized exercises... This may take a moment.</AlertDescription>
+        <Sparkles className="h-4 w-4" />
+        <AlertDescription>{getGenerationMessage(exerciseType)}</AlertDescription>
       </Alert>
     );
   }
@@ -174,8 +170,8 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
         <VerbAspectExerciseComponent
           exerciseSet={exerciseData as SentenceExerciseSet & { exercises: VerbAspectExercise[] }}
           exerciseType={exerciseType}
-          onComplete={handleCompleteExercise}
           title={getExerciseTitle()}
+          onComplete={handleCompleteExercise}
         />
       ) : (
         <SentenceExerciseComponent

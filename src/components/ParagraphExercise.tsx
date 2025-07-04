@@ -10,7 +10,8 @@ import { useExercise } from "@/contexts/ExerciseContext";
 import { useResetExerciseState } from "@/hooks/useResetExerciseState";
 import { ParagraphExerciseSet, ExerciseType } from "@/types/exercise";
 import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
-import { Check, X, RefreshCw, RotateCcw, ArrowRight, AlertTriangle } from "lucide-react";
+import { getExerciseSourceInfo } from "@/lib/exercise-source-utils";
+import { Check, X, RefreshCw, RotateCcw, ArrowRight, AlertTriangle, BookOpen, Sparkles } from "lucide-react";
 import { getExerciseDescription } from "@/lib/exercise-descriptions";
 import { GenerateNewQuestionsCard } from "@/components/GenerateNewQuestionsCard";
 
@@ -192,6 +193,9 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
   const filledAnswers = exerciseSet.questions.filter((q) => answers[q.id] && answers[q.id].trim() !== "").length;
   const progress = hasChecked ? (correctAnswers / totalQuestions) * 100 : (filledAnswers / totalQuestions) * 100;
 
+  // Get exercise source info for MVP static-first messaging
+  const sourceInfo = getExerciseSourceInfo(exerciseSet.id, exerciseType);
+
   return (
     <>
       {/* Fixed progress bar at top of viewport - nprogress style */}
@@ -210,7 +214,22 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
 
         <Card className="mx-0 sm:mx-auto">
           <CardHeader className="pb-1">
-            <CardTitle className="text-lg sm:text-xl lg:text-2xl">{title}</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg sm:text-xl lg:text-2xl">{title}</CardTitle>
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                {sourceInfo.isStatic ? (
+                  <>
+                    <BookOpen className="h-4 w-4" />
+                    <span>{sourceInfo.indicator}</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    <span>{sourceInfo.indicator}</span>
+                  </>
+                )}
+              </div>
+            </div>
             <p className="text-sm text-muted-foreground mt-2">{getExerciseDescription(exerciseType)}</p>
           </CardHeader>
           <CardContent className="space-y-3 sm:space-y-6 px-3 sm:px-6">

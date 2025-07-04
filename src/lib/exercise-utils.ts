@@ -132,8 +132,24 @@ export function calculateScore(results: ExerciseResult[]): {
 }
 
 /**
- * Determines if an exercise ID is static (number) or generated (string UUID)
+ * Determines if an exercise ID is static or generated
+ * Static exercises have predictable patterns, generated exercises are UUIDs
  */
 export function isStaticExercise(id: string | number): boolean {
-  return typeof id === "number";
+  // Legacy static exercises were numbers
+  if (typeof id === "number") return true;
+  
+  // New static worksheet exercises have predictable patterns
+  const staticPatterns = [
+    /^verb-tenses-\d+$/,
+    /^noun-declension-\d+$/,
+    /^verb-aspect-\d+$/,
+    /^interrogative-pronouns-\d+$/,
+    // Legacy patterns (if any exist)
+    /^static-/,
+    /^verb-tenses-static-/,
+    /^noun-adjective-static-/
+  ];
+  
+  return staticPatterns.some(pattern => pattern.test(id.toString()));
 }

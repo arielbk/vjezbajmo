@@ -1,0 +1,524 @@
+{
+  "worksheets": [
+    {
+      "id": "verb-tenses-01",
+      "source": "static",
+      "exerciseType": "verbTenses",
+      "cefrLevel": "A2.2",
+      "title": "Daily Routine and Plans",
+      "paragraph": "Petra ___1___ (raditi) u banci već tri godine. Svako jutro ___2___ (ustajati) u sedam sati i ___3___ (doručkovati) kod kuće. Prošlog tjedna ___4___ (kupovati) novi auto jer ___5___ (trebati) brži prijevoz. Sljedeći mjesec ___6___ (putovati) na odmor u Italiju.",
+      "questions": [
+        {
+          "id": "vt01-q1",
+          "blankNumber": 1,
+          "baseForm": "raditi",
+          "correctAnswer": ["radi"],
+          "explanation": "Present tense, third person singular. Petra currently works at the bank."
+        },
+        {
+          "id": "vt01-q2",
+          "blankNumber": 2,
+          "baseForm": "ustajati",
+          "correctAnswer": ["ustaje"],
+          "explanation": "Present tense, third person singular. Daily habitual action."
+        },
+        {
+          "id": "vt01-q3",
+          "blankNumber": 3,
+          "baseForm": "doručkovati",
+          "correctAnswer": ["doručkuje"],
+          "explanation": "Present tense, third person singular. Regular morning routine."
+        },
+        {
+          "id": "vt01-q4",
+          "blankNumber": 4,
+          "baseForm": "kupovati",
+          "correctAnswer": ["je kupila"],
+          "explanation": "Past perfect tense, third person singular feminine. Completed action last week."
+        },
+        {
+          "id": "vt01-q5",
+          "blankNumber": 5,
+          "baseForm": "trebati",
+          "correctAnswer": ["je trebala"],
+          "explanation": "Past tense, third person singular feminine. Past need/requirement."
+        },
+        {
+          "id": "vt01-q6",
+          "blankNumber": 6,
+          "baseForm": "putovati",
+          "correctAnswer": ["će putovati"],
+          "explanation": "Future tense, third person singular. Planned action for next month."
+        }
+      ]
+    },
+    {
+      "id": "verb-tenses-02",
+      "source": "static",
+      "exerciseType": "verbTenses",
+      "cefrLevel": "A2.2",
+      "title": "School and Family Life",
+      "paragraph": "Marko ___1___ (pohađati) srednju školu u centru grada. Njegova sestra ___2___ (studirati) medicinu na fakultetu. Jučer ___3___ (slaviti) majčin rođendan u restoranu. Sutra ___4___ (pisati) važan ispit iz kemije. Kada ___5___ (završiti) školu, ___6___ (željeti) postati liječnik kao sestra.",
+      "questions": [
+        {
+          "id": "vt02-q1",
+          "blankNumber": 1,
+          "baseForm": "pohađati",
+          "correctAnswer": ["pohađa"],
+          "explanation": "Present tense, third person singular. Marko currently attends high school."
+        },
+        {
+          "id": "vt02-q2",
+          "blankNumber": 2,
+          "baseForm": "studirati",
+          "correctAnswer": ["studira"],
+          "explanation": "Present tense, third person singular. Current activity of his sister."
+        },
+        {
+          "id": "vt02-q3",
+          "blankNumber": 3,
+          "baseForm": "slaviti",
+          "correctAnswer": ["su slavili"],
+          "explanation": "Past tense, third person plural. Completed family celebration yesterday."
+        },
+        {
+          "id": "vt02-q4",
+          "blankNumber": 4,
+          "baseForm": "pisati",
+          "correctAnswer": ["će pisati"],
+          "explanation": "Future tense, third person singular. Planned exam tomorrow."
+        },
+        {
+          "id": "vt02-q5",
+          "blankNumber": 5,
+          "baseForm": "završiti",
+          "correctAnswer": ["završi"],
+          "explanation": "Present tense in temporal clause after 'kada'."
+        },
+        {
+          "id": "vt02-q6",
+          "blankNumber": 6,
+          "baseForm": "željeti",
+          "correctAnswer": ["želi"],
+          "explanation": "Present tense, third person singular. Current desire/wish."
+        }
+      ]
+    },
+    {
+      "id": "verb-tenses-03",
+      "source": "static",
+      "exerciseType": "verbTenses",
+      "cefrLevel": "A2.2",
+      "title": "Weekend Activities",
+      "paragraph": "Vikendom Ana i Tomislav ___1___ (voliti) provoditi vrijeme u prirodi. Prošlu subotu ___2___ (ići) na planinarenje u Medvednici. Tamo ___3___ (upoznati) grupu turista iz Njemačke. Sljedeću subotu ___4___ (planirati) posjetiti Plitvička jezera. Ana ___5___ (fotografirati) već dvadeset godina i ___6___ (htjeti) napraviti prekrasne snimke.",
+      "questions": [
+        {
+          "id": "vt03-q1",
+          "blankNumber": 1,
+          "baseForm": "voliti",
+          "correctAnswer": ["vole"],
+          "explanation": "Present tense, third person plural. Regular weekend preference."
+        },
+        {
+          "id": "vt03-q2",
+          "blankNumber": 2,
+          "baseForm": "ići",
+          "correctAnswer": ["su išli"],
+          "explanation": "Past tense, third person plural. Completed action last Saturday."
+        },
+        {
+          "id": "vt03-q3",
+          "blankNumber": 3,
+          "baseForm": "upoznati",
+          "correctAnswer": ["su upoznali"],
+          "explanation": "Past perfect tense, third person plural. They met the tourists there."
+        },
+        {
+          "id": "vt03-q4",
+          "blankNumber": 4,
+          "baseForm": "planirati",
+          "correctAnswer": ["planiraju"],
+          "explanation": "Present tense, third person plural. Current plan for next Saturday."
+        },
+        {
+          "id": "vt03-q5",
+          "blankNumber": 5,
+          "baseForm": "fotografirati",
+          "correctAnswer": ["fotografira"],
+          "explanation": "Present tense, third person singular. Ana's ongoing hobby for twenty years."
+        },
+        {
+          "id": "vt03-q6",
+          "blankNumber": 6,
+          "baseForm": "htjeti",
+          "correctAnswer": ["želi"],
+          "explanation": "Present tense, third person singular. Ana's current wish/intention."
+        }
+      ]
+    },
+    {
+      "id": "verb-tenses-04",
+      "source": "static",
+      "exerciseType": "verbTenses",
+      "cefrLevel": "A2.2",
+      "title": "Moving to a New City",
+      "paragraph": "Luka se ___1___ (seliti) u Zagreb iz malog grada. On ___2___ (tražiti) posao već mjesec dana. Prošli tjedan ___3___ (imati) razgovor za posao u IT tvrtki. Kada ___4___ (pronaći) posao, ___5___ (unajmiti) stan blizu centra. Njegova djevojka ___6___ (doći) za njim sljedeći mjesec.",
+      "questions": [
+        {
+          "id": "vt04-q1",
+          "blankNumber": 1,
+          "baseForm": "seliti",
+          "correctAnswer": ["seli"],
+          "explanation": "Present tense with reflexive pronoun. Luka is currently moving."
+        },
+        {
+          "id": "vt04-q2",
+          "blankNumber": 2,
+          "baseForm": "tražiti",
+          "correctAnswer": ["traži"],
+          "explanation": "Present tense, third person singular. Ongoing job search."
+        },
+        {
+          "id": "vt04-q3",
+          "blankNumber": 3,
+          "baseForm": "imati",
+          "correctAnswer": ["je imao"],
+          "explanation": "Past tense, third person singular masculine. Completed job interview."
+        },
+        {
+          "id": "vt04-q4",
+          "blankNumber": 4,
+          "baseForm": "pronaći",
+          "correctAnswer": ["pronađe"],
+          "explanation": "Present tense in temporal clause after 'kada'."
+        },
+        {
+          "id": "vt04-q5",
+          "blankNumber": 5,
+          "baseForm": "unajmiti",
+          "correctAnswer": ["će unajmiti"],
+          "explanation": "Future tense, third person singular. Future plan after finding a job."
+        },
+        {
+          "id": "vt04-q6",
+          "blankNumber": 6,
+          "baseForm": "doći",
+          "correctAnswer": ["će doći"],
+          "explanation": "Future tense, third person singular. Girlfriend's planned arrival."
+        }
+      ]
+    },
+    {
+      "id": "verb-tenses-05",
+      "source": "static",
+      "exerciseType": "verbTenses",
+      "cefrLevel": "A2.2",
+      "title": "Learning Croatian",
+      "paragraph": "Maria ___1___ (učiti) hrvatski jezik već godinu dana. Svaki dan ___2___ (vježbati) gramatiku i ___3___ (slušati) hrvatske pjesme. Prošlog mjeseca ___4___ (položiti) prvi ispit. Sljedeće godine ___5___ (studirati) u Zagrebu i ___6___ (morati) govoriti hrvatski fluently.",
+      "questions": [
+        {
+          "id": "vt05-q1",
+          "blankNumber": 1,
+          "baseForm": "učiti",
+          "correctAnswer": ["uči"],
+          "explanation": "Present tense, third person singular. Ongoing learning for a year."
+        },
+        {
+          "id": "vt05-q2",
+          "blankNumber": 2,
+          "baseForm": "vježbati",
+          "correctAnswer": ["vježba"],
+          "explanation": "Present tense, third person singular. Daily practice routine."
+        },
+        {
+          "id": "vt05-q3",
+          "blankNumber": 3,
+          "baseForm": "slušati",
+          "correctAnswer": ["sluša"],
+          "explanation": "Present tense, third person singular. Daily listening activity."
+        },
+        {
+          "id": "vt05-q4",
+          "blankNumber": 4,
+          "baseForm": "položiti",
+          "correctAnswer": ["je položila"],
+          "explanation": "Past perfect tense, third person singular feminine. Completed exam last month."
+        },
+        {
+          "id": "vt05-q5",
+          "blankNumber": 5,
+          "baseForm": "studirati",
+          "correctAnswer": ["će studirati"],
+          "explanation": "Future tense, third person singular. Plans for next year."
+        },
+        {
+          "id": "vt05-q6",
+          "blankNumber": 6,
+          "baseForm": "morati",
+          "correctAnswer": ["će morati"],
+          "explanation": "Future tense, third person singular. Future necessity."
+        }
+      ]
+    },
+    {
+      "id": "verb-tenses-06",
+      "source": "static",
+      "exerciseType": "verbTenses",
+      "cefrLevel": "A2.2",
+      "title": "Cooking and Food",
+      "paragraph": "Marta ___1___ (kuhati) vrlo ukusno. Svake nedjelje ___2___ (pripremati) veliki ručak za obitelj. Jučer ___3___ (kupiti) svježe sastojke na tržnici. Danas ___4___ (kuhati) tradicijski gulaš. Njezina djeca ___5___ (obožavati) njezino kuhanje i ___6___ (čekati) nedjeljni ručak cijeli tjedan.",
+      "questions": [
+        {
+          "id": "vt06-q1",
+          "blankNumber": 1,
+          "baseForm": "kuhati",
+          "correctAnswer": ["kuha"],
+          "explanation": "Present tense, third person singular. Marta's general cooking skill."
+        },
+        {
+          "id": "vt06-q2",
+          "blankNumber": 2,
+          "baseForm": "pripremati",
+          "correctAnswer": ["priprema"],
+          "explanation": "Present tense, third person singular. Weekly routine."
+        },
+        {
+          "id": "vt06-q3",
+          "blankNumber": 3,
+          "baseForm": "kupiti",
+          "correctAnswer": ["je kupila"],
+          "explanation": "Past perfect tense, third person singular feminine. Completed shopping yesterday."
+        },
+        {
+          "id": "vt06-q4",
+          "blankNumber": 4,
+          "baseForm": "kuhati",
+          "correctAnswer": ["kuha"],
+          "explanation": "Present tense, third person singular. Current cooking activity."
+        },
+        {
+          "id": "vt06-q5",
+          "blankNumber": 5,
+          "baseForm": "obožavati",
+          "correctAnswer": ["obožavaju"],
+          "explanation": "Present tense, third person plural. Children's love for their mother's cooking."
+        },
+        {
+          "id": "vt06-q6",
+          "blankNumber": 6,
+          "baseForm": "čekati",
+          "correctAnswer": ["čekaju"],
+          "explanation": "Present tense, third person plural. Children's ongoing anticipation."
+        }
+      ]
+    },
+    {
+      "id": "verb-tenses-07",
+      "source": "static",
+      "exerciseType": "verbTenses",
+      "cefrLevel": "A2.2",
+      "title": "Sports and Health",
+      "paragraph": "Petar ___1___ (baviti) se sportom od djetinjstva. Svaki dan ___2___ (trčati) u parku i ___3___ (vježbati) u teretani. Prošle godine ___4___ (sudjelovati) u maratonu. Ovaj mjesec ___5___ (priprema) se za novo natjecanje. Ako ___6___ (pobijediti), dobit će veliku nagradu.",
+      "questions": [
+        {
+          "id": "vt07-q1",
+          "blankNumber": 1,
+          "baseForm": "baviti",
+          "correctAnswer": ["bavi"],
+          "explanation": "Present tense with reflexive pronoun. Petar's lifelong involvement in sports."
+        },
+        {
+          "id": "vt07-q2",
+          "blankNumber": 2,
+          "baseForm": "trčati",
+          "correctAnswer": ["trči"],
+          "explanation": "Present tense, third person singular. Daily running routine."
+        },
+        {
+          "id": "vt07-q3",
+          "blankNumber": 3,
+          "baseForm": "vježbati",
+          "correctAnswer": ["vježba"],
+          "explanation": "Present tense, third person singular. Daily gym routine."
+        },
+        {
+          "id": "vt07-q4",
+          "blankNumber": 4,
+          "baseForm": "sudjelovati",
+          "correctAnswer": ["je sudjelovao"],
+          "explanation": "Past tense, third person singular masculine. Participation last year."
+        },
+        {
+          "id": "vt07-q5",
+          "blankNumber": 5,
+          "baseForm": "pripremati",
+          "correctAnswer": ["se priprema"],
+          "explanation": "Present tense with reflexive pronoun. Current preparation this month."
+        },
+        {
+          "id": "vt07-q6",
+          "blankNumber": 6,
+          "baseForm": "pobijediti",
+          "correctAnswer": ["pobijedi"],
+          "explanation": "Present tense in conditional clause after 'ako'."
+        }
+      ]
+    },
+    {
+      "id": "verb-tenses-08",
+      "source": "static",
+      "exerciseType": "verbTenses",
+      "cefrLevel": "A2.2",
+      "title": "Travel and Culture",
+      "paragraph": "Ivana ___1___ (raditi) kao turistička vodiča u Dubrovniku. Ljeti ___2___ (voditi) turiste kroz stari grad i ___3___ (objašnjavati) povijest. Prošlog ljeta ___4___ (voditi) VIP skupinu iz Amerike. Ove godine ___5___ (planirati) proširiti svoje usluge. Također ___6___ (učiti) talijanski jezik za bolje komunikacije.",
+      "questions": [
+        {
+          "id": "vt08-q1",
+          "blankNumber": 1,
+          "baseForm": "raditi",
+          "correctAnswer": ["radi"],
+          "explanation": "Present tense, third person singular. Ivana's current profession."
+        },
+        {
+          "id": "vt08-q2",
+          "blankNumber": 2,
+          "baseForm": "voditi",
+          "correctAnswer": ["vodi"],
+          "explanation": "Present tense, third person singular. Summer activity."
+        },
+        {
+          "id": "vt08-q3",
+          "blankNumber": 3,
+          "baseForm": "objašnjavati",
+          "correctAnswer": ["objašnjava"],
+          "explanation": "Present tense, third person singular. Part of her guiding routine."
+        },
+        {
+          "id": "vt08-q4",
+          "blankNumber": 4,
+          "baseForm": "voditi",
+          "correctAnswer": ["je vodila"],
+          "explanation": "Past tense, third person singular feminine. Specific group last summer."
+        },
+        {
+          "id": "vt08-q5",
+          "blankNumber": 5,
+          "baseForm": "planirati",
+          "correctAnswer": ["planira"],
+          "explanation": "Present tense, third person singular. Current plans for this year."
+        },
+        {
+          "id": "vt08-q6",
+          "blankNumber": 6,
+          "baseForm": "učiti",
+          "correctAnswer": ["uči"],
+          "explanation": "Present tense, third person singular. Current language learning."
+        }
+      ]
+    },
+    {
+      "id": "verb-tenses-09",
+      "source": "static",
+      "exerciseType": "verbTenses",
+      "cefrLevel": "A2.2",
+      "title": "Technology and Communication",
+      "paragraph": "Milan ___1___ (koristiti) kompjuter svakodnevno za posao. On ___2___ (programirati) web stranice i aplikacije. Jučer ___3___ (završiti) važan projekt za klijenta. Sljednji tjedan ___4___ (počinjati) novi projekt. Njegov tim ___5___ (raditi) na inovativnim rješenjima i ___6___ (nadati) se velikом uspjehu.",
+      "questions": [
+        {
+          "id": "vt09-q1",
+          "blankNumber": 1,
+          "baseForm": "koristiti",
+          "correctAnswer": ["koristi"],
+          "explanation": "Present tense, third person singular. Daily computer use."
+        },
+        {
+          "id": "vt09-q2",
+          "blankNumber": 2,
+          "baseForm": "programirati",
+          "correctAnswer": ["programira"],
+          "explanation": "Present tense, third person singular. Milan's profession."
+        },
+        {
+          "id": "vt09-q3",
+          "blankNumber": 3,
+          "baseForm": "završiti",
+          "correctAnswer": ["je završio"],
+          "explanation": "Past perfect tense, third person singular masculine. Completed project yesterday."
+        },
+        {
+          "id": "vt09-q4",
+          "blankNumber": 4,
+          "baseForm": "počinjati",
+          "correctAnswer": ["će počinjati"],
+          "explanation": "Future tense, third person singular. Starting new project next week."
+        },
+        {
+          "id": "vt09-q5",
+          "blankNumber": 5,
+          "baseForm": "raditi",
+          "correctAnswer": ["radi"],
+          "explanation": "Present tense, third person singular. Team's current work."
+        },
+        {
+          "id": "vt09-q6",
+          "blankNumber": 6,
+          "baseForm": "nadati",
+          "correctAnswer": ["se nada"],
+          "explanation": "Present tense with reflexive pronoun. Team's hope for success."
+        }
+      ]
+    },
+    {
+      "id": "verb-tenses-10",
+      "source": "static",
+      "exerciseType": "verbTenses",
+      "cefrLevel": "A2.2",
+      "title": "Art and Creativity",
+      "paragraph": "Katarina ___1___ (slikati) portrete već deset godina. Ona ___2___ (imati) vlastiti studio u centru grada. Prošle godine ___3___ (organizirati) svoju prvu izložbu. Mnogi ljudi ___4___ (doći) pogledati njezina djela. Sljedeće godine ___5___ (planirati) izložbu u Parizu gdje ___6___ (pokazati) svoja najbolja djela.",
+      "questions": [
+        {
+          "id": "vt10-q1",
+          "blankNumber": 1,
+          "baseForm": "slikati",
+          "correctAnswer": ["slika"],
+          "explanation": "Present tense, third person singular. Katarina's artistic activity for ten years."
+        },
+        {
+          "id": "vt10-q2",
+          "blankNumber": 2,
+          "baseForm": "imati",
+          "correctAnswer": ["ima"],
+          "explanation": "Present tense, third person singular. Current possession of studio."
+        },
+        {
+          "id": "vt10-q3",
+          "blankNumber": 3,
+          "baseForm": "organizirati",
+          "correctAnswer": ["je organizirala"],
+          "explanation": "Past tense, third person singular feminine. First exhibition last year."
+        },
+        {
+          "id": "vt10-q4",
+          "blankNumber": 4,
+          "baseForm": "doći",
+          "correctAnswer": ["su došli"],
+          "explanation": "Past tense, third person plural. People who came to see her artwork."
+        },
+        {
+          "id": "vt10-q5",
+          "blankNumber": 5,
+          "baseForm": "planirati",
+          "correctAnswer": ["planira"],
+          "explanation": "Present tense, third person singular. Current plans for next year."
+        },
+        {
+          "id": "vt10-q6",
+          "blankNumber": 6,
+          "baseForm": "pokazati",
+          "correctAnswer": ["će pokazati"],
+          "explanation": "Future tense, third person singular. Future exhibition in Paris."
+        }
+      ]
+    }
+  ]
+}

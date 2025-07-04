@@ -11,12 +11,11 @@ import {
   CheckAnswerResponse,
 } from "@/types/exercise";
 import { userProgressManager } from "@/lib/user-progress";
-
-// Static exercise imports
-import verbAspectData from "@/data/verb-aspect-exercises.json";
-import interrogativePronounsData from "@/data/interrogative-pronouns-exercises.json";
-import verbTensesData from "@/data/verb-tenses-paragraph.json";
-import nounAdjectiveData from "@/data/noun-adjective-paragraph.json";
+import { 
+  getNextStaticWorksheet, 
+  hasRemainingStaticWorksheets, 
+  convertWorksheetToExerciseSet 
+} from "@/lib/static-worksheets";
 
 interface ExerciseState {
   currentExerciseType: ExerciseType | null;
@@ -59,15 +58,23 @@ type ExerciseAction =
 const initialState: ExerciseState = {
   currentExerciseType: null,
   verbAspectExercises: {
-    id: "static-verb-aspect",
-    exercises: verbAspectData.exercises,
+    id: "loading",
+    exercises: [],
   },
   interrogativePronounsExercises: {
-    id: "static-interrogative-pronouns",
-    exercises: interrogativePronounsData.exercises,
+    id: "loading",
+    exercises: [],
   },
-  verbTensesParagraph: verbTensesData as ParagraphExerciseSet,
-  nounAdjectiveParagraph: nounAdjectiveData as ParagraphExerciseSet,
+  verbTensesParagraph: {
+    id: "loading",
+    paragraph: "",
+    questions: [],
+  },
+  nounAdjectiveParagraph: {
+    id: "loading", 
+    paragraph: "",
+    questions: [],
+  },
   currentSession: null,
   apiKey: null,
   selectedProvider: "openai",
@@ -100,7 +107,8 @@ function exerciseReducer(state: ExerciseState, action: ExerciseAction): Exercise
       return { ...state, cefrLevel: action.payload };
 
     case "START_SESSION":
-      return {
+      // For new sessions (not review mode), try to load a static worksheet first
+      let updatedState = {
         ...state,
         currentSession: {
           exerciseType: action.payload.exerciseType,
@@ -112,6 +120,27 @@ function exerciseReducer(state: ExerciseState, action: ExerciseAction): Exercise
         },
         error: null,
       };
+
+      // If not in review mode, try to load a static worksheet
+      if (!action.payload.isReviewMode) {
+        const nextWorksheet = getNextStaticWorksheet(action.payload.exerciseType, state.cefrLevel);
+        if (nextWorksheet) {
+          const exerciseSet = convertWorksheetToExerciseSet(nextWorksheet, action.payload.exerciseType);
+          
+          // Update the appropriate exercise data
+          if (action.payload.exerciseType === "verbTenses") {
+            updatedState = { ...updatedState, verbTensesParagraph: exerciseSet as ParagraphExerciseSet };
+          } else if (action.payload.exerciseType === "nounDeclension") {
+            updatedState = { ...updatedState, nounAdjectiveParagraph: exerciseSet as ParagraphExerciseSet };
+          } else if (action.payload.exerciseType === "verbAspect") {
+            updatedState = { ...updatedState, verbAspectExercises: exerciseSet as SentenceExerciseSet };
+          } else if (action.payload.exerciseType === "interrogativePronouns") {
+            updatedState = { ...updatedState, interrogativePronounsExercises: exerciseSet as SentenceExerciseSet };
+          }
+        }
+      }
+
+      return updatedState;
 
     case "ADD_RESULT":
       if (!state.currentSession) return state;
@@ -202,6 +231,8 @@ const ExerciseContext = createContext<{
   state: ExerciseState;
   dispatch: React.Dispatch<ExerciseAction>;
   forceRegenerateExercise: (exerciseType: ExerciseType, theme?: string) => Promise<void>;
+  loadNextStaticWorksheet: (exerciseType: ExerciseType, theme?: string) => boolean;
+  hasRemainingStaticWorksheets: (exerciseType: ExerciseType, theme?: string) => boolean;
   regenerateAllExercises: (theme?: string) => Promise<void>;
   checkAnswer: (questionId: string, userAnswer: string) => Promise<CheckAnswerResponse>;
   markExerciseCompleted: (
@@ -263,6 +294,25 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     localStorage.setItem("vjezbajmo-cefr-level", state.cefrLevel);
   }, [state.cefrLevel]);
+
+  const loadNextStaticWorksheet = (exerciseType: ExerciseType, theme?: string): boolean => {
+    const nextWorksheet = getNextStaticWorksheet(exerciseType, state.cefrLevel, theme);
+    
+    if (!nextWorksheet) {
+      return false; // No more static worksheets available
+    }
+
+    // Convert worksheet to the format expected by components
+    const exerciseSet = convertWorksheetToExerciseSet(nextWorksheet, exerciseType);
+    
+    // Dispatch the loaded exercise data
+    dispatch({
+      type: "SET_GENERATED_EXERCISES",
+      payload: { exerciseType, data: exerciseSet }
+    });
+    
+    return true; // Successfully loaded static worksheet
+  };
 
   const forceRegenerateExercise = async (exerciseType: ExerciseType, theme?: string) => {
     dispatch({ type: "SET_GENERATING", payload: true });
@@ -436,12 +486,18 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const hasRemainingStaticWorksheetsFunc = (exerciseType: ExerciseType, theme?: string): boolean => {
+    return hasRemainingStaticWorksheets(exerciseType, state.cefrLevel, theme);
+  };
+
   return (
     <ExerciseContext.Provider
       value={{
         state,
         dispatch,
         forceRegenerateExercise,
+        loadNextStaticWorksheet,
+        hasRemainingStaticWorksheets: hasRemainingStaticWorksheetsFunc,
         regenerateAllExercises,
         checkAnswer,
         markExerciseCompleted,

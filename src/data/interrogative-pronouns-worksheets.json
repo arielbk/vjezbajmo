@@ -1,0 +1,49 @@
+{
+  "worksheets": [
+    {
+      "id": "interrogative-pronouns-static-01",
+      "source": "static",
+      "exerciseType": "interrogativePronouns",
+      "cefrLevel": "A2.2",
+      "title": "Basic Interrogative Pronouns",
+      "exercises": [
+        {
+          "id": "ip01-q1",
+          "text": "_____ je ovo? Ovo je moja nova knjiga.",
+          "correctAnswer": ["Što", "Šta"],
+          "explanation": "Use 'što' or 'šta' (what) when asking about things or objects."
+        },
+        {
+          "id": "ip01-q2",
+          "text": "_____ si ti? Ja sam Ana.",
+          "correctAnswer": ["Tko", "Ko"],
+          "explanation": "Use 'tko' or 'ko' (who) when asking about people's identity."
+        },
+        {
+          "id": "ip01-q3",
+          "text": "_____ radiš? Radim u banci.",
+          "correctAnswer": ["Gdje", "Gde"],
+          "explanation": "Use 'gdje' or 'gde' (where) when asking about location."
+        },
+        {
+          "id": "ip01-q4",
+          "text": "_____ ideš kući? Idem autobusom.",
+          "correctAnswer": ["Kako"],
+          "explanation": "Use 'kako' (how) when asking about manner or method."
+        },
+        {
+          "id": "ip01-q5",
+          "text": "_____ počinje film? Počinje u osam.",
+          "correctAnswer": ["Kada", "Kad"],
+          "explanation": "Use 'kada' or 'kad' (when) when asking about time."
+        },
+        {
+          "id": "ip01-q6",
+          "text": "_____ voliš čitati? Volim jer je zanimljivo.",
+          "correctAnswer": ["Zašto"],
+          "explanation": "Use 'zašto' (why) when asking for reasons or explanations."
+        }
+      ]
+    }
+  ]
+}
