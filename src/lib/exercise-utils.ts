@@ -138,7 +138,7 @@ export function calculateScore(results: ExerciseResult[]): {
 export function isStaticExercise(id: string | number): boolean {
   // Legacy static exercises were numbers
   if (typeof id === "number") return true;
-  
+
   // New static worksheet exercises have predictable patterns
   const staticPatterns = [
     /^verb-tenses-\d+$/,
@@ -148,8 +148,8 @@ export function isStaticExercise(id: string | number): boolean {
     // Legacy patterns (if any exist)
     /^static-/,
     /^verb-tenses-static-/,
-    /^noun-adjective-static-/
+    /^noun-adjective-static-/,
   ];
-  
-  return staticPatterns.some(pattern => pattern.test(id.toString()));
+
+  return staticPatterns.some((pattern) => pattern.test(id.toString()));
 }

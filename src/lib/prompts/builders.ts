@@ -2,20 +2,9 @@
  * Prompt builders for different exercise types
  */
 
-import { 
-  PromptBuilder, 
-  PromptContext, 
-  ExerciseJsonSchema, 
-  MultipleAnswersInstructions 
-} from './types';
-import { 
-  createSystemPrompt, 
-  formatThemeText
-} from './base';
-import { 
-  MULTIPLE_ANSWERS_INSTRUCTIONS, 
-  formatMultipleAnswersInstructions 
-} from './templates';
+import { PromptBuilder, PromptContext, ExerciseJsonSchema, MultipleAnswersInstructions } from "./types";
+import { createSystemPrompt, formatThemeText } from "./base";
+import { MULTIPLE_ANSWERS_INSTRUCTIONS, formatMultipleAnswersInstructions } from "./templates";
 
 // Import static exercise examples
 import verbTensesData from "@/data/verb-tenses-worksheets.json";
@@ -31,7 +20,7 @@ export class VerbTensesPromptBuilder implements PromptBuilder {
   buildUserPrompt(context: PromptContext): string {
     const themeText = formatThemeText(context.theme);
     const exampleExercise = JSON.stringify(verbTensesData[0], null, 2);
-    
+
     return `Create a Croatian verb tenses paragraph exercise. Generate a connected story with 6 blanks where students fill in correct verb forms.${themeText}
 
 Here's an example of the quality and style expected:
@@ -75,8 +64,8 @@ Return JSON in this exact format:
       requirements: [
         "Include paragraph text with numbered blanks",
         "Provide questions array with blank details",
-        "Each question must have correctAnswer as array of strings"
-      ]
+        "Each question must have correctAnswer as array of strings",
+      ],
     };
   }
 
@@ -93,7 +82,7 @@ export class NounDeclensionPromptBuilder implements PromptBuilder {
   buildUserPrompt(context: PromptContext): string {
     const themeText = formatThemeText(context.theme);
     const exampleExercise = JSON.stringify(nounDeclinationData[0], null, 2);
-    
+
     return `Create a Croatian noun-adjective declension paragraph exercise. Generate a connected story with 6 blanks where students fill in correctly declined noun-adjective pairs.${themeText}
 
 Here's an example of the quality and style expected:
@@ -130,8 +119,8 @@ Return JSON in this exact format:
       requirements: [
         "Include paragraph text with numbered blanks",
         "Provide questions array with blank details",
-        "Each question must have correctAnswer as array of strings"
-      ]
+        "Each question must have correctAnswer as array of strings",
+      ],
     };
   }
 
@@ -148,7 +137,7 @@ export class VerbAspectPromptBuilder implements PromptBuilder {
   buildUserPrompt(context: PromptContext): string {
     const themeText = formatThemeText(context.theme);
     const exampleExercises = JSON.stringify({ exercises: verbAspectData[0].exercises.slice(0, 3) }, null, 2);
-    
+
     return `Create 5 Croatian verb aspect exercises. Each should be a sentence with one blank where students choose between perfective/imperfective verb forms.${themeText}
 
 Here are examples of the quality and style expected:
@@ -188,8 +177,8 @@ Return JSON in this exact format:
       requirements: [
         "Provide exercises array",
         "Each exercise has text with single blank",
-        "Include verb aspect specific properties"
-      ]
+        "Include verb aspect specific properties",
+      ],
     };
   }
 
@@ -206,7 +195,7 @@ export class RelativePronounsPromptBuilder implements PromptBuilder {
   buildUserPrompt(context: PromptContext): string {
     const themeText = formatThemeText(context.theme);
     const exampleExercises = JSON.stringify({ exercises: relativePronounsData[0].exercises.slice(0, 3) }, null, 2);
-    
+
     return `Create 5 Croatian relative pronoun exercises. Each should be a sentence with one blank where students fill in the correct form of koji/koja/koje ONLY.${themeText}
 
 Here are examples of the quality and style expected:
@@ -256,8 +245,8 @@ Return JSON in this exact format:
       requirements: [
         "Provide exercises array",
         "Each exercise has text with single blank",
-        "Focus on relative pronoun declensions"
-      ]
+        "Focus on relative pronoun declensions",
+      ],
     };
   }
 

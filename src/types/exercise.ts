@@ -10,12 +10,12 @@ export interface SentenceExercise {
 
 // Specialized interface for verb aspect exercises with radio button options
 export interface VerbAspectExercise extends SentenceExercise {
-  exerciseSubType: 'verb-aspect';
+  exerciseSubType: "verb-aspect";
   options: {
     imperfective: string;
     perfective: string;
   };
-  correctAspect: 'imperfective' | 'perfective';
+  correctAspect: "imperfective" | "perfective";
 }
 
 export interface ParagraphExerciseSet {

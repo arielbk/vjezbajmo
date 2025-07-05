@@ -77,9 +77,9 @@ export function ExerciseSelection() {
           <History className="h-4 w-4" />
           View Completed Exercises
         </Button>
-        
+
         {/* Only show Model Evaluations in development */}
-        {process.env.NODE_ENV === 'development' && (
+        {process.env.NODE_ENV === "development" && (
           <Button variant="outline" onClick={() => router.push("/evals")} className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Model Evaluations

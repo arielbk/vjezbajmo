@@ -66,23 +66,23 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { questionId, userAnswer } = checkAnswerSchema.parse(body);
 
-    exerciseLogger.api.request('POST', '/api/check-answer', { questionId });
+    exerciseLogger.api.request("POST", "/api/check-answer", { questionId });
 
     // Find the solution within cached exercises
     const solution = await findSolutionForQuestion(questionId);
 
     if (!solution) {
-      exerciseLogger.warn('Question not found in cache', { questionId });
+      exerciseLogger.warn("Question not found in cache", { questionId });
       return NextResponse.json({ error: "Question not found or expired" }, { status: 404 });
     }
 
     const { correct, diacriticWarning, matchedAnswer } = checkAnswer(userAnswer, solution.correctAnswer);
 
-    exerciseLogger.debug('Answer checked', { 
-      questionId, 
-      correct, 
+    exerciseLogger.debug("Answer checked", {
+      questionId,
+      correct,
       diacriticWarning: !!diacriticWarning,
-      userAnswerLength: userAnswer.length 
+      userAnswerLength: userAnswer.length,
     });
 
     return NextResponse.json({

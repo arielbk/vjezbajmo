@@ -14,15 +14,15 @@ export function getExerciseSourceInfo(exerciseId: string, exerciseType: Exercise
   // Static exercise ID patterns (actual patterns from our static worksheets)
   const staticPatterns = {
     verbAspect: /^verb-aspect-\d+$/,
-    relativePronouns: /^relative-pronouns-\d+$/, 
+    relativePronouns: /^relative-pronouns-\d+$/,
     verbTenses: /^verb-tenses-\d+$/,
-    nounDeclension: /^noun-declension-\d+$/
+    nounDeclension: /^noun-declension-\d+$/,
   };
 
   // Check if the exercise ID matches static patterns
   let isStatic = false;
   let staticIndex = 0;
-  
+
   switch (exerciseType) {
     case "verbAspect":
       isStatic = staticPatterns.verbAspect.test(exerciseId);
@@ -59,14 +59,14 @@ export function getExerciseSourceInfo(exerciseId: string, exerciseType: Exercise
     return {
       isStatic: true,
       indicator: staticIndex > 0 ? `Static Exercise ${staticIndex}/10` : "Static Exercise",
-      description: ""
+      description: "",
     };
   } else {
     // Generated exercise indicators
     return {
       isStatic: false,
       indicator: "Generated Exercise",
-      description: ""
+      description: "",
     };
   }
 }
@@ -77,9 +77,9 @@ export function getExerciseSourceInfo(exerciseId: string, exerciseType: Exercise
 export function getGenerationMessage(exerciseType: ExerciseType): string {
   const typeNames = {
     verbTenses: "verb tense",
-    nounDeclension: "noun declension", 
+    nounDeclension: "noun declension",
     verbAspect: "verb aspect",
-    relativePronouns: "relative pronoun"
+    relativePronouns: "relative pronoun",
   };
 
   return `Generating a new ${typeNames[exerciseType]} exercise for you...`;

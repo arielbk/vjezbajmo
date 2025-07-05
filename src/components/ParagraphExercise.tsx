@@ -24,7 +24,15 @@ interface ParagraphExerciseProps {
 
 export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title }: ParagraphExerciseProps) {
   const router = useRouter();
-  const { dispatch, checkAnswer, forceRegenerateExercise, state, markExerciseCompleted, loadNextStaticWorksheet, hasRemainingStaticWorksheets } = useExercise();
+  const {
+    dispatch,
+    checkAnswer,
+    forceRegenerateExercise,
+    state,
+    markExerciseCompleted,
+    loadNextStaticWorksheet,
+    hasRemainingStaticWorksheets,
+  } = useExercise();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [results, setResults] = useState<Record<string, ReturnType<typeof createExerciseResult>>>({});
   const [isChecking, setIsChecking] = useState(false);
@@ -216,21 +224,17 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
           <CardHeader className="pb-1">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg sm:text-xl lg:text-2xl">{title}</CardTitle>
-              <ExerciseInfoModal 
-                exerciseId={exerciseSet.id}
-                exerciseType={exerciseType}
-                cefrLevel={state.cefrLevel}
-              >
-                <button className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+              <ExerciseInfoModal exerciseId={exerciseSet.id} exerciseType={exerciseType} cefrLevel={state.cefrLevel}>
+                <button className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground bg-muted/40 hover:bg-muted/70 border border-border hover:border-primary/50 rounded-lg transition-all duration-200 cursor-pointer group">
                   {sourceInfo.isStatic ? (
                     <>
-                      <BookOpen className="h-4 w-4" />
-                      <span>{sourceInfo.indicator}</span>
+                      <BookOpen className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                      <span className="font-medium">{sourceInfo.indicator}</span>
                     </>
                   ) : (
                     <>
-                      <Sparkles className="h-4 w-4" />
-                      <span>{sourceInfo.indicator}</span>
+                      <Sparkles className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                      <span className="font-medium">{sourceInfo.indicator}</span>
                     </>
                   )}
                 </button>
@@ -319,7 +323,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
                             try {
                               // First, check if there are remaining static worksheets
                               const hasMoreStatic = hasRemainingStaticWorksheets(exerciseType);
-                              
+
                               if (hasMoreStatic) {
                                 // Load the next static worksheet
                                 const success = loadNextStaticWorksheet(exerciseType);
@@ -330,7 +334,7 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
                                   return;
                                 }
                               }
-                              
+
                               // If no static worksheets remain, generate a new exercise
                               await forceRegenerateExercise(exerciseType);
                               dispatch({ type: "START_SESSION", payload: { exerciseType } });

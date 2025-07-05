@@ -6,9 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { ParagraphExerciseSet, SentenceExercise, ExerciseType, CefrLevel } from "@/types/exercise";
 import { cacheProvider, generateCacheKey, CachedExercise } from "@/lib/cache-provider";
 import { generatePrompt } from "@/lib/prompts";
-import { 
-  validateExerciseResponse
-} from "@/lib/exercise-schemas";
+import { validateExerciseResponse } from "@/lib/exercise-schemas";
 import { exerciseLogger } from "@/lib/logger";
 
 // Cache static exercise generation for 1 hour
@@ -25,12 +23,10 @@ const generateExerciseSchema = z.object({
   forceRegenerate: z.boolean().optional(),
 });
 
-
-
 export async function POST(request: NextRequest) {
-  let exerciseType: ExerciseType = 'verbTenses';
-  let cefrLevel: CefrLevel = 'A1';
-  let effectiveProvider: string = 'unknown';
+  let exerciseType: ExerciseType = "verbTenses";
+  let cefrLevel: CefrLevel = "A1";
+  let effectiveProvider: string = "unknown";
 
   try {
     const body = await request.json();
@@ -51,7 +47,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    exerciseLogger.api.request('POST', '/api/generate-exercise-set', {
+    exerciseLogger.api.request("POST", "/api/generate-exercise-set", {
       hasApiKey: !!effectiveApiKey,
       provider: effectiveProvider,
       exerciseType,
@@ -71,10 +67,10 @@ export async function POST(request: NextRequest) {
     // Skip cache if forceRegenerate is true
     if (!forceRegenerate) {
       // Try to serve from cache first
-      exerciseLogger.debug('Generated cache key', { cacheKey });
+      exerciseLogger.debug("Generated cache key", { cacheKey });
 
       const cachedExercises = await cacheProvider.getCachedExercises(cacheKey);
-      exerciseLogger.debug('Retrieved cached exercises', { count: cachedExercises.length, cacheKey });
+      exerciseLogger.debug("Retrieved cached exercises", { count: cachedExercises.length, cacheKey });
 
       // Filter out exercises the user has already completed
       // Check against the actual exercise data ID, not the cache wrapper ID
@@ -84,7 +80,7 @@ export async function POST(request: NextRequest) {
         const exerciseDataId = exercise.data.id;
         const isCompleted = completedSet.has(exerciseDataId);
 
-        exerciseLogger.debug('Filtering cached exercise', {
+        exerciseLogger.debug("Filtering cached exercise", {
           cacheId: exercise.id,
           dataId: exerciseDataId,
           isCompleted,
@@ -93,7 +89,7 @@ export async function POST(request: NextRequest) {
         return !isCompleted;
       });
 
-      exerciseLogger.debug('Cache filtering results', {
+      exerciseLogger.debug("Cache filtering results", {
         totalCached: cachedExercises.length,
         completedCount: completedSet.size,
         availableAfterFilter: availableExercises.length,
@@ -102,9 +98,9 @@ export async function POST(request: NextRequest) {
       if (availableExercises.length > 0) {
         // Serve from cache
         const selectedExercise = availableExercises[Math.floor(Math.random() * availableExercises.length)];
-        
+
         exerciseLogger.cache.hit(cacheKey, availableExercises.length);
-        exerciseLogger.debug('Selected cached exercise', {
+        exerciseLogger.debug("Selected cached exercise", {
           cacheId: selectedExercise.id,
           dataId: selectedExercise.data.id,
           exerciseType: selectedExercise.exerciseType,
@@ -115,7 +111,7 @@ export async function POST(request: NextRequest) {
     }
 
     // No suitable cached exercises or force regeneration requested, generate new ones
-    const reason = forceRegenerate ? 'force_regeneration' : 'no_suitable_cache';
+    const reason = forceRegenerate ? "force_regeneration" : "no_suitable_cache";
     exerciseLogger.cache.miss(cacheKey, reason);
     exerciseLogger.exerciseGeneration.start(exerciseType, cefrLevel, effectiveProvider, theme);
 
@@ -140,7 +136,7 @@ export async function POST(request: NextRequest) {
       createdAt: Date.now(),
     };
 
-    exerciseLogger.debug('Caching new exercise', {
+    exerciseLogger.debug("Caching new exercise", {
       cacheId: cachedExercise.id,
       dataId: responseData.id,
       cacheKey,
@@ -169,15 +165,15 @@ async function generateWithOpenAI(exerciseType: string, cefrLevel: string, apiKe
   const openai = new OpenAI({ apiKey });
 
   const prompts = generatePrompt(
-    exerciseType as "verbTenses" | "nounDeclension" | "verbAspect" | "relativePronouns", 
-    cefrLevel as "A1" | "A2.1" | "A2.2" | "B1.1", 
+    exerciseType as "verbTenses" | "nounDeclension" | "verbAspect" | "relativePronouns",
+    cefrLevel as "A1" | "A2.1" | "A2.2" | "B1.1",
     theme
   );
 
   // Determine the appropriate response schema based on exercise type
   const responseFormat = getOpenAIResponseFormat(exerciseType);
 
-  exerciseLogger.debug('Using OpenAI structured output', { exerciseType });
+  exerciseLogger.debug("Using OpenAI structured output", { exerciseType });
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
@@ -187,7 +183,7 @@ async function generateWithOpenAI(exerciseType: string, cefrLevel: string, apiKe
     ],
     temperature: 0.8, // Reduced from 2 for more consistent structured output
     max_tokens: 1500,
-    response_format: responseFormat
+    response_format: responseFormat,
   });
 
   const content = completion.choices[0]?.message?.content;
@@ -199,17 +195,17 @@ async function generateWithOpenAI(exerciseType: string, cefrLevel: string, apiKe
 }
 
 async function generateWithAnthropic(exerciseType: string, cefrLevel: string, apiKey: string, theme?: string) {
-  exerciseLogger.debug('Anthropic generation started', { exerciseType, cefrLevel, theme });
+  exerciseLogger.debug("Anthropic generation started", { exerciseType, cefrLevel, theme });
 
   const anthropic = new Anthropic({ apiKey });
 
   const prompts = generatePrompt(
-    exerciseType as "verbTenses" | "nounDeclension" | "verbAspect" | "relativePronouns", 
-    cefrLevel as "A1" | "A2.1" | "A2.2" | "B1.1", 
+    exerciseType as "verbTenses" | "nounDeclension" | "verbAspect" | "relativePronouns",
+    cefrLevel as "A1" | "A2.1" | "A2.2" | "B1.1",
     theme
   );
 
-  exerciseLogger.debug('Sending request to Anthropic');
+  exerciseLogger.debug("Sending request to Anthropic");
 
   try {
     const message = await anthropic.messages.create({
@@ -225,7 +221,7 @@ async function generateWithAnthropic(exerciseType: string, cefrLevel: string, ap
       ],
     });
 
-    exerciseLogger.debug('Received response from Anthropic');
+    exerciseLogger.debug("Received response from Anthropic");
     const content = message.content[0];
     if (content.type !== "text") {
       throw new Error("No text response from Anthropic");
@@ -233,7 +229,7 @@ async function generateWithAnthropic(exerciseType: string, cefrLevel: string, ap
 
     return processAIResponseWithValidation(content.text, exerciseType);
   } catch (error) {
-    exerciseLogger.error('Anthropic API error', error);
+    exerciseLogger.error("Anthropic API error", error);
     throw error;
   }
 }
@@ -250,7 +246,7 @@ function getOpenAIResponseFormat(exerciseType: string) {
           properties: {
             paragraph: {
               type: "string",
-              description: "Croatian text with numbered blanks like {{1}}, {{2}}, etc."
+              description: "Croatian text with numbered blanks like {{1}}, {{2}}, etc.",
             },
             questions: {
               type: "array",
@@ -260,40 +256,41 @@ function getOpenAIResponseFormat(exerciseType: string) {
                 properties: {
                   blankNumber: {
                     type: "number",
-                    description: "The number of the blank this question corresponds to"
+                    description: "The number of the blank this question corresponds to",
                   },
                   baseForm: {
                     type: "string",
-                    description: "The Croatian base form of the word (infinitive for verbs, nominative for nouns)"
+                    description: "The Croatian base form of the word (infinitive for verbs, nominative for nouns)",
                   },
                   correctAnswer: {
                     oneOf: [
                       { type: "string" },
-                      { 
+                      {
                         type: "array",
-                        items: { type: "string" }
-                      }
+                        items: { type: "string" },
+                      },
                     ],
-                    description: "The correct Croatian answer(s) - string for single answer, array for multiple acceptable answers"
+                    description:
+                      "The correct Croatian answer(s) - string for single answer, array for multiple acceptable answers",
                   },
                   explanation: {
                     type: "string",
-                    description: "Explanation in English of why this answer is correct"
+                    description: "Explanation in English of why this answer is correct",
                   },
                   isPlural: {
                     type: "boolean",
-                    description: "Whether the answer should be in plural form"
-                  }
+                    description: "Whether the answer should be in plural form",
+                  },
                 },
                 required: ["blankNumber", "baseForm", "correctAnswer", "explanation"],
-                additionalProperties: false
-              }
-            }
+                additionalProperties: false,
+              },
+            },
           },
           required: ["paragraph", "questions"],
-          additionalProperties: false
-        }
-      }
+          additionalProperties: false,
+        },
+      },
     };
   } else {
     return {
@@ -312,59 +309,62 @@ function getOpenAIResponseFormat(exerciseType: string) {
                 properties: {
                   text: {
                     type: "string",
-                    description: "Croatian sentence with a blank marked as ___"
+                    description: "Croatian sentence with a blank marked as ___",
                   },
                   correctAnswer: {
                     oneOf: [
                       { type: "string" },
-                      { 
+                      {
                         type: "array",
-                        items: { type: "string" }
-                      }
+                        items: { type: "string" },
+                      },
                     ],
-                    description: "The correct Croatian answer(s)"
+                    description: "The correct Croatian answer(s)",
                   },
                   explanation: {
                     type: "string",
-                    description: "Explanation in English of why this answer is correct"
+                    description: "Explanation in English of why this answer is correct",
                   },
                   isPlural: {
                     type: "boolean",
-                    description: "Whether the answer should be in plural form"
+                    description: "Whether the answer should be in plural form",
                   },
-                  ...(exerciseType === "verbAspect" ? {
-                    exerciseSubType: {
-                      type: "string",
-                      enum: ["verb-aspect"],
-                      description: "Type identifier for verb aspect exercises"
-                    },
-                    options: {
-                      type: "object",
-                      properties: {
-                        imperfective: { type: "string" },
-                        perfective: { type: "string" }
-                      },
-                      required: ["imperfective", "perfective"],
-                      description: "The two verb aspect options to choose from"
-                    },
-                    correctAspect: {
-                      type: "string",
-                      enum: ["imperfective", "perfective"],
-                      description: "Which aspect is correct"
-                    }
-                  } : {})
+                  ...(exerciseType === "verbAspect"
+                    ? {
+                        exerciseSubType: {
+                          type: "string",
+                          enum: ["verb-aspect"],
+                          description: "Type identifier for verb aspect exercises",
+                        },
+                        options: {
+                          type: "object",
+                          properties: {
+                            imperfective: { type: "string" },
+                            perfective: { type: "string" },
+                          },
+                          required: ["imperfective", "perfective"],
+                          description: "The two verb aspect options to choose from",
+                        },
+                        correctAspect: {
+                          type: "string",
+                          enum: ["imperfective", "perfective"],
+                          description: "Which aspect is correct",
+                        },
+                      }
+                    : {}),
                 },
-                required: exerciseType === "verbAspect" 
-                  ? ["text", "correctAnswer", "explanation", "exerciseSubType", "options", "correctAspect"]
-                  : ["text", "correctAnswer", "explanation"],
-                additionalProperties: false
-              }
-            }
+                required:
+                  exerciseType === "verbAspect"
+                    ? ["text", "correctAnswer", "explanation", "exerciseSubType", "options", "correctAspect"]
+                    : ["text", "correctAnswer", "explanation"],
+                additionalProperties: false,
+              },
+            },
           },
           required: ["exercises"],
-          additionalProperties: false
-        }
-      }
+          additionalProperties: false,
+        },
+      },
     };
   }
 }
@@ -374,20 +374,20 @@ function processAIResponseWithValidation(content: string, exerciseType: string) 
   try {
     parsedData = JSON.parse(content);
   } catch {
-    exerciseLogger.error('Failed to parse AI response', { content: content.substring(0, 200) });
+    exerciseLogger.error("Failed to parse AI response", { content: content.substring(0, 200) });
     throw new Error("Invalid JSON response from AI");
   }
 
   // Validate the response using Zod schemas
   const validatedData = validateExerciseResponse(
-    parsedData, 
+    parsedData,
     exerciseType as "verbTenses" | "nounDeclension" | "verbAspect" | "relativePronouns"
   );
 
   // Generate UUIDs and transform to final format
   if (exerciseType === "verbTenses" || exerciseType === "nounDeclension") {
     // Type narrowing: we know this is a paragraph exercise response
-    if ('paragraph' in validatedData) {
+    if ("paragraph" in validatedData) {
       const exerciseSet: ParagraphExerciseSet = {
         id: uuidv4(),
         paragraph: validatedData.paragraph,
@@ -405,10 +405,10 @@ function processAIResponseWithValidation(content: string, exerciseType: string) 
     }
   } else {
     // Type narrowing: we know this is a sentence exercise response
-    if ('exercises' in validatedData) {
+    if ("exercises" in validatedData) {
       const exercises: SentenceExercise[] = validatedData.exercises.map((ex) => {
         // Check if this is a verb aspect exercise and preserve the verb aspect properties
-        if ('exerciseSubType' in ex && ex.exerciseSubType === "verb-aspect") {
+        if ("exerciseSubType" in ex && ex.exerciseSubType === "verb-aspect") {
           return {
             id: uuidv4(),
             text: ex.text,
@@ -420,7 +420,7 @@ function processAIResponseWithValidation(content: string, exerciseType: string) 
             isPlural: ex.isPlural,
           };
         }
-        
+
         // Default sentence exercise format
         return {
           id: uuidv4(),
@@ -440,7 +440,6 @@ function processAIResponseWithValidation(content: string, exerciseType: string) 
       return NextResponse.json(exerciseSetWithId);
     }
   }
-  
+
   throw new Error("Invalid exercise response format");
 }
-
