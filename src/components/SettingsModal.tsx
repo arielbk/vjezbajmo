@@ -4,18 +4,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { ResponsiveModal } from "@/components/ui/responsive-modal";
 import { useExercise } from "@/contexts/ExerciseContext";
 import { userProgressManager } from "@/lib/user-progress";
 import { Settings, Key, Eye, EyeOff, RefreshCw, AlertCircle, Trash2 } from "lucide-react";
 import type { CefrLevel } from "@/types/exercise";
+import { toast } from "sonner";
 
 export function SettingsModal() {
   const { state, dispatch, regenerateAllExercises } = useExercise();
@@ -32,6 +26,7 @@ export function SettingsModal() {
       dispatch({ type: "SET_API_KEY", payload: tempApiKey.trim() });
       setIsEditing(false);
       setTempApiKey("");
+      toast.success("API key saved successfully!");
     }
   };
 
@@ -39,6 +34,7 @@ export function SettingsModal() {
     dispatch({ type: "CLEAR_API_KEY" });
     setTempApiKey("");
     setIsEditing(true);
+    toast.success("API key removed");
   };
 
   const handleProviderChange = (provider: "openai" | "anthropic") => {
@@ -47,12 +43,19 @@ export function SettingsModal() {
 
   const handleCefrLevelChange = (level: CefrLevel) => {
     dispatch({ type: "SET_CEFR_LEVEL", payload: level });
+    toast.success(`CEFR level changed to ${level}`);
   };
 
   const handleRegenerateAll = async () => {
-    await regenerateAllExercises(globalTheme || undefined);
-    setGlobalTheme("");
-    setOpen(false);
+    try {
+      await regenerateAllExercises(globalTheme || undefined);
+      setGlobalTheme("");
+      setOpen(false);
+      toast.success("All exercises regenerated successfully!");
+    } catch (error) {
+      console.error("Failed to regenerate exercises:", error);
+      toast.error("Failed to regenerate exercises. Please try again.");
+    }
   };
 
   const handleClearProgress = async () => {
@@ -62,6 +65,7 @@ export function SettingsModal() {
     try {
       userProgressManager.clearAllProgress();
       setClearSuccess(true);
+      toast.success("Progress cleared successfully!");
       
       // Hide success message after 3 seconds
       setTimeout(() => {
@@ -69,7 +73,7 @@ export function SettingsModal() {
       }, 3000);
     } catch (error) {
       console.error("Failed to clear progress:", error);
-      // You could add error state here if needed
+      toast.error("Failed to clear progress. Please try again.");
     } finally {
       setIsClearing(false);
     }
@@ -91,24 +95,18 @@ export function SettingsModal() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <ResponsiveModal
+      open={open}
+      onOpenChange={setOpen}
+      trigger={
         <Button variant="outline" size="sm" className="gap-2">
           <Settings className="h-4 w-4" />
           Settings
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            Settings
-          </DialogTitle>
-          <DialogDescription>
-            Configure your learning preferences and optionally provide your own API key for unlimited exercise
-            generation.
-          </DialogDescription>
-        </DialogHeader>
+      }
+      title="Settings"
+      description="Configure your learning preferences and optionally provide your own API key for unlimited exercise generation."
+    >
 
         <div className="space-y-6">
           {/* CEFR Level Selection */}
@@ -266,7 +264,6 @@ export function SettingsModal() {
             </p>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
-  );
+      </ResponsiveModal>
+    );
 }

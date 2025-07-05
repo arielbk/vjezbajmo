@@ -4,6 +4,8 @@ export interface ExerciseSourceInfo {
   isStatic: boolean;
   indicator: string;
   description: string;
+  currentIndex?: number;
+  totalCount?: number;
 }
 
 /**
@@ -60,6 +62,8 @@ export function getExerciseSourceInfo(exerciseId: string, exerciseType: Exercise
       isStatic: true,
       indicator: staticIndex > 0 ? `Static Exercise ${staticIndex}/10` : "Static Exercise",
       description: "",
+      currentIndex: staticIndex,
+      totalCount: 10,
     };
   } else {
     // Generated exercise indicators

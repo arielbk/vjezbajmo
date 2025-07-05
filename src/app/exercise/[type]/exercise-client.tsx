@@ -3,11 +3,11 @@
 import { ParagraphExercise } from "@/components/ParagraphExercise";
 import { SentenceExercise as SentenceExerciseComponent } from "@/components/SentenceExercise";
 import { VerbAspectExerciseComponent } from "@/components/VerbAspectExercise";
+import { ExerciseLoadingSkeleton } from "@/components/ExerciseLoadingSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useExercise } from "@/contexts/ExerciseContext";
 import type { ParagraphExerciseSet, SentenceExerciseSet, VerbAspectExercise, ExerciseType } from "@/types/exercise";
-import { getGenerationMessage } from "@/lib/exercise-source-utils";
-import { AlertTriangle, Sparkles } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { clientLogger } from "@/lib/client-logger";
@@ -131,7 +131,7 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <ExerciseLoadingSkeleton />;
   }
 
   const exerciseData = getCurrentExerciseData();
@@ -147,12 +147,7 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
 
   // Show generating message when auto-generating exercises
   if (state.isGenerating && hasAttemptedGeneration) {
-    return (
-      <Alert>
-        <Sparkles className="h-4 w-4" />
-        <AlertDescription>{getGenerationMessage(exerciseType)}</AlertDescription>
-      </Alert>
-    );
+    return <ExerciseLoadingSkeleton />;
   }
 
   return (

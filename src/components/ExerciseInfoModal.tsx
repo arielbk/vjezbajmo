@@ -7,19 +7,13 @@ import { getStaticWorksheetProgress, getStaticWorksheets } from "@/lib/static-wo
 import { getExerciseSourceInfo } from "@/lib/exercise-source-utils";
 import { useExercise } from "@/contexts/ExerciseContext";
 import { useRouter } from "next/navigation";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { ResponsiveModal } from "@/components/ui/responsive-modal";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { BookOpen, Sparkles, RefreshCw, Star, ChevronRight, CheckCircle, Circle } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Sparkles, RefreshCw, Star, ChevronRight, CheckCircle, Circle } from "lucide-react";
+import { toast } from "sonner";
 
 interface ExerciseInfoModalProps {
   exerciseId: string;
@@ -69,8 +63,10 @@ export function ExerciseInfoModal({ exerciseId, exerciseType, cefrLevel, childre
       await forceRegenerateExercise(exerciseType, theme || undefined);
       setTheme("");
       setIsOpen(false);
+      toast.success("New exercise generated successfully!");
     } catch (error) {
       console.error("Failed to generate exercise:", error);
+      toast.error("Failed to generate exercise. Please try again.");
     }
   };
 
@@ -100,159 +96,144 @@ export function ExerciseInfoModal({ exerciseId, exerciseType, cefrLevel, childre
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto w-[95vw] sm:w-full">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {sourceInfo.isStatic ? (
-              <>
-                <BookOpen className="h-5 w-5" />
-                Static Exercise Details
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-5 w-5" />
-                Generated Exercise Details
-              </>
-            )}
-          </DialogTitle>
-          <DialogDescription>
-            View your progress and performance for this {exerciseType.replace(/([A-Z])/g, " $1").toLowerCase()}{" "}
-            exercise.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-6">
-          {/* Exercises Section */}
-          {exerciseSummary.length > 0 && (
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    Static <span className="capitalize">{exerciseType.replace(/([A-Z])/g, " $1")}</span> Exercises
-                  </CardTitle>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Badge variant="outline">{cefrLevel}</Badge>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span className="whitespace-nowrap">{staticProgress.progressText}</span>
-                      <div className="w-12 bg-muted rounded-full h-1.5">
-                        <div
-                          className="bg-primary rounded-full h-1.5 transition-all duration-300"
-                          style={{ width: `${(staticProgress.completed / staticProgress.total) * 100}%` }}
-                        />
-                      </div>
+    <ResponsiveModal
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      trigger={children}
+      title={sourceInfo.isStatic ? "Static Exercise Details" : "Generated Exercise Details"}
+      description={`View your progress and performance for this ${exerciseType.replace(/([A-Z])/g, " $1").toLowerCase()} exercise.`}
+      className="max-w-2xl max-h-[80vh] overflow-y-auto w-[95vw] sm:w-full"
+    >
+      <div className="space-y-6">
+        {/* Exercises Section */}
+        {exerciseSummary.length > 0 && (
+          <div>
+            <div className="pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  Static <span className="capitalize">{exerciseType.replace(/([A-Z])/g, " $1")}</span> Exercises
+                </h3>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Badge variant="outline">{cefrLevel}</Badge>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span className="whitespace-nowrap">{staticProgress.progressText}</span>
+                    <div className="w-12 bg-muted rounded-full h-1.5">
+                      <div
+                        className="bg-primary rounded-full h-1.5 transition-all duration-300"
+                        style={{ width: `${(staticProgress.completed / staticProgress.total) * 100}%` }}
+                      />
                     </div>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {sourceInfo.isStatic
-                    ? "Browse and jump to other exercises in this category"
-                    : "Browse and jump to static exercises in this category"}
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-1 max-h-60 overflow-y-auto pr-2">
-                  {exerciseSummary.map((exercise) => (
-                    <div
-                      key={exercise.id}
-                      className={`group flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border transition-all gap-3 ${
-                        exercise.isCurrent
-                          ? "border-primary bg-primary/5 shadow-sm"
-                          : "border-border hover:border-primary/50 hover:bg-muted/30 cursor-pointer"
-                      }`}
-                      onClick={() => !exercise.isCurrent && handleNavigateToExercise(exercise.id)}
-                    >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="flex-shrink-0">
-                          {exercise.isCompleted ? (
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                          ) : (
-                            <Circle className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="font-medium text-sm truncate flex flex-wrap items-center gap-2">
-                            <span>{exercise.title}</span>
-                            {exercise.isCurrent && (
-                              <Badge variant="outline" className="text-xs flex-shrink-0">
-                                Current
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {exercise.attempts > 0
-                              ? `${exercise.attempts} attempt${exercise.attempts > 1 ? "s" : ""}`
-                              : "Not attempted yet"}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between sm:justify-end gap-2 flex-shrink-0">
-                        {exercise.bestScore !== null && (
-                          <Badge
-                            variant="outline"
-                            className={`text-xs font-medium ${getScoreColor(exercise.bestScore)}`}
-                          >
-                            <Star className="h-3 w-3 mr-1" />
-                            {exercise.bestScore}%
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {sourceInfo.isStatic
+                  ? "Browse and jump to other exercises in this category"
+                  : "Browse and jump to static exercises in this category"}
+              </p>
+            </div>
+            <div className="space-y-1">
+              {exerciseSummary.map((exercise) => (
+                <div
+                  key={exercise.id}
+                  className={`group flex items-center justify-between p-3 rounded-lg border transition-all ${
+                    exercise.isCurrent
+                      ? "border-primary bg-primary/5 shadow-sm"
+                      : "border-border hover:border-primary/50 hover:bg-muted/30 cursor-pointer"
+                  }`}
+                  onClick={() => !exercise.isCurrent && handleNavigateToExercise(exercise.id)}
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="flex-shrink-0">
+                      {exercise.isCompleted ? (
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Circle className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-sm truncate flex flex-wrap items-center gap-2">
+                        <span>{exercise.title}</span>
+                        {exercise.isCurrent && (
+                          <Badge variant="outline" className="text-xs flex-shrink-0">
+                            Current
                           </Badge>
                         )}
-                        {!exercise.isCurrent && (
-                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {exercise.attempts > 0
+                          ? `${exercise.attempts} attempt${exercise.attempts > 1 ? "s" : ""}`
+                          : "Not attempted yet"}
                       </div>
                     </div>
-                  ))}
-                </div>
-                {exerciseSummary.filter((e) => !e.isCurrent).length > 0 && (
-                  <div className="mt-3 text-xs text-muted-foreground border-t pt-3">
-                    💡 Click on any static exercise to practice it directly
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Generate New Exercise Section */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Sparkles className="h-4 w-4" />
-                Generate New Exercise
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Want to practice with different questions? Generate a new exercise with optional theme.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Input
-                  type="text"
-                  placeholder="Optional theme (e.g., 'travel', 'food', 'family')"
-                  value={theme}
-                  onChange={(e) => setTheme(e.target.value)}
-                  className="flex-1"
-                  disabled={state.isGenerating}
-                />
-                <Button onClick={handleRegenerateExercise} disabled={state.isGenerating} className="w-full sm:w-auto">
-                  {state.isGenerating ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Generate New Exercise
-                    </>
-                  )}
-                </Button>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {exercise.bestScore !== null && (
+                      <Badge
+                        variant="outline"
+                        className={`text-xs font-medium ${getScoreColor(exercise.bestScore)}`}
+                      >
+                        <Star className="h-3 w-3 mr-1" />
+                        {exercise.bestScore}%
+                      </Badge>
+                    )}
+                    {!exercise.isCurrent && (
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {exerciseSummary.filter((e) => !e.isCurrent).length > 0 && (
+              <div className="mt-3 text-xs text-muted-foreground border-t pt-3">
+                💡 Click on any static exercise to practice it directly
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
+        )}
+
+        {/* Separator */}
+        {exerciseSummary.length > 0 && <Separator />}
+
+        {/* Generate New Exercise Section */}
+        <div>
+          <div className="pb-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
+              <Sparkles className="h-4 w-4" />
+              Generate New Exercise
+            </h3>
+          </div>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Want to practice with different questions? Generate a new exercise with optional theme.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Input
+                type="text"
+                placeholder="Optional theme (e.g., 'travel', 'food', 'family')"
+                value={theme}
+                onChange={(e) => setTheme(e.target.value)}
+                className="flex-1"
+                disabled={state.isGenerating}
+              />
+              <Button onClick={handleRegenerateExercise} disabled={state.isGenerating} className="w-full sm:w-auto">
+                {state.isGenerating ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Generate New Exercise
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </ResponsiveModal>
   );
 }

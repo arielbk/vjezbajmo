@@ -11,9 +11,9 @@ import { useResetExerciseState } from "@/hooks/useResetExerciseState";
 import type { SentenceExercise, SentenceExerciseSet, ExerciseType } from "@/types/exercise";
 import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
 import { getExerciseSourceInfo } from "@/lib/exercise-source-utils";
-import { Check, X, RotateCcw, ArrowRight, AlertTriangle, BookOpen, Sparkles } from "lucide-react";
+import { Check, X, RotateCcw, ArrowRight, AlertTriangle } from "lucide-react";
 import { getExerciseDescription } from "@/lib/exercise-descriptions";
-import { ExerciseInfoModal } from "@/components/ExerciseInfoModal";
+import { ExerciseInfoButton } from "@/components/ExerciseInfoButton";
 
 interface SentenceExerciseProps {
   exerciseSet: SentenceExerciseSet;
@@ -202,21 +202,13 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
           <CardHeader className="pb-1">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg sm:text-xl lg:text-2xl">{title}</CardTitle>
-              <ExerciseInfoModal exerciseId={exerciseSet.id} exerciseType={exerciseType} cefrLevel={state.cefrLevel}>
-                <button className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground bg-muted/40 hover:bg-muted/70 border border-border hover:border-primary/50 rounded-lg transition-all duration-200 cursor-pointer group">
-                  {sourceInfo.isStatic ? (
-                    <>
-                      <BookOpen className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                      <span className="font-medium">{sourceInfo.indicator}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                      <span className="font-medium">{sourceInfo.indicator}</span>
-                    </>
-                  )}
-                </button>
-              </ExerciseInfoModal>
+              <ExerciseInfoButton 
+                exerciseId={exerciseSet.id} 
+                exerciseType={exerciseType} 
+                cefrLevel={state.cefrLevel}
+                currentIndex={sourceInfo.currentIndex}
+                totalCount={sourceInfo.totalCount}
+              />
             </div>
             <p className="text-sm text-muted-foreground mt-2">{getExerciseDescription(exerciseType)}</p>
           </CardHeader>

@@ -34,7 +34,7 @@
       {
         "id": "vt01-q4",
         "blankNumber": 4,
-        "baseForm": "popiti",
+        "baseForm": "piti",
         "correctAnswer": ["pije"],
         "explanation": "Present tense, habitual action before work.",
         "isPlural": false
