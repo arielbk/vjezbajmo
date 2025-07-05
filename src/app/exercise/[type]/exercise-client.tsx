@@ -71,6 +71,23 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
     }
   }, [exerciseType, dispatch, searchParams]);
 
+  // Debug effect to log exercise loading state
+  useEffect(() => {
+    if (typeof window !== "undefined" && exerciseType) {
+      const currentData = getCurrentExerciseData();
+      console.log("Exercise Client Debug:", {
+        exerciseType,
+        hasCurrentData: !!currentData,
+        currentDataId: currentData?.id,
+        cefrLevel: state.cefrLevel,
+        isGenerating: state.isGenerating,
+        hasApiKey: !!state.apiKey,
+        hasAttemptedGeneration,
+        isReview: searchParams.get("review") === "true",
+      });
+    }
+  }, [exerciseType, state.cefrLevel, state.isGenerating, state.apiKey, hasAttemptedGeneration, searchParams, getCurrentExerciseData]);
+
   // Auto-generate exercises if no static worksheets are available and user has API key
   useEffect(() => {
     const shouldGenerateExercises = () => {

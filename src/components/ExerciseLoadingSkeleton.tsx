@@ -52,7 +52,7 @@ export function ExerciseLoadingSkeleton() {
 
             {/* Button skeleton */}
             <div className="text-center">
-              <Skeleton className="h-12 w-48 mx-auto" />
+              <Skeleton className="h-10 w-32 mx-auto" />
             </div>
           </CardContent>
         </Card>

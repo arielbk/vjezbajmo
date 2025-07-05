@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ExerciseProvider } from "@/contexts/ExerciseContext";
 import { AppHeader } from "@/components/AppHeader";
 import { AppFooter } from "@/components/AppFooter";
+import { DebugInfo } from "@/components/DebugInfo";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -46,16 +47,11 @@ export default function RootLayout({
               <AppFooter />
             </div>
           </div>
+          <DebugInfo />
         </ExerciseProvider>
-        <Toaster 
-          position="top-center"
+        <Toaster
           toastOptions={{
             duration: 4000,
-            style: {
-              background: 'hsl(var(--background))',
-              color: 'hsl(var(--foreground))',
-              border: '1px solid hsl(var(--border))',
-            },
           }}
         />
       </body>

@@ -18,6 +18,16 @@ import {
   getStaticWorksheets,
 } from "@/lib/static-worksheets";
 
+// Add debugging to verify static worksheets are loading
+if (typeof window !== "undefined") {
+  console.log("Static worksheets available:", {
+    verbTenses: getStaticWorksheets("verbTenses").length,
+    nounDeclension: getStaticWorksheets("nounDeclension").length,
+    verbAspect: getStaticWorksheets("verbAspect").length,
+    relativePronouns: getStaticWorksheets("relativePronouns").length,
+  });
+}
+
 interface ExerciseState {
   currentExerciseType: ExerciseType | null;
   verbAspectExercises: SentenceExerciseSet;
@@ -137,6 +147,27 @@ function exerciseReducer(state: ExerciseState, action: ExerciseAction): Exercise
             updatedState = { ...updatedState, verbAspectExercises: exerciseSet as SentenceExerciseSet };
           } else if (action.payload.exerciseType === "relativePronouns") {
             updatedState = { ...updatedState, relativePronounsExercises: exerciseSet as SentenceExerciseSet };
+          }
+        } else {
+          // No static worksheet available - get the first one regardless of completion status
+          // This ensures we always have something to show, even if all exercises are completed
+          const allWorksheets = getStaticWorksheets(action.payload.exerciseType);
+          const levelWorksheets = allWorksheets.filter((w) => w.cefrLevel === state.cefrLevel);
+          
+          if (levelWorksheets.length > 0) {
+            const firstWorksheet = levelWorksheets[0];
+            const exerciseSet = convertWorksheetToExerciseSet(firstWorksheet, action.payload.exerciseType);
+            
+            // Update the appropriate exercise data
+            if (action.payload.exerciseType === "verbTenses") {
+              updatedState = { ...updatedState, verbTensesParagraph: exerciseSet as ParagraphExerciseSet };
+            } else if (action.payload.exerciseType === "nounDeclension") {
+              updatedState = { ...updatedState, nounAdjectiveParagraph: exerciseSet as ParagraphExerciseSet };
+            } else if (action.payload.exerciseType === "verbAspect") {
+              updatedState = { ...updatedState, verbAspectExercises: exerciseSet as SentenceExerciseSet };
+            } else if (action.payload.exerciseType === "relativePronouns") {
+              updatedState = { ...updatedState, relativePronounsExercises: exerciseSet as SentenceExerciseSet };
+            }
           }
         }
       }

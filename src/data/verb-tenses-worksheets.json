@@ -5,7 +5,7 @@
     "exerciseType": "verbTenses",
     "cefrLevel": "A2.2",
     "title": "Dan u gradu",
-    "paragraph": "Marko ___1___ (živjeti) u Zagrebu od djetinjstva. Svaki dan ___2___ (ići) na posao tramvajem. Jučer ___3___ (kupovati) novu jaknu u centru. Prije posla obično ___4___ (popiti) kavu s prijateljem. Sutra ___5___ (posjetiti) izložbu u muzeju. Kada ___6___ (završiti) s poslom, vraća se kući pješice.",
+    "paragraph": "Marko ___1___ (živjeti) u Zagrebu od djetinjstva. Svaki dan ___2___ (ići) na posao tramvajem. Jučer ___3___ (kupiti) novu jaknu u centru. Prije posla obično ___4___ (popiti) kavu s prijateljem. Sutra ___5___ (posjetiti) izložbu u muzeju. Kada ___6___ (završiti) s poslom, vraća se kući pješice.",
     "questions": [
       {
         "id": "vt01-q1",
@@ -26,7 +26,7 @@
       {
         "id": "vt01-q3",
         "blankNumber": 3,
-        "baseForm": "kupovati",
+        "baseForm": "kupiti",
         "correctAnswer": ["je kupio", "je kupila"],
         "explanation": "Past tense (perfect), third person singular, masculine or feminine as context allows.",
         "isPlural": false
