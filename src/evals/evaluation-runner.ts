@@ -509,7 +509,7 @@ export class EvaluationRunner {
       'verbTenses': 1.0,
       'nounDeclension': 1.2,
       'verbAspect': 0.8,
-      'interrogativePronouns': 0.9
+      'relativePronouns': 0.9
     };
     
     return baseTokens * (multipliers[exerciseType] || 1.0);

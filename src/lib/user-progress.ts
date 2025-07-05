@@ -209,7 +209,7 @@ class UserProgressManager {
           verbTenses: { completed: 0, averageScore: 0 },
           nounDeclension: { completed: 0, averageScore: 0 },
           verbAspect: { completed: 0, averageScore: 0 },
-          interrogativePronouns: { completed: 0, averageScore: 0 },
+          relativePronouns: { completed: 0, averageScore: 0 },
         },
       };
     }
@@ -222,11 +222,11 @@ class UserProgressManager {
       verbTenses: { completed: 0, averageScore: 0 },
       nounDeclension: { completed: 0, averageScore: 0 },
       verbAspect: { completed: 0, averageScore: 0 },
-      interrogativePronouns: { completed: 0, averageScore: 0 },
+      relativePronouns: { completed: 0, averageScore: 0 },
     };
 
     // Calculate stats by exercise type
-    const exerciseTypes: ExerciseType[] = ["verbTenses", "nounDeclension", "verbAspect", "interrogativePronouns"];
+    const exerciseTypes: ExerciseType[] = ["verbTenses", "nounDeclension", "verbAspect", "relativePronouns"];
 
     exerciseTypes.forEach((type) => {
       const typeRecords = records.filter((r) => r.exerciseType === type);

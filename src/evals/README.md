@@ -136,7 +136,7 @@ The evaluation system includes comprehensive test cases for all Croatian grammar
 - **Verb Tenses**: 6 test cases (present, past, future, temporal clauses)
 - **Noun Declension**: 8 test cases (all major cases: nominative, accusative, genitive, dative, locative, instrumental)
 - **Verb Aspect**: 6 test cases (perfective vs imperfective distinctions)
-- **Interrogative Pronouns**: 6 test cases (koji/koja/koje in different cases)
+- **Relative Pronouns**: 6 test cases (koji/koja/koje in different cases)
 
 ### Test Case Features
 - **Multiple Correct Answers**: Support for Croatian/Serbian variants and alternative forms

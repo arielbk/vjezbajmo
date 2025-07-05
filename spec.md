@@ -39,7 +39,7 @@ The application is a monolithic **Next.js** application.
 1.  **Verb Tenses in Text (Paragraph Completion)**
 2.  **Noun & Adjective Declension (Paragraph Completion)**
 3.  **Verb Aspect (Radio Button Selection)**
-4.  **Interrogative Pronouns (Mid-sentence Fill-ins)**
+4.  **Relative Pronouns (Mid-sentence Fill-ins)**
 
 **Architectural Note on Extensibility:** The system will be designed so that adding a new exercise type is a streamlined process, involving a new Zod schema, a new prompt template, and a new React component.
 
@@ -72,7 +72,7 @@ interface BaseExerciseQuestion {
 interface ExerciseWorksheet {
   id: string; // Static: "verb-aspect-01", Generated: UUID
   source: "static" | "generated"; // To differentiate in the UI
-  exerciseType: "verbAspect" | "interrogativePronouns" | "verbTenses" | "nounDeclension";
+  exerciseType: "verbAspect" | "relativePronouns" | "verbTenses" | "nounDeclension";
   cefrLevel: string;
   theme?: string;
   // Content will vary by exercise type
@@ -97,7 +97,7 @@ interface SentenceContent extends BaseExerciseQuestion {
 - **Request Body:**
   ```json
   {
-    "exerciseType": "verbTenses" | "nounDeclension" | "verbAspect" | "interrogativePronouns",
+    "exerciseType": "verbTenses" | "nounDeclension" | "verbAspect" | "relativePronouns",
     "cefrLevel": "A1" | "A2.1" | "A2.2" | "B1.1",
     "provider"?: "openai" | "anthropic",
     "apiKey"?: "string",

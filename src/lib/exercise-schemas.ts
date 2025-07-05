@@ -39,7 +39,7 @@ export const VerbAspectExerciseSchema = BaseSentenceExerciseSchema.extend({
   correctAspect: z.enum(["imperfective", "perfective"])
 });
 
-// Schema for regular sentence exercises (interrogative pronouns, etc.)
+// Schema for regular sentence exercises (relative pronouns, etc.)
 export const RegularSentenceExerciseSchema = BaseSentenceExerciseSchema;
 
 // Union schema for any sentence exercise
@@ -72,7 +72,7 @@ export type ExerciseResponse = z.infer<typeof ExerciseResponseSchema>;
 // Helper function to validate and transform exercise responses
 export function validateExerciseResponse(
   data: unknown,
-  exerciseType: "verbTenses" | "nounDeclension" | "verbAspect" | "interrogativePronouns"
+  exerciseType: "verbTenses" | "nounDeclension" | "verbAspect" | "relativePronouns"
 ): ParagraphExerciseResponse | SentenceExerciseResponse {
   try {
     if (exerciseType === "verbTenses" || exerciseType === "nounDeclension") {

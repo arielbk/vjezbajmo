@@ -44,8 +44,8 @@ export function CompletedExercisesView({ onRetryExercise }: CompletedExercisesVi
         return "Noun & Adjective Declension";
       case "verbAspect":
         return "Verb Aspect";
-      case "interrogativePronouns":
-        return "Interrogative Pronouns";
+      case "relativePronouns":
+        return "Relative Pronouns";
       default:
         return type;
     }
@@ -161,7 +161,7 @@ export function CompletedExercisesView({ onRetryExercise }: CompletedExercisesVi
             <TabsTrigger value="verbAspect" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap">
               Verb Aspect
             </TabsTrigger>
-            <TabsTrigger value="interrogativePronouns" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap">
+            <TabsTrigger value="relativePronouns" className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap">
               Pronouns
             </TabsTrigger>
           </TabsList>

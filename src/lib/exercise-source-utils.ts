@@ -14,7 +14,7 @@ export function getExerciseSourceInfo(exerciseId: string, exerciseType: Exercise
   // Static exercise ID patterns (actual patterns from our static worksheets)
   const staticPatterns = {
     verbAspect: /^verb-aspect-\d+$/,
-    interrogativePronouns: /^interrogative-pronouns-\d+$/, 
+    relativePronouns: /^relative-pronouns-\d+$/, 
     verbTenses: /^verb-tenses-\d+$/,
     nounDeclension: /^noun-declension-\d+$/
   };
@@ -31,10 +31,10 @@ export function getExerciseSourceInfo(exerciseId: string, exerciseType: Exercise
         staticIndex = match ? parseInt(match[1]) : 1;
       }
       break;
-    case "interrogativePronouns":
-      isStatic = staticPatterns.interrogativePronouns.test(exerciseId);
+    case "relativePronouns":
+      isStatic = staticPatterns.relativePronouns.test(exerciseId);
       if (isStatic) {
-        const match = exerciseId.match(/interrogative-pronouns-(\d+)$/);
+        const match = exerciseId.match(/relative-pronouns-(\d+)$/);
         staticIndex = match ? parseInt(match[1]) : 1;
       }
       break;
@@ -79,7 +79,7 @@ export function getGenerationMessage(exerciseType: ExerciseType): string {
     verbTenses: "verb tense",
     nounDeclension: "noun declension", 
     verbAspect: "verb aspect",
-    interrogativePronouns: "interrogative pronoun"
+    relativePronouns: "relative pronoun"
   };
 
   return `Generating a new ${typeNames[exerciseType]} exercise for you...`;

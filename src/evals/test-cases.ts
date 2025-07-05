@@ -4,7 +4,7 @@ export interface GenerationTestCase {
   id: string;
   description: string;
   request: {
-    exerciseType: "verbTenses" | "nounDeclension" | "verbAspect" | "interrogativePronouns";
+    exerciseType: "verbTenses" | "nounDeclension" | "verbAspect" | "relativePronouns";
     cefrLevel: "A1" | "A2.1" | "A2.2" | "B1.1";
     theme?: string;
   };
@@ -14,14 +14,14 @@ export interface GenerationTestCase {
     maxQuestions: number;
     hasExplanations: boolean;
     hasCorrectAnswers: boolean;
-    
+
     // Content quality expectations
     cefrLevelMatch: boolean; // Should match requested CEFR level
     themeAdherence?: boolean; // Should follow theme if provided
     grammarAccuracy: boolean; // Croatian grammar should be correct
     explanationQuality: "basic" | "good" | "excellent"; // Expected explanation quality
     vocabularyAppropriate: boolean; // Vocabulary should match CEFR level
-    
+
     // Exercise type specific
     exerciseTypeSpecific?: {
       verbTenses?: {
@@ -36,7 +36,7 @@ export interface GenerationTestCase {
         includesBothAspects: boolean;
         hasAspectOptions: boolean;
       };
-      interrogativePronouns?: {
+      relativePronouns?: {
         coversDifferentPronouns: boolean;
         includesContextualUsage: boolean;
       };
@@ -225,12 +225,12 @@ export const ALL_TEST_CASES: GenerationTestCase[] = [
     },
   },
 
-  // Interrogative Pronouns Tests
+  // Relative Pronouns Tests
   {
     id: "ip-a1-basic",
-    description: "Basic A1 interrogative pronouns exercise generation",
+    description: "Basic A1 relative pronouns exercise generation",
     request: {
-      exerciseType: "interrogativePronouns",
+      exerciseType: "relativePronouns",
       cefrLevel: "A1",
     },
     expectedCriteria: {
@@ -243,7 +243,7 @@ export const ALL_TEST_CASES: GenerationTestCase[] = [
       explanationQuality: "basic",
       vocabularyAppropriate: true,
       exerciseTypeSpecific: {
-        interrogativePronouns: {
+        relativePronouns: {
           coversDifferentPronouns: true,
           includesContextualUsage: true,
         },
@@ -252,9 +252,9 @@ export const ALL_TEST_CASES: GenerationTestCase[] = [
   },
   {
     id: "ip-a2-family",
-    description: "A2.1 interrogative pronouns with family theme",
+    description: "A2.1 relative pronouns with family theme",
     request: {
-      exerciseType: "interrogativePronouns",
+      exerciseType: "relativePronouns",
       cefrLevel: "A2.1",
       theme: "family and relationships",
     },
@@ -269,7 +269,7 @@ export const ALL_TEST_CASES: GenerationTestCase[] = [
       explanationQuality: "good",
       vocabularyAppropriate: true,
       exerciseTypeSpecific: {
-        interrogativePronouns: {
+        relativePronouns: {
           coversDifferentPronouns: true,
           includesContextualUsage: true,
         },

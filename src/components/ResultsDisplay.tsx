@@ -36,8 +36,8 @@ export function ResultsDisplay({ onRestart, onReviewMistakes, onNextExercise }: 
         return state.nounAdjectiveParagraph;
       case "verbAspect":
         return state.verbAspectExercises;
-      case "interrogativePronouns":
-        return state.interrogativePronounsExercises;
+      case "relativePronouns":
+        return state.relativePronounsExercises;
       default:
         return null;
     }
@@ -69,7 +69,7 @@ export function ResultsDisplay({ onRestart, onReviewMistakes, onNextExercise }: 
         return "Noun & Adjective Declension";
       case "verbAspect":
         return "Verb Aspect";
-      case "interrogativePronouns":
+      case "relativePronouns":
         return "Koji, koja, koje";
       default:
         return "Exercise";

@@ -2,7 +2,7 @@
  * Type definitions for the prompt system
  */
 
-export type ExerciseType = "verbTenses" | "nounDeclension" | "verbAspect" | "interrogativePronouns";
+export type ExerciseType = "verbTenses" | "nounDeclension" | "verbAspect" | "relativePronouns";
 export type CefrLevel = "A1" | "A2.1" | "A2.2" | "B1.1";
 export type AIProvider = "openai" | "anthropic";
 

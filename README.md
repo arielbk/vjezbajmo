@@ -11,7 +11,7 @@ A web application for practicing Croatian grammar with dynamic exercises at A2.2
   - Verb Tenses in Text (paragraph completion)
   - Noun & Adjective Declension (paragraph completion)
   - Verb Aspect (isolated sentences)
-  - Interrogative Pronouns (isolated sentences)
+  - Relative Pronouns (isolated sentences)
 - **Modern UI**: Clean, responsive design with Tailwind CSS
 - **Accessibility**: Full keyboard navigation and WCAG 2.1 compliance
 - **Secure validation**: Server-side answer checking for generated exercises

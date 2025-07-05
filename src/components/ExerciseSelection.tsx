@@ -35,8 +35,8 @@ const exerciseTypes: Array<{
     isParagraph: false,
   },
   {
-    type: "interrogativePronouns",
-    title: "Interrogative Pronouns",
+    type: "relativePronouns",
+    title: "Relative Pronouns",
     description: "Fill in blanks with the correct form of koji, koja, koje in context.",
     icon: <HelpCircle className="h-5 w-5" />,
     isParagraph: false,

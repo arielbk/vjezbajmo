@@ -44,8 +44,8 @@ export const MULTIPLE_ANSWERS_INSTRUCTIONS: Record<string, MultipleAnswersInstru
     ]
   },
 
-  INTERROGATIVE_PRONOUNS: {
-    description: "Provide multiple acceptable variations for interrogative pronouns",
+  RELATIVE_PRONOUNS: {
+    description: "Provide multiple acceptable variations for relative pronouns",
     requirements: [
       "Provide \"correctAnswer\" as an array of strings containing ALL grammatically acceptable variations",
       "Include alternative case forms when context permits multiple interpretations",

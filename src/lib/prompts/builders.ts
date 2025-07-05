@@ -21,7 +21,7 @@ import {
 import verbTensesData from "@/data/verb-tenses-worksheets.json";
 import nounDeclinationData from "@/data/noun-declension-worksheets.json";
 import verbAspectData from "@/data/verb-aspect-worksheets.json";
-import interrogativePronounsData from "@/data/interrogative-pronouns-worksheets.json";
+import relativePronounsData from "@/data/relative-pronouns-worksheets.json";
 
 export class VerbTensesPromptBuilder implements PromptBuilder {
   buildSystemPrompt(context: PromptContext): string {
@@ -198,22 +198,23 @@ Return JSON in this exact format:
   }
 }
 
-export class InterrogativePronounsPromptBuilder implements PromptBuilder {
+export class RelativePronounsPromptBuilder implements PromptBuilder {
   buildSystemPrompt(context: PromptContext): string {
     return createSystemPrompt(context.cefrLevel);
   }
 
   buildUserPrompt(context: PromptContext): string {
     const themeText = formatThemeText(context.theme);
-    const exampleExercises = JSON.stringify({ exercises: interrogativePronounsData[0].exercises.slice(0, 3) }, null, 2);
+    const exampleExercises = JSON.stringify({ exercises: relativePronounsData[0].exercises.slice(0, 3) }, null, 2);
     
-    return `Create 5 Croatian interrogative pronoun exercises. Each should be a sentence with one blank where students fill in the correct form of koji/koja/koje ONLY.${themeText}
+    return `Create 5 Croatian relative pronoun exercises. Each should be a sentence with one blank where students fill in the correct form of koji/koja/koje ONLY.${themeText}
 
 Here are examples of the quality and style expected:
 
 ${exampleExercises}
 
-IMPORTANT: Use ONLY forms of "koji" (which). Do NOT use other interrogative pronouns like "tko", "što", "čiji", etc.
+IMPORTANT: Use ONLY forms of "koji" (which). Do NOT use other relative pronouns like "tko", "što", "čiji", etc.
+These are RELATIVE pronouns used to connect clauses, not question words.
 
 Declension table for "koji" (which):
 SINGULAR:
@@ -246,7 +247,7 @@ Return JSON in this exact format:
       "isPlural": false
     }
   ]
-}${formatMultipleAnswersInstructions("INTERROGATIVE_PRONOUNS")}`;
+}${formatMultipleAnswersInstructions("RELATIVE_PRONOUNS")}`;
   }
 
   getJsonSchema(): ExerciseJsonSchema {
@@ -255,13 +256,13 @@ Return JSON in this exact format:
       requirements: [
         "Provide exercises array",
         "Each exercise has text with single blank",
-        "Focus on interrogative pronoun declensions"
+        "Focus on relative pronoun declensions"
       ]
     };
   }
 
   getMultipleAnswersInstructions(): MultipleAnswersInstructions {
-    return MULTIPLE_ANSWERS_INSTRUCTIONS.INTERROGATIVE_PRONOUNS;
+    return MULTIPLE_ANSWERS_INSTRUCTIONS.RELATIVE_PRONOUNS;
   }
 }
 
@@ -276,8 +277,8 @@ export function createPromptBuilder(exerciseType: string): PromptBuilder {
       return new NounDeclensionPromptBuilder();
     case "verbAspect":
       return new VerbAspectPromptBuilder();
-    case "interrogativePronouns":
-      return new InterrogativePronounsPromptBuilder();
+    case "relativePronouns":
+      return new RelativePronounsPromptBuilder();
     default:
       throw new Error(`Unknown exercise type: ${exerciseType}`);
   }

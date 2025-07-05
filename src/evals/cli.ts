@@ -59,7 +59,7 @@ async function main() {
     console.log('\n📋 DETAILED BREAKDOWN BY EXERCISE TYPE\n');
     console.log('='.repeat(80));
 
-    const exerciseTypes = ['verbTenses', 'nounDeclension', 'verbAspect', 'interrogativePronouns'];
+    const exerciseTypes = ['verbTenses', 'nounDeclension', 'verbAspect', 'relativePronouns'];
     
     exerciseTypes.forEach(exerciseType => {
       console.log(`\n🎯 ${exerciseType.toUpperCase()}`);

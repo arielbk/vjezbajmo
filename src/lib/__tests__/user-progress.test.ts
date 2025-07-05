@@ -15,7 +15,7 @@ describe("Cache Provider Utils", () => {
     });
 
     it("should handle all exercise types", () => {
-      const types = ["verbTenses", "nounDeclension", "verbAspect", "interrogativePronouns"] as const;
+      const types = ["verbTenses", "nounDeclension", "verbAspect", "relativePronouns"] as const;
 
       types.forEach((type) => {
         const key = generateCacheKey(type, "A2.2");

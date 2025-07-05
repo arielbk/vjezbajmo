@@ -144,7 +144,7 @@ export function isStaticExercise(id: string | number): boolean {
     /^verb-tenses-\d+$/,
     /^noun-declension-\d+$/,
     /^verb-aspect-\d+$/,
-    /^interrogative-pronouns-\d+$/,
+    /^relative-pronouns-\d+$/,
     // Legacy patterns (if any exist)
     /^static-/,
     /^verb-tenses-static-/,

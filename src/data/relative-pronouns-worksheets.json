@@ -1,0 +1,398 @@
+[
+  {
+    "id": "relative-pronouns-01",
+    "source": "static",
+    "exerciseType": "relativePronouns",
+    "cefrLevel": "A2.2",
+    "title": "Grad i događaji",
+    "exercises": [
+      {
+        "id": "rp01-q1",
+        "text": "Zagreb je grad u _____ živi više od 800.000 ljudi.",
+        "correctAnswer": ["kojem", "kojemu"],
+        "explanation": "Locative masculine singular—'u kojem/kojemu' refers to 'grad'. Both short and long forms are correct.",
+        "isPlural": false
+      },
+      {
+        "id": "rp01-q2",
+        "text": "Ovo je park kroz _____ prolazim svaki dan.",
+        "correctAnswer": ["koji"],
+        "explanation": "Accusative masculine singular—'kroz koji' refers to 'park'.",
+        "isPlural": false
+      },
+      {
+        "id": "rp01-q3",
+        "text": "Gledali smo film o djevojci za _____ nitko nije znao.",
+        "correctAnswer": ["koju"],
+        "explanation": "Accusative feminine singular—'za koju' refers to 'djevojka'.",
+        "isPlural": false
+      },
+      {
+        "id": "rp01-q4",
+        "text": "To su prijatelji s _____ često putujem.",
+        "correctAnswer": ["kojima", "kojim"],
+        "explanation": "Instrumental plural—'s kojima/kojim' refers to 'prijatelji'. Both forms are correct.",
+        "isPlural": true
+      },
+      {
+        "id": "rp01-q5",
+        "text": "Posjetili smo mjesta u _____ su snimali film.",
+        "correctAnswer": ["kojima", "kojim"],
+        "explanation": "Locative plural—'u kojima/kojim' refers to the neuter plural noun 'mjesta'. Both the long form 'kojima' and the short form 'kojim' are correct.",
+        "isPlural": true
+      }
+    ]
+  },
+  {
+    "id": "relative-pronouns-02",
+    "source": "static",
+    "exerciseType": "relativePronouns",
+    "cefrLevel": "A2.2",
+    "title": "Škola i učenje",
+    "exercises": [
+      {
+        "id": "rp02-q1",
+        "text": "Ovo su zadaci na _____ još nisam odgovorio.",
+        "correctAnswer": ["koje"],
+        "explanation": "Accusative plural—'na koje' refers to 'zadaci'. The phrase 'odgovoriti na' takes the accusative case.",
+        "isPlural": true
+      },
+      {
+        "id": "rp02-q2",
+        "text": "Profesorica je dala temu o _____ ćemo raspravljati sutra.",
+        "correctAnswer": ["kojoj"],
+        "explanation": "Locative feminine singular—'o kojoj' refers to 'tema'.",
+        "isPlural": false
+      },
+      {
+        "id": "rp02-q3",
+        "text": "To je knjiga iz _____ sam učio gramatiku.",
+        "correctAnswer": ["koje"],
+        "explanation": "Genitive feminine singular—The preposition 'iz' takes the genitive case. 'iz koje' refers to 'knjiga'.",
+        "isPlural": false
+      },
+      {
+        "id": "rp02-q4",
+        "text": "To su učenici s _____ sam bio na natjecanju.",
+        "correctAnswer": ["kojima", "kojim"],
+        "explanation": "Instrumental plural—'s kojima/kojim' refers to 'učenici'.",
+        "isPlural": true
+      },
+      {
+        "id": "rp02-q5",
+        "text": "Imam zadatak za _____ mi treba pomoć.",
+        "correctAnswer": ["koji"],
+        "explanation": "Accusative masculine singular—'za koji' refers to 'zadatak'.",
+        "isPlural": false
+      }
+    ]
+  },
+  {
+    "id": "relative-pronouns-03",
+    "source": "static",
+    "exerciseType": "relativePronouns",
+    "cefrLevel": "A2.2",
+    "title": "Hrana i trgovina",
+    "exercises": [
+      {
+        "id": "rp03-q1",
+        "text": "To je trgovina u _____ kupujem kruh.",
+        "correctAnswer": ["kojoj"],
+        "explanation": "Locative feminine singular—'u kojoj' refers to 'trgovina'.",
+        "isPlural": false
+      },
+      {
+        "id": "rp03-q2",
+        "text": "Ovo su kolači bez _____ ne slavim rođendan.",
+        "correctAnswer": ["kojih"],
+        "explanation": "Genitive plural—'bez kojih' refers to 'kolači'.",
+        "isPlural": true
+      },
+      {
+        "id": "rp03-q3",
+        "text": "Ovo je čokolada na _____ sam potrošio zadnji novac.",
+        "correctAnswer": ["koju"],
+        "explanation": "Accusative feminine singular—'na koju' refers to 'čokolada'.",
+        "isPlural": false
+      },
+      {
+        "id": "rp03-q4",
+        "text": "To su proizvodi o _____ često čitam recenzije.",
+        "correctAnswer": ["kojima", "kojim"],
+        "explanation": "Locative plural—'o kojima/kojim' refers to 'proizvodi'.",
+        "isPlural": true
+      },
+      {
+        "id": "rp03-q5",
+        "text": "To je kafić u _____ se uvijek nalazimo.",
+        "correctAnswer": ["kojem", "kojemu"],
+        "explanation": "Locative masculine singular—'u kojem/kojemu' refers to 'kafić'.",
+        "isPlural": false
+      }
+    ]
+  },
+  {
+    "id": "relative-pronouns-04",
+    "source": "static",
+    "exerciseType": "relativePronouns",
+    "cefrLevel": "A2.2",
+    "title": "Putovanja",
+    "exercises": [
+      {
+        "id": "rp04-q1",
+        "text": "Ovo je autobus s _____ sam putovao u Split.",
+        "correctAnswer": ["kojim"],
+        "explanation": "Instrumental masculine singular—'s kojim' refers to 'autobus'.",
+        "isPlural": false
+      },
+      {
+        "id": "rp04-q2",
+        "text": "Imam kartu za vlak u _____ ima puno mjesta.",
+        "correctAnswer": ["kojem", "kojemu"],
+        "explanation": "Locative masculine singular—'u kojem/kojemu' refers to 'vlak'.",
+        "isPlural": false
+      },
+      {
+        "id": "rp04-q3",
+        "text": "Posjetio sam otoke o _____ sam dugo sanjao.",
+        "correctAnswer": ["kojima", "kojim"],
+        "explanation": "Locative plural—The verb 'sanjati o' (to dream about) takes the locative case. 'o kojima/kojim' refers to 'otoci'.",
+        "isPlural": true
+      },
+      {
+        "id": "rp04-q4",
+        "text": "To su hoteli u _____ su odsjeli moji roditelji.",
+        "correctAnswer": ["kojima", "kojim"],
+        "explanation": "Locative plural—'u kojima/kojim' refers to 'hoteli'.",
+        "isPlural": true
+      },
+      {
+        "id": "rp04-q5",
+        "text": "To je plaža na _____ smo igrali odbojku.",
+        "correctAnswer": ["kojoj"],
+        "explanation": "Locative feminine singular—'na kojoj' refers to 'plaža'.",
+        "isPlural": false
+      }
+    ]
+  },
+  {
+    "id": "relative-pronouns-05",
+    "source": "static",
+    "exerciseType": "relativePronouns",
+    "cefrLevel": "A2.2",
+    "title": "Tehnologija",
+    "exercises": [
+      {
+        "id": "rp05-q1",
+        "text": "Ovo je računalo na _____ radim svaki dan.",
+        "correctAnswer": ["kojem", "kojemu"],
+        "explanation": "Locative neuter singular—'na kojem/kojemu' refers to 'računalo'.",
+        "isPlural": false
+      },
+      {
+        "id": "rp05-q2",
+        "text": "To su uređaji bez _____ više ne mogu zamisliti dan.",
+        "correctAnswer": ["kojih"],
+        "explanation": "Genitive plural—'bez kojih' refers to 'uređaji'.",
+        "isPlural": true
+      },
+      {
+        "id": "rp05-q3",
+        "text": "Ovo su aplikacije u _____ se može učiti jezike.",
+        "correctAnswer": ["kojima", "kojim"],
+        "explanation": "Locative plural—'u kojima/kojim' refers to 'aplikacije'.",
+        "isPlural": true
+      },
+      {
+        "id": "rp05-q4",
+        "text": "To je mobitel s _____ često fotografiram.",
+        "correctAnswer": ["kojim"],
+        "explanation": "Instrumental masculine singular—'s kojim' refers to 'mobitel'.",
+        "isPlural": false
+      },
+      {
+        "id": "rp05-q5",
+        "text": "Imam tablet za _____ koristim posebnu olovku.",
+        "correctAnswer": ["koji"],
+        "explanation": "Accusative masculine singular—'za koji' refers to 'tablet'.",
+        "isPlural": false
+      }
+    ]
+  },
+  {
+    "id": "relative-pronouns-06",
+    "source": "static",
+    "exerciseType": "relativePronouns",
+    "cefrLevel": "A2.2",
+    "title": "Sport i zabava",
+    "exercises": [
+      {
+        "id": "rp06-q1",
+        "text": "Ovo su tenisice u _____ ću ići na Inmusic Festival.",
+        "correctAnswer": ["kojima", "kojim"],
+        "explanation": "Locative plural—'u kojima/kojim' refers to 'tenisice'.",
+        "isPlural": true
+      },
+      {
+        "id": "rp06-q2",
+        "text": "To je tim za _____ navijam od djetinjstva.",
+        "correctAnswer": ["koji"],
+        "explanation": "Accusative masculine singular—'za koji' refers to 'tim'.",
+        "isPlural": false
+      },
+      {
+        "id": "rp06-q3",
+        "text": "Gledam utakmicu u _____ igra moj brat.",
+        "correctAnswer": ["kojoj"],
+        "explanation": "Locative feminine singular—'u kojoj' refers to 'utakmica'.",
+        "isPlural": false
+      },
+      {
+        "id": "rp06-q4",
+        "text": "To su pjesme uz _____ uvijek plešem.",
+        "correctAnswer": ["koje"],
+        "explanation": "Accusative plural—'uz koje' refers to 'pjesme'.",
+        "isPlural": true
+      },
+      {
+        "id": "rp06-q5",
+        "text": "Ovo je glumac o _____ svi pričaju.",
+        "correctAnswer": ["kojem", "kojemu"],
+        "explanation": "Locative masculine singular—'o kojem/kojemu' refers to 'glumac'.",
+        "isPlural": false
+      }
+    ]
+  },
+  {
+    "id": "relative-pronouns-07",
+    "source": "static",
+    "exerciseType": "relativePronouns",
+    "cefrLevel": "A2.2",
+    "title": "Prijateljstvo",
+    "exercises": [
+      {
+        "id": "rp07-q1",
+        "text": "Volim piti kavu s ljudima s _____ ne moram puno pričati.",
+        "correctAnswer": ["kojima", "kojim"],
+        "explanation": "Instrumental plural—'s kojima/kojim' refers to 'ljudima'.",
+        "isPlural": true
+      },
+      {
+        "id": "rp07-q2",
+        "text": "To su prijateljice za _____ bih sve učinila.",
+        "correctAnswer": ["koje"],
+        "explanation": "Accusative feminine plural—'za koje' refers to 'prijateljice'.",
+        "isPlural": true
+      },
+      {
+        "id": "rp07-q3",
+        "text": "On je netko u _____ uvijek mogu imati povjerenja.",
+        "correctAnswer": ["kojeg", "kojega"],
+        "explanation": "Accusative masculine singular—The phrase 'imati povjerenja u nekoga' takes the accusative case. 'u kojeg(a)' refers to 'netko'. Both the short form 'kojeg' and long form 'kojega' are correct.",
+        "isPlural": false
+      },
+      {
+        "id": "rp07-q4",
+        "text": "To su priče o _____ često razgovaramo.",
+        "correctAnswer": ["kojima", "kojim"],
+        "explanation": "Locative plural—'o kojima/kojim' refers to 'priče'.",
+        "isPlural": true
+      },
+      {
+        "id": "rp07-q5",
+        "text": "To je prijatelj na _____ uvijek mogu računati.",
+        "correctAnswer": ["kojeg", "kojega"],
+        "explanation": "Accusative masculine singular—The phrase 'računati na nekoga' takes the accusative case. 'na kojeg(a)' refers to 'prijatelj'. Both the short form 'kojeg' and long form 'kojega' are correct.",
+        "isPlural": false
+      }
+    ]
+  },
+  {
+    "id": "relative-pronouns-08",
+    "source": "static",
+    "exerciseType": "relativePronouns",
+    "cefrLevel": "A2.2",
+    "title": "Priroda i okoliš",
+    "exercises": [
+      {
+        "id": "rp08-q1",
+        "text": "To su mjesta na _____ često idem na izlete.",
+        "correctAnswer": ["koja"],
+        "explanation": "Accusative plural—'na koja' refers to 'mjesta'. The preposition 'na' with a verb of motion takes the accusative.",
+        "isPlural": true
+      },
+      {
+        "id": "rp08-q2",
+        "text": "Ovo su drveća ispod _____ sjedimo ljeti.",
+        "correctAnswer": ["kojih"],
+        "explanation": "Genitive plural—The preposition 'ispod' takes the genitive case. 'ispod kojih' refers to 'drveća'.",
+        "isPlural": true
+      },
+      {
+        "id": "rp08-q3",
+        "text": "To je park iz _____ se pruža lijep pogled.",
+        "correctAnswer": ["kojeg", "kojega"],
+        "explanation": "Genitive masculine singular—The preposition 'iz' takes the genitive case. 'iz kojeg(a)' refers to 'park'. Both the short form 'kojeg' and long form 'kojega' are correct.",
+        "isPlural": false
+      },
+      {
+        "id": "rp08-q4",
+        "text": "Ovo je staza po _____ trčimo svakog jutra.",
+        "correctAnswer": ["kojoj"],
+        "explanation": "Locative feminine singular—The preposition 'po' indicating movement across a surface takes the locative case. 'po kojoj' refers to 'staza'.",
+        "isPlural": false
+      },
+      {
+        "id": "rp08-q5",
+        "text": "To su životinje o _____ smo učili u školi.",
+        "correctAnswer": ["kojima", "kojim"],
+        "explanation": "Locative plural—'o kojima/kojim' refers to 'životinje'.",
+        "isPlural": true
+      }
+    ]
+  },
+  {
+    "id": "relative-pronouns-09",
+    "source": "static",
+    "exerciseType": "relativePronouns",
+    "cefrLevel": "A2.2",
+    "title": "Umjetnost i kultura",
+    "exercises": [
+      {
+        "id": "rp09-q1",
+        "text": "To je knjiga o _____ smo razgovarali.",
+        "correctAnswer": ["kojoj"],
+        "explanation": "Locative feminine singular—'o kojoj' refers to 'knjiga'.",
+        "isPlural": false
+      },
+      {
+        "id": "rp09-q2",
+        "text": "To su slike o _____ pišu poznati kritičari.",
+        "correctAnswer": ["kojima", "kojim"],
+        "explanation": "Locative plural—The verb 'pisati o' (to write about) takes the locative case. 'o kojima/kojim' refers to 'slike'.",
+        "isPlural": true
+      },
+      {
+        "id": "rp09-q3",
+        "text": "To je muzej u _____ je izložena slavna skulptura.",
+        "correctAnswer": ["kojem", "kojemu"],
+        "explanation": "Locative masculine singular—'u kojem/kojemu' refers to 'muzej'.",
+        "isPlural": false
+      },
+      {
+        "id": "rp09-q4",
+        "text": "To su pjesme bez _____ ne mogu zamisliti ljeto.",
+        "correctAnswer": ["kojih"],
+        "explanation": "Genitive plural—'bez kojih' refers to 'pjesme'.",
+        "isPlural": true
+      },
+      {
+        "id": "rp09-q5",
+        "text": "To je film u _____ igra moj omiljeni glumac.",
+        "correctAnswer": ["kojem", "kojemu"],
+        "explanation": "Locative masculine singular—'u kojem/kojemu' refers to 'film'.",
+        "isPlural": false
+      }
+    ]
+  }
+]

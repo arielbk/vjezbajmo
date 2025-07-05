@@ -16,7 +16,7 @@ export const revalidate = 3600;
 
 // Validation schema - now includes userCompletedExercises and forceRegenerate
 const generateExerciseSchema = z.object({
-  exerciseType: z.enum(["verbTenses", "nounDeclension", "verbAspect", "interrogativePronouns"]),
+  exerciseType: z.enum(["verbTenses", "nounDeclension", "verbAspect", "relativePronouns"]),
   cefrLevel: z.enum(["A1", "A2.1", "A2.2", "B1.1"]),
   provider: z.enum(["openai", "anthropic"]).optional(),
   apiKey: z.string().optional(),
@@ -169,7 +169,7 @@ async function generateWithOpenAI(exerciseType: string, cefrLevel: string, apiKe
   const openai = new OpenAI({ apiKey });
 
   const prompts = generatePrompt(
-    exerciseType as "verbTenses" | "nounDeclension" | "verbAspect" | "interrogativePronouns", 
+    exerciseType as "verbTenses" | "nounDeclension" | "verbAspect" | "relativePronouns", 
     cefrLevel as "A1" | "A2.1" | "A2.2" | "B1.1", 
     theme
   );
@@ -204,7 +204,7 @@ async function generateWithAnthropic(exerciseType: string, cefrLevel: string, ap
   const anthropic = new Anthropic({ apiKey });
 
   const prompts = generatePrompt(
-    exerciseType as "verbTenses" | "nounDeclension" | "verbAspect" | "interrogativePronouns", 
+    exerciseType as "verbTenses" | "nounDeclension" | "verbAspect" | "relativePronouns", 
     cefrLevel as "A1" | "A2.1" | "A2.2" | "B1.1", 
     theme
   );
@@ -381,7 +381,7 @@ function processAIResponseWithValidation(content: string, exerciseType: string) 
   // Validate the response using Zod schemas
   const validatedData = validateExerciseResponse(
     parsedData, 
-    exerciseType as "verbTenses" | "nounDeclension" | "verbAspect" | "interrogativePronouns"
+    exerciseType as "verbTenses" | "nounDeclension" | "verbAspect" | "relativePronouns"
   );
 
   // Generate UUIDs and transform to final format

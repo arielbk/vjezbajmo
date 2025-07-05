@@ -11,17 +11,17 @@ import {
   CheckAnswerResponse,
 } from "@/types/exercise";
 import { userProgressManager } from "@/lib/user-progress";
-import { 
-  getNextStaticWorksheet, 
-  hasRemainingStaticWorksheets, 
+import {
+  getNextStaticWorksheet,
+  hasRemainingStaticWorksheets,
   convertWorksheetToExerciseSet,
-  getStaticWorksheets
+  getStaticWorksheets,
 } from "@/lib/static-worksheets";
 
 interface ExerciseState {
   currentExerciseType: ExerciseType | null;
   verbAspectExercises: SentenceExerciseSet;
-  interrogativePronounsExercises: SentenceExerciseSet;
+  relativePronounsExercises: SentenceExerciseSet;
   verbTensesParagraph: ParagraphExerciseSet;
   nounAdjectiveParagraph: ParagraphExerciseSet;
   currentSession: ExerciseSession | null;
@@ -62,7 +62,7 @@ const initialState: ExerciseState = {
     id: "loading",
     exercises: [],
   },
-  interrogativePronounsExercises: {
+  relativePronounsExercises: {
     id: "loading",
     exercises: [],
   },
@@ -72,7 +72,7 @@ const initialState: ExerciseState = {
     questions: [],
   },
   nounAdjectiveParagraph: {
-    id: "loading", 
+    id: "loading",
     paragraph: "",
     questions: [],
   },
@@ -86,7 +86,7 @@ const initialState: ExerciseState = {
     verbTenses: [],
     nounDeclension: [],
     verbAspect: [],
-    interrogativePronouns: [],
+    relativePronouns: [],
   },
 };
 
@@ -127,7 +127,7 @@ function exerciseReducer(state: ExerciseState, action: ExerciseAction): Exercise
         const nextWorksheet = getNextStaticWorksheet(action.payload.exerciseType, state.cefrLevel);
         if (nextWorksheet) {
           const exerciseSet = convertWorksheetToExerciseSet(nextWorksheet, action.payload.exerciseType);
-          
+
           // Update the appropriate exercise data
           if (action.payload.exerciseType === "verbTenses") {
             updatedState = { ...updatedState, verbTensesParagraph: exerciseSet as ParagraphExerciseSet };
@@ -135,8 +135,8 @@ function exerciseReducer(state: ExerciseState, action: ExerciseAction): Exercise
             updatedState = { ...updatedState, nounAdjectiveParagraph: exerciseSet as ParagraphExerciseSet };
           } else if (action.payload.exerciseType === "verbAspect") {
             updatedState = { ...updatedState, verbAspectExercises: exerciseSet as SentenceExerciseSet };
-          } else if (action.payload.exerciseType === "interrogativePronouns") {
-            updatedState = { ...updatedState, interrogativePronounsExercises: exerciseSet as SentenceExerciseSet };
+          } else if (action.payload.exerciseType === "relativePronouns") {
+            updatedState = { ...updatedState, relativePronounsExercises: exerciseSet as SentenceExerciseSet };
           }
         }
       }
@@ -183,9 +183,9 @@ function exerciseReducer(state: ExerciseState, action: ExerciseAction): Exercise
       } else if (exerciseType === "verbAspect") {
         const sentenceData = data as SentenceExerciseSet;
         return { ...state, verbAspectExercises: sentenceData };
-      } else if (exerciseType === "interrogativePronouns") {
+      } else if (exerciseType === "relativePronouns") {
         const sentenceData = data as SentenceExerciseSet;
-        return { ...state, interrogativePronounsExercises: sentenceData };
+        return { ...state, relativePronounsExercises: sentenceData };
       }
 
       return state;
@@ -299,42 +299,42 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
 
   const loadNextStaticWorksheet = (exerciseType: ExerciseType, theme?: string): boolean => {
     const nextWorksheet = getNextStaticWorksheet(exerciseType, state.cefrLevel, theme);
-    
+
     if (!nextWorksheet) {
       return false; // No more static worksheets available
     }
 
     // Convert worksheet to the format expected by components
     const exerciseSet = convertWorksheetToExerciseSet(nextWorksheet, exerciseType);
-    
+
     // Dispatch the loaded exercise data
     dispatch({
       type: "SET_GENERATED_EXERCISES",
-      payload: { exerciseType, data: exerciseSet }
+      payload: { exerciseType, data: exerciseSet },
     });
-    
+
     return true; // Successfully loaded static worksheet
   };
 
   const loadSpecificStaticWorksheet = (exerciseId: string, exerciseType: ExerciseType): boolean => {
     // Use existing utility to get all static worksheets
     const allWorksheets = getStaticWorksheets(exerciseType);
-    
+
     const targetWorksheet = allWorksheets.find((w) => w.id === exerciseId && w.cefrLevel === state.cefrLevel);
-    
+
     if (!targetWorksheet) {
       return false; // Worksheet not found
     }
 
     // Convert worksheet to the format expected by components
     const exerciseSet = convertWorksheetToExerciseSet(targetWorksheet, exerciseType);
-    
+
     // Dispatch the loaded exercise data
     dispatch({
       type: "SET_GENERATED_EXERCISES",
-      payload: { exerciseType, data: exerciseSet }
+      payload: { exerciseType, data: exerciseSet },
     });
-    
+
     return true; // Successfully loaded specific worksheet
   };
 
@@ -394,7 +394,7 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const regenerateAllExercises = async (theme?: string) => {
-    const exerciseTypes: ExerciseType[] = ["verbTenses", "nounDeclension", "verbAspect", "interrogativePronouns"];
+    const exerciseTypes: ExerciseType[] = ["verbTenses", "nounDeclension", "verbAspect", "relativePronouns"];
 
     dispatch({ type: "SET_GENERATING", payload: true });
     dispatch({ type: "SET_ERROR", payload: null });

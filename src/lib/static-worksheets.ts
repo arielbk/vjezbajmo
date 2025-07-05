@@ -8,7 +8,7 @@ import { userProgressManager } from "@/lib/user-progress";
 import verbTensesWorksheets from "@/data/verb-tenses-worksheets.json";
 import nounDeclensionWorksheets from "@/data/noun-declension-worksheets.json";
 import verbAspectWorksheets from "@/data/verb-aspect-worksheets.json";
-import interrogativePronounsWorksheets from "@/data/interrogative-pronouns-worksheets.json";
+import relativePronounsWorksheets from "@/data/relative-pronouns-worksheets.json";
 
 interface StaticWorksheet {
   id: string;
@@ -28,7 +28,7 @@ interface StaticWorksheet {
       perfective: string;
     };
     correctAspect?: "imperfective" | "perfective";
-  }>; // For sentence exercises (interrogative pronouns, verb aspect)
+  }>; // For sentence exercises (relative pronouns, verb aspect)
   questions?: Array<{
     id: string;
     blankNumber: number;
@@ -49,8 +49,8 @@ export function getStaticWorksheets(exerciseType: ExerciseType): StaticWorksheet
       return nounDeclensionWorksheets as StaticWorksheet[];
     case "verbAspect":
       return verbAspectWorksheets as StaticWorksheet[];
-    case "interrogativePronouns":
-      return interrogativePronounsWorksheets as StaticWorksheet[];
+    case "relativePronouns":
+      return relativePronounsWorksheets as StaticWorksheet[];
     default:
       return [];
   }
@@ -145,7 +145,7 @@ export function convertWorksheetToExerciseSet(
       return result;
     }
 
-    case "interrogativePronouns": {
+    case "relativePronouns": {
       // Sentence exercises - return SentenceExerciseSet
       const exercises = worksheet.exercises || [];
 

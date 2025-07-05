@@ -28,12 +28,18 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
         return state.nounAdjectiveParagraph;
       case "verbAspect":
         return state.verbAspectExercises;
-      case "interrogativePronouns":
-        return state.interrogativePronounsExercises;
+      case "relativePronouns":
+        return state.relativePronounsExercises;
       default:
         return null;
     }
-  }, [exerciseType, state.verbTensesParagraph, state.nounAdjectiveParagraph, state.verbAspectExercises, state.interrogativePronounsExercises]);
+  }, [
+    exerciseType,
+    state.verbTensesParagraph,
+    state.nounAdjectiveParagraph,
+    state.verbAspectExercises,
+    state.relativePronounsExercises,
+  ]);
 
   useEffect(() => {
     // Set the exercise type and start session when component mounts
@@ -70,28 +76,27 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
     const shouldGenerateExercises = () => {
       // Don't generate if already attempted or currently generating
       if (hasAttemptedGeneration || state.isGenerating) return false;
-      
+
       // Don't generate for review sessions
       if (searchParams.get("review") === "true") return false;
-      
+
       // Only generate if user has API key
       if (!state.apiKey) return false;
-      
+
       // Check if we have valid exercise data loaded
       const currentData = getCurrentExerciseData();
       if (!currentData || currentData.id === "loading") return false;
-      
+
       // Check if there are more static worksheets available
       return !hasRemainingStaticWorksheets(exerciseType, state.cefrLevel);
     };
 
     if (shouldGenerateExercises()) {
       setHasAttemptedGeneration(true);
-      forceRegenerateExercise(exerciseType)
-        .catch((error) => {
-          clientLogger.exercise.generateError(exerciseType, error);
-          // Don't show error to user, just continue with static exercises
-        });
+      forceRegenerateExercise(exerciseType).catch((error) => {
+        clientLogger.exercise.generateError(exerciseType, error);
+        // Don't show error to user, just continue with static exercises
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exerciseType, state.apiKey, state.isGenerating, hasAttemptedGeneration, searchParams, forceRegenerateExercise]);
@@ -118,7 +123,7 @@ export default function ExerciseClient({ exerciseType }: { exerciseType: Exercis
         return "Noun & Adjective Declension";
       case "verbAspect":
         return "Verb Aspect";
-      case "interrogativePronouns":
+      case "relativePronouns":
         return "Koji, koja, koje";
       default:
         return "Exercise";

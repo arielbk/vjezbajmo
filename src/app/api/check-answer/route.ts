@@ -20,7 +20,7 @@ async function findSolutionForQuestion(
   // Since we don't know which exercise type/level contains this question,
   // we'll need to search across different cache keys
 
-  const exerciseTypes = ["verbTenses", "nounDeclension", "verbAspect", "interrogativePronouns"];
+  const exerciseTypes = ["verbTenses", "nounDeclension", "verbAspect", "relativePronouns"];
   const cefrLevels = ["A1", "A2.1", "A2.2", "B1.1"];
 
   for (const exerciseType of exerciseTypes) {
