@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import { ExerciseProvider } from "@/contexts/ExerciseContext";
 import { AppHeader } from "@/components/AppHeader";
 import { AppFooter } from "@/components/AppFooter";
@@ -36,25 +37,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="hr">
-      <Analytics />
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ExerciseProvider>
-          <div className="min-h-screen">
-            <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
-              <AppHeader />
-              {children}
-              <AppFooter />
+    <ClerkProvider>
+      <html lang="hr">
+        <Analytics />
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+          <ExerciseProvider>
+            <div className="min-h-screen">
+              <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+                <AppHeader />
+                {children}
+                <AppFooter />
+              </div>
             </div>
-          </div>
-          <DebugInfo />
-        </ExerciseProvider>
-        <Toaster
-          toastOptions={{
-            duration: 4000,
-          }}
-        />
-      </body>
-    </html>
+            <DebugInfo />
+          </ExerciseProvider>
+          <Toaster
+            toastOptions={{
+              duration: 4000,
+            }}
+          />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
