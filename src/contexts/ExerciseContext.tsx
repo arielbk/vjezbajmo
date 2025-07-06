@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useReducer, useEffect } from "react";
+import { useAuth } from "@clerk/nextjs";
 import {
   ExerciseType,
   CefrLevel,
@@ -10,7 +11,7 @@ import {
   ExerciseResult,
   CheckAnswerResponse,
 } from "@/types/exercise";
-import { userProgressManager } from "@/lib/user-progress";
+import { clerkUserProgressService } from "@/lib/clerk-user-progress";
 import {
   getNextStaticWorksheet,
   hasRemainingStaticWorksheets,
@@ -281,6 +282,22 @@ const ExerciseContext = createContext<{
 
 export function ExerciseProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(exerciseReducer, initialState);
+  const { userId, isSignedIn } = useAuth();
+
+  // Auto-migrate progress when user signs in
+  useEffect(() => {
+    if (isSignedIn && userId) {
+      const migrateProgress = async () => {
+        try {
+          await clerkUserProgressService.migrateLocalProgressToUser(userId);
+        } catch (error) {
+          console.error('Failed to migrate user progress:', error);
+        }
+      };
+      
+      migrateProgress();
+    }
+  }, [isSignedIn, userId]);
 
   // Load API key, provider, and CEFR level from localStorage on mount
   useEffect(() => {
@@ -374,8 +391,13 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "SET_ERROR", payload: null });
 
     try {
-      // Get user's completed exercises for this type/level/theme
-      const completedExercises = userProgressManager.getCompletedExercises(exerciseType, state.cefrLevel, theme);
+      // Get user's completed exercises for this type/level/theme using Clerk service
+      const completedExercises = await clerkUserProgressService.getCompletedExercises(
+        exerciseType, 
+        state.cefrLevel, 
+        theme, 
+        userId || undefined
+      );
 
       const requestBody: {
         exerciseType: ExerciseType;
@@ -432,8 +454,13 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const promises = exerciseTypes.map(async (exerciseType) => {
-        // Get user's completed exercises for this type/level/theme
-        const completedExercises = userProgressManager.getCompletedExercises(exerciseType, state.cefrLevel, theme);
+        // Get user's completed exercises for this type/level/theme using Clerk service
+        const completedExercises = await clerkUserProgressService.getCompletedExercises(
+          exerciseType, 
+          state.cefrLevel, 
+          theme, 
+          userId || undefined
+        );
 
         const requestBody: {
           exerciseType: ExerciseType;
@@ -515,14 +542,22 @@ export function ExerciseProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const markExerciseCompleted = (
+  const markExerciseCompleted = async (
     exerciseId: string,
     exerciseType: ExerciseType,
     theme?: string,
     scoreData?: { correct: number; total: number },
     title?: string
   ) => {
-    userProgressManager.markExerciseCompleted(exerciseId, exerciseType, state.cefrLevel, theme, scoreData, title);
+    await clerkUserProgressService.markExerciseCompleted(
+      exerciseId, 
+      exerciseType, 
+      state.cefrLevel, 
+      theme, 
+      scoreData, 
+      title, 
+      userId || undefined
+    );
   };
 
   const storeSessionAnswers = (answers: Record<string, string>) => {

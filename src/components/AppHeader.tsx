@@ -1,6 +1,7 @@
 "use client";
 
 import { SettingsModal } from "@/components/SettingsModal";
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 
 export function AppHeader() {
@@ -15,7 +16,20 @@ export function AppHeader() {
           <p className="text-sm sm:text-base text-gray-500">Croatian Language Practice</p>
         </div>
       </Link>
-      <SettingsModal />
+      
+      <div className="flex items-center gap-3">
+        <SettingsModal />
+        <SignedOut>
+          <SignInButton mode="modal">
+            <button className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 border border-blue-200 hover:border-blue-300 rounded-md transition-colors">
+              Sign In
+            </button>
+          </SignInButton>
+        </SignedOut>
+        <SignedIn>
+          <UserButton afterSignOutUrl="/" />
+        </SignedIn>
+      </div>
     </div>
   );
 }
