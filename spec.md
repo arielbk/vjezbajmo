@@ -27,12 +27,14 @@ The application is a monolithic **Next.js** application.
     - **Automatically:** After completing all available static exercises for a specific category.
     - **Manually:** At any time, via a "Generate a new one" button available on exercise pages.
 4.  **No Server-Side Caching (MVP):** For the MVP, generated exercises are not cached on the server. Each generation request is a direct, new call to the LLM provider. This simplifies the architecture significantly.
-5.  **Anonymous Access:** All users are anonymous. The app will use a site-wide API key (`SITE_API_KEY`) for generation by default. Users can optionally provide their own API key in a settings panel, which is stored only in their `localStorage`.
-6.  **Robust Generation Fallback:** If an LLM-based exercise generation fails, the system will display a clear, user-friendly error message. It will **not** fall back to a static exercise, to avoid user confusion.
-7.  **Secure Answer Validation:**
+5.  **Authentication-Gated Generation:** Exercise generation requires either user authentication or user-provided API keys. Anonymous users can access all static content but must sign in or provide API keys to generate new exercises.
+6.  **Progress Sync:** Anonymous users store progress in localStorage. Authenticated users have progress stored in Clerk's user metadata and synced across devices. Local progress is automatically migrated when users sign up.
+7.  **Robust Generation Fallback:** If an LLM-based exercise generation fails, the system will display a clear, user-friendly error message. It will **not** fall back to a static exercise, to avoid user confusion.
+8.  **Secure Answer Validation:**
+8.  **Secure Answer Validation:**
     - **Static Exercises:** Solutions are bundled with the client-side JSON. Since this content is static, this is a low-risk trade-off for speed.
     - **Generated Exercises:** To check an answer for a generated exercise, the client sends the user's answer to a server-side API endpoint. The correct answers (received from the LLM during generation) are temporarily held by the server to perform the check securely.
-8.  **Diacritic Tolerance:** The system marks answers as correct even if they are missing diacritics (č, ć, đ, š, ž), but provides a helpful warning to the user.
+9.  **Diacritic Tolerance:** The system marks answers as correct even if they are missing diacritics (č, ć, đ, š, ž), but provides a helpful warning to the user.
 
 ### **4. Core Features & Exercise Types (MVP)**
 
@@ -45,6 +47,7 @@ The application is a monolithic **Next.js** application.
 
 ### **5. Technology Stack**
 
+- **Authentication:** **Clerk** (user authentication and management)
 - **Framework:** **Next.js 15** (App Router)
 - **Language:** **TypeScript**
 - **Styling:** **Tailwind CSS**
@@ -56,7 +59,8 @@ The application is a monolithic **Next.js** application.
 - **Logging:** **Pino**
 - **Error Monitoring:** **Sentry**
 - **LLM Providers:** **OpenAI API**, **Anthropic API**
-- **Client-Side Storage:** **localStorage**
+- **Client-Side Storage:** **localStorage** (anonymous users)
+- **User Data Storage:** **Clerk User Metadata** (authenticated users)
 
 ### **6. Data Models & API Design**
 
@@ -156,7 +160,28 @@ The internal evaluation system remains a crucial part of the development process
 - Test and refine prompts to achieve the highest possible quality and consistency.
 - Compare the output of different models (OpenAI vs. Anthropic) to ensure reliability.
 
-### **10. Future Enhancements (Post-MVP)**
+### **10. Authentication & User Management**
+
+The application uses **Clerk** for user authentication and user management. This integration provides:
+
+- **Anonymous Usage:** Users can access static exercises and practice without signing up
+- **Progressive Sign-up:** When users want to generate new exercises, they can either:
+  - Sign in to unlock server-side generation (using the site's API keys)
+  - Provide their own API keys to generate anonymously
+- **Progress Sync:** Local storage progress is automatically migrated to user accounts when they sign up
+- **Cross-device Sync:** Authenticated users can access their progress from any device
+- **Future-ready:** Architecture supports adding social login providers (Google, GitHub, Apple, etc.)
+
+**Authentication Flow:**
+1. Users start anonymously with local storage progress tracking
+2. Static exercises are available without authentication
+3. Exercise generation requires either:
+   - User authentication (uses site API keys)
+   - User-provided API keys (remains anonymous)
+4. Upon sign-up/sign-in, local progress is migrated to user account
+5. Progress is then stored in Clerk's user metadata for cross-device sync
+
+### **11. Future Enhancements (Post-MVP)**
 
 - **Server-Side Caching:** Re-introduce a server-side caching layer (e.g., Vercel KV) to store generated exercises, reducing API costs and improving load times as the user base grows.
 - **User Accounts:** Implement user authentication (e.g., with Clerk) to sync progress across devices.
