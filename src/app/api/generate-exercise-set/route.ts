@@ -3,6 +3,7 @@ import { z } from "zod";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { v4 as uuidv4 } from "uuid";
+import { auth } from "@clerk/nextjs/server";
 import { ParagraphExerciseSet, SentenceExercise, ExerciseType, CefrLevel } from "@/types/exercise";
 import { cacheProvider, generateCacheKey, CachedExercise } from "@/lib/cache-provider";
 import { generatePrompt } from "@/lib/prompts";
@@ -34,6 +35,17 @@ export async function POST(request: NextRequest) {
     exerciseType = parsed.exerciseType;
     cefrLevel = parsed.cefrLevel;
     const { provider, apiKey, theme, userCompletedExercises, forceRegenerate } = parsed;
+
+    // Check authentication - require sign-in if no API key is provided
+    if (!apiKey) {
+      const { userId } = await auth();
+      if (!userId) {
+        return NextResponse.json(
+          { error: "Authentication required. Please sign in or provide your own API key to generate exercises." },
+          { status: 401 }
+        );
+      }
+    }
 
     // Determine which API key and provider to use
     effectiveProvider = provider || (process.env.SITE_API_PROVIDER as "openai" | "anthropic") || "openai";
