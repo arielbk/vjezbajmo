@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import { ExerciseProvider } from "@/contexts/ExerciseContext";
 import { AppHeader } from "@/components/AppHeader";
 import { AppFooter } from "@/components/AppFooter";
@@ -35,7 +36,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
+  // Handle missing Clerk publishable key gracefully for builds
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  
+  if (!publishableKey) {
+    console.warn('Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY - Clerk authentication will not work');
+  }
+
+  const AppContent = () => (
     <html lang="hr">
       <Analytics />
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
@@ -57,4 +65,16 @@ export default function RootLayout({
       </body>
     </html>
   );
+
+  // Only wrap with ClerkProvider if publishable key is available
+  if (publishableKey) {
+    return (
+      <ClerkProvider publishableKey={publishableKey}>
+        <AppContent />
+      </ClerkProvider>
+    );
+  }
+
+  // Fallback for builds without Clerk keys
+  return <AppContent />;
 }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ResponsiveModal } from "@/components/ui/responsive-modal";
+import { GenerationAuthStatus } from "@/components/GenerationAuthStatus";
 import { useExercise } from "@/contexts/ExerciseContext";
 import { userProgressManager } from "@/lib/user-progress";
 import { Settings, Key, Eye, EyeOff, RefreshCw, AlertCircle, Trash2 } from "lucide-react";
@@ -145,6 +146,12 @@ export function SettingsModal() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">{getProviderDescription()}</p>
+        </div>
+
+        {/* Authentication Status */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-medium">Exercise Generation Access</h4>
+          <GenerationAuthStatus hasApiKey={!!state.apiKey} />
         </div>
 
         {/* API Key Section */}
