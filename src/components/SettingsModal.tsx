@@ -95,9 +95,9 @@ export function SettingsModal() {
       open={open}
       onOpenChange={setOpen}
       trigger={
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button variant="outline" size="sm" className="gap-1.5 shrink-0 min-w-0">
           <Settings className="h-4 w-4" />
-          Settings
+          <span className="hidden min-[480px]:inline">Settings</span>
         </Button>
       }
       title="Settings"
