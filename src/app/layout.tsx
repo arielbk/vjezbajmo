@@ -36,28 +36,45 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <ClerkProvider>
-      <html lang="hr">
-        <Analytics />
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-          <ExerciseProvider>
-            <div className="min-h-screen">
-              <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
-                <AppHeader />
-                {children}
-                <AppFooter />
-              </div>
+  // Handle missing Clerk publishable key gracefully for builds
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  
+  if (!publishableKey) {
+    console.warn('Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY - Clerk authentication will not work');
+  }
+
+  const AppContent = () => (
+    <html lang="hr">
+      <Analytics />
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ExerciseProvider>
+          <div className="min-h-screen">
+            <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+              <AppHeader />
+              {children}
+              <AppFooter />
             </div>
-            <DebugInfo />
-          </ExerciseProvider>
-          <Toaster
-            toastOptions={{
-              duration: 4000,
-            }}
-          />
-        </body>
-      </html>
-    </ClerkProvider>
+          </div>
+          <DebugInfo />
+        </ExerciseProvider>
+        <Toaster
+          toastOptions={{
+            duration: 4000,
+          }}
+        />
+      </body>
+    </html>
   );
+
+  // Only wrap with ClerkProvider if publishable key is available
+  if (publishableKey) {
+    return (
+      <ClerkProvider publishableKey={publishableKey}>
+        <AppContent />
+      </ClerkProvider>
+    );
+  }
+
+  // Fallback for builds without Clerk keys
+  return <AppContent />;
 }

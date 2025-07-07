@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { CheckCircle, Upload, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { userProgressManager } from "@/lib/user-progress";
 
 export function ProgressMigrationStatus() {
   const { isSignedIn, userId } = useAuth();
@@ -20,11 +21,23 @@ export function ProgressMigrationStatus() {
         
         try {
           // Check if there's local progress to migrate
-          const localProgress = localStorage.getItem('vjezbajmo-completed-exercises');
-          if (!localProgress) {
+          const allProgress = userProgressManager.getAllProgress();
+          const allRecords = userProgressManager.getAllCompletedRecords();
+          
+          // Check if we have any meaningful progress to migrate
+          const hasProgressData = Object.keys(allProgress).length > 0 || allRecords.length > 0;
+          
+          if (!hasProgressData) {
             setMigrationStatus('complete');
             return;
           }
+
+          // Create a combined progress object for migration
+          const localProgress = {
+            completedExercises: allRecords.map(r => r.exerciseId).filter((id, index, self) => self.indexOf(id) === index),
+            completedRecords: allRecords,
+            lastUpdated: Date.now(),
+          };
 
           const response = await fetch('/api/user/progress/migrate', {
             method: 'POST',
@@ -32,7 +45,7 @@ export function ProgressMigrationStatus() {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({ 
-              localProgress: JSON.parse(localProgress),
+              localProgress,
               userId 
             }),
           });
