@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Mic, MicOff, Volume2, User, Bot } from 'lucide-react';
+import { ArrowLeft, Mic, Volume2, Bot } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useConversation } from '@elevenlabs/react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -340,7 +340,7 @@ export function ConversationClient() {
                   <li>• You can switch between Croatian and English</li>
                   <li>• The AI will help correct your pronunciation</li>
                   <li>• Try asking questions about Croatian culture</li>
-                  <li>• Watch the AI's responses appear as subtitles below</li>
+                  <li>• Watch the AI&apos;s responses appear as subtitles below</li>
                 </ul>
               </CardContent>
             </Card>
