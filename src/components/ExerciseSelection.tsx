@@ -76,18 +76,18 @@ export function ExerciseSelection() {
           <div className="absolute inset-[2px] rounded-xl bg-white"></div>
           <div className="relative z-10">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-purple-800">
+              <CardTitle className="flex items-center gap-2">
                 <Bot className="h-5 w-5" />
                 Conversational AI
               </CardTitle>
-              <CardDescription className="text-purple-700">
+              <CardDescription className="mb-2">
                 Practice Croatian through natural conversation with an AI partner. Improve your speaking and listening skills!
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button 
                 onClick={() => router.push('/conversation')} 
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                className="w-full bg-gradient-to-r from-purple-500 via-blue-500 to-pink-500 hover:from-purple-600 hover:via-blue-600 hover:to-pink-600 text-white"
               >
                 Start Conversation
               </Button>

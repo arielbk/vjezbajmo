@@ -33,6 +33,7 @@
     "@vercel/kv": "^3.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "framer-motion": "^12.23.0",
     "lucide-react": "^0.523.0",
     "next": "15.3.4",
     "openai": "^5.7.0",
