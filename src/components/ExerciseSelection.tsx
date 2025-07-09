@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ExerciseType } from "@/types/exercise";
 import { BookOpen, MessageSquare, FileText, HelpCircle, History, BarChart3, Bot } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 
 const exerciseTypes: Array<{
   type: ExerciseType;
@@ -85,12 +86,23 @@ export function ExerciseSelection() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button 
-                onClick={() => router.push('/conversation')} 
-                className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
-              >
-                Start Conversation
-              </Button>
+              <SignedIn>
+                <Button 
+                  onClick={() => router.push('/conversation')} 
+                  className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
+                >
+                  Start Conversation
+                </Button>
+              </SignedIn>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <Button 
+                    className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
+                  >
+                    Sign In to Start Conversation
+                  </Button>
+                </SignInButton>
+              </SignedOut>
             </CardContent>
           </div>
         </Card>

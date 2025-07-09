@@ -3,15 +3,17 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Mic, MicOff, Volume2 } from 'lucide-react';
+import { ArrowLeft, Mic, MicOff, Volume2, User, Bot } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useConversation } from '@elevenlabs/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs';
 
 export function ConversationClient() {
   const router = useRouter();
   const [showAnimation, setShowAnimation] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentAIMessage, setCurrentAIMessage] = useState<string>('');
   
   const conversation = useConversation({
     onConnect: () => {
@@ -26,7 +28,20 @@ export function ConversationClient() {
       setError('Failed to connect to conversation service. Please try again.');
     },
     onMessage: (message) => {
-      console.log('Message:', message);
+      console.log('Message received:', message);
+      
+      // Based on the console output, messages have this structure:
+      // { source: "ai" | "user", message: "text content" }
+      if (message && typeof message === 'object' && message.source && message.message) {
+        // Only update the display for AI messages (subtitles-style)
+        if (message.source === 'ai') {
+          setCurrentAIMessage(message.message);
+        }
+        // We can still log user messages for debugging
+        if (message.source === 'user') {
+          console.log('User said:', message.message);
+        }
+      }
     },
   });
 
@@ -69,6 +84,10 @@ export function ConversationClient() {
     }
   };
 
+  const clearCurrentMessage = () => {
+    setCurrentAIMessage('');
+  };
+
   return (
     <div className="container mx-auto p-4 max-w-4xl">
       <div className="space-y-6">
@@ -88,6 +107,25 @@ export function ConversationClient() {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Authentication Check */}
+            <SignedOut>
+              <div className="bg-muted/30 p-4 sm:p-6 lg:p-8 rounded-lg text-center">
+                <h3 className="text-xl font-semibold mb-4">Sign In Required</h3>
+                <p className="text-muted-foreground mb-6">
+                  Please sign in to access the conversational AI feature and practice Croatian with our AI partner.
+                </p>
+                <SignInButton mode="modal">
+                  <Button 
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white px-8"
+                    size="lg"
+                  >
+                    Sign In to Continue
+                  </Button>
+                </SignInButton>
+              </div>
+            </SignedOut>
+
+            <SignedIn>
             {/* Animation Card */}
             <AnimatePresence>
               {showAnimation && (
@@ -223,19 +261,36 @@ export function ConversationClient() {
                             </Button>
                           </motion.div>
                         ) : (
-                          <motion.div
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <Button 
-                              onClick={handleEndConversation}
-                              variant="destructive"
-                              className="px-8"
-                              size="lg"
+                          <div className="flex gap-4">
+                            <motion.div
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
                             >
-                              End Conversation
-                            </Button>
-                          </motion.div>
+                              <Button 
+                                onClick={handleEndConversation}
+                                variant="destructive"
+                                className="px-8"
+                                size="lg"
+                              >
+                                End Conversation
+                              </Button>
+                            </motion.div>
+                            {currentAIMessage && (
+                              <motion.div
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                <Button 
+                                  onClick={clearCurrentMessage}
+                                  variant="outline"
+                                  className="px-6"
+                                  size="lg"
+                                >
+                                  Clear Message
+                                </Button>
+                              </motion.div>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -243,6 +298,38 @@ export function ConversationClient() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* AI Subtitles */}
+            {currentAIMessage && (
+              <motion.div
+                key={currentAIMessage} // Re-animate when message changes
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-400 to-blue-400 flex items-center justify-center flex-shrink-0">
+                        <Bot className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground mb-1">AI is saying:</p>
+                        <motion.p 
+                          className="text-lg font-medium text-gray-800 leading-relaxed"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.2, delay: 0.1 }}
+                        >
+                          {currentAIMessage}
+                        </motion.p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
             {/* Info Card */}
             <Card className="bg-muted/50">
@@ -253,9 +340,11 @@ export function ConversationClient() {
                   <li>• You can switch between Croatian and English</li>
                   <li>• The AI will help correct your pronunciation</li>
                   <li>• Try asking questions about Croatian culture</li>
+                  <li>• Watch the AI's responses appear as subtitles below</li>
                 </ul>
               </CardContent>
             </Card>
+            </SignedIn>
           </CardContent>
         </Card>
       </div>

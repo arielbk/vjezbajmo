@@ -14,6 +14,8 @@ import { getExerciseSourceInfo } from "@/lib/exercise-source-utils";
 import { Check, X, RotateCcw, ArrowRight } from "lucide-react";
 import { getExerciseDescription } from "@/lib/exercise-descriptions";
 import { ExerciseInfoButton } from "@/components/ExerciseInfoButton";
+import { toast } from "sonner";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 
 interface VerbAspectExerciseSetProps {
   exerciseSet: SentenceExerciseSet & {
@@ -369,40 +371,51 @@ export function VerbAspectExerciseComponent({
                             Try Again
                           </Button>
 
-                          <Button
-                            onClick={async () => {
-                              setIsGeneratingNext(true);
-                              try {
-                                // First, check if there are remaining static worksheets
-                                const hasMoreStatic = hasRemainingStaticWorksheets(exerciseType);
+                          <SignedIn>
+                            <Button
+                              onClick={async () => {
+                                setIsGeneratingNext(true);
+                                try {
+                                  // First, check if there are remaining static worksheets
+                                  const hasMoreStatic = hasRemainingStaticWorksheets(exerciseType);
 
-                                if (hasMoreStatic) {
-                                  // Load the next static worksheet
-                                  const success = loadNextStaticWorksheet(exerciseType);
-                                  if (success) {
-                                    // Start new session and navigate to exercise
-                                    dispatch({ type: "START_SESSION", payload: { exerciseType } });
-                                    router.push(`/exercise/${exerciseType}`);
-                                    return;
+                                  if (hasMoreStatic) {
+                                    // Load the next static worksheet
+                                    const success = loadNextStaticWorksheet(exerciseType);
+                                    if (success) {
+                                      // Start new session and navigate to exercise
+                                      dispatch({ type: "START_SESSION", payload: { exerciseType } });
+                                      router.push(`/exercise/${exerciseType}`);
+                                      return;
+                                    }
                                   }
-                                }
 
-                                // If no static worksheets remain, generate a new exercise
-                                await forceRegenerateExercise(exerciseType);
-                                dispatch({ type: "START_SESSION", payload: { exerciseType } });
-                                router.push(`/exercise/${exerciseType}`);
-                              } catch (error) {
-                                console.error("Failed to load next exercise:", error);
-                              } finally {
-                                setIsGeneratingNext(false);
-                              }
-                            }}
-                            size="lg"
-                            disabled={isGeneratingNext}
-                          >
-                            <ArrowRight className="h-4 w-4 mr-2" />
-                            {isGeneratingNext ? "Generating..." : "Next Exercise"}
-                          </Button>
+                                  // If no static worksheets remain, generate a new exercise
+                                  await forceRegenerateExercise(exerciseType);
+                                  dispatch({ type: "START_SESSION", payload: { exerciseType } });
+                                  router.push(`/exercise/${exerciseType}`);
+                                } catch (error) {
+                                  console.error("Failed to load next exercise:", error);
+                                  toast.error("Failed to generate new exercise. Please try again.");
+                                } finally {
+                                  setIsGeneratingNext(false);
+                                }
+                              }}
+                              size="lg"
+                              disabled={isGeneratingNext}
+                            >
+                              <ArrowRight className="h-4 w-4 mr-2" />
+                              {isGeneratingNext ? "Generating..." : "Next Exercise"}
+                            </Button>
+                          </SignedIn>
+                          <SignedOut>
+                            <SignInButton mode="modal">
+                              <Button size="lg">
+                                <ArrowRight className="h-4 w-4 mr-2" />
+                                Sign In for Next Exercise
+                              </Button>
+                            </SignInButton>
+                          </SignedOut>
                         </div>
                       </div>
                     )}

@@ -15,6 +15,7 @@ import { Check, X, RefreshCw, RotateCcw, ArrowRight, AlertTriangle } from "lucid
 import { getExerciseDescription } from "@/lib/exercise-descriptions";
 import { ExerciseInfoButton } from "@/components/ExerciseInfoButton";
 import { toast } from "sonner";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 
 interface ParagraphExerciseProps {
   exerciseSet: ParagraphExerciseSet;
@@ -334,51 +335,64 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
                           Try Again
                         </Button>
 
-                        <Button
-                          onClick={async () => {
-                            setIsGeneratingNext(true);
-                            try {
-                              // First, check if there are remaining static worksheets
-                              const hasMoreStatic = hasRemainingStaticWorksheets(exerciseType);
+                        <SignedIn>
+                          <Button
+                            onClick={async () => {
+                              setIsGeneratingNext(true);
+                              try {
+                                // First, check if there are remaining static worksheets
+                                const hasMoreStatic = hasRemainingStaticWorksheets(exerciseType);
 
-                              if (hasMoreStatic) {
-                                // Load the next static worksheet
-                                const success = loadNextStaticWorksheet(exerciseType);
-                                if (success) {
-                                  // Start new session and navigate to exercise
-                                  dispatch({ type: "START_SESSION", payload: { exerciseType } });
-                                  router.push(`/exercise/${exerciseType}`);
-                                  return;
+                                if (hasMoreStatic) {
+                                  // Load the next static worksheet
+                                  const success = loadNextStaticWorksheet(exerciseType);
+                                  if (success) {
+                                    // Start new session and navigate to exercise
+                                    dispatch({ type: "START_SESSION", payload: { exerciseType } });
+                                    router.push(`/exercise/${exerciseType}`);
+                                    return;
+                                  }
                                 }
-                              }
 
-                              // If no static worksheets remain, generate a new exercise
-                              await forceRegenerateExercise(exerciseType);
-                              dispatch({ type: "START_SESSION", payload: { exerciseType } });
-                              router.push(`/exercise/${exerciseType}`);
-                            } catch (error) {
-                              console.error("Failed to load next exercise:", error);
-                              toast.error("Failed to generate new exercise. Please try again.");
-                            } finally {
-                              setIsGeneratingNext(false);
-                            }
-                          }}
-                          size="lg"
-                          disabled={isGeneratingNext}
-                          className="w-full sm:w-auto min-w-[140px] h-12 text-base font-semibold"
-                        >
-                          {isGeneratingNext ? (
-                            <>
-                              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                              Generating...
-                            </>
-                          ) : (
-                            <>
+                                // If no static worksheets remain, generate a new exercise
+                                await forceRegenerateExercise(exerciseType);
+                                dispatch({ type: "START_SESSION", payload: { exerciseType } });
+                                router.push(`/exercise/${exerciseType}`);
+                              } catch (error) {
+                                console.error("Failed to load next exercise:", error);
+                                toast.error("Failed to generate new exercise. Please try again.");
+                              } finally {
+                                setIsGeneratingNext(false);
+                              }
+                            }}
+                            size="lg"
+                            disabled={isGeneratingNext}
+                            className="w-full sm:w-auto min-w-[140px] h-12 text-base font-semibold"
+                          >
+                            {isGeneratingNext ? (
+                              <>
+                                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <ArrowRight className="h-4 w-4 mr-2" />
+                                Next Exercise
+                              </>
+                            )}
+                          </Button>
+                        </SignedIn>
+                        <SignedOut>
+                          <SignInButton mode="modal">
+                            <Button
+                              size="lg"
+                              className="w-full sm:w-auto min-w-[140px] h-12 text-base font-semibold"
+                            >
                               <ArrowRight className="h-4 w-4 mr-2" />
-                              Next Exercise
-                            </>
-                          )}
-                        </Button>
+                              Sign In for Next Exercise
+                            </Button>
+                          </SignInButton>
+                        </SignedOut>
                       </div>
                     )}
                   </div>
