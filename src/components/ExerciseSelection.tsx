@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExerciseType } from "@/types/exercise";
-import { BookOpen, MessageSquare, FileText, HelpCircle, History, BarChart3 } from "lucide-react";
+import { BookOpen, MessageSquare, FileText, HelpCircle, History, BarChart3, Bot } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const exerciseTypes: Array<{
@@ -69,6 +69,31 @@ export function ExerciseSelection() {
             </CardContent>
           </Card>
         ))}
+        
+        {/* Conversational AI Card */}
+        <Card className="relative bg-gradient-to-br from-pink-50 to-purple-50 border-2 border-transparent bg-clip-padding">
+          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-400 via-purple-400 via-blue-400 via-green-400 via-yellow-400 to-red-400 opacity-75 blur-sm"></div>
+          <div className="absolute inset-[2px] rounded-xl bg-white"></div>
+          <div className="relative z-10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-purple-800">
+                <Bot className="h-5 w-5" />
+                Conversational AI
+              </CardTitle>
+              <CardDescription className="text-purple-700">
+                Practice Croatian through natural conversation with an AI partner. Improve your speaking and listening skills!
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => router.push('/conversation')} 
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+              >
+                Start Conversation
+              </Button>
+            </CardContent>
+          </div>
+        </Card>
       </div>
 
       {/* Action Buttons */}
