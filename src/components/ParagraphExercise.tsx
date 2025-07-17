@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,11 +10,12 @@ import { useResetExerciseState } from "@/hooks/useResetExerciseState";
 import { ParagraphExerciseSet, ExerciseType } from "@/types/exercise";
 import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
 import { getExerciseSourceInfo } from "@/lib/exercise-source-utils";
-import { Check, X, RefreshCw, RotateCcw, ArrowRight, AlertTriangle } from "lucide-react";
+import { Check, X, AlertTriangle } from "lucide-react";
 import { getExerciseDescription } from "@/lib/exercise-descriptions";
 import { ExerciseInfoButton } from "@/components/ExerciseInfoButton";
+import { ExerciseFooter } from "@/components/ExerciseFooter";
+import { ReviewModeUI } from "@/components/ReviewModeUI";
 import { toast } from "sonner";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 
 interface ParagraphExerciseProps {
   exerciseSet: ParagraphExerciseSet;
@@ -25,21 +25,16 @@ interface ParagraphExerciseProps {
 }
 
 export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title }: ParagraphExerciseProps) {
-  const router = useRouter();
   const {
     dispatch,
     checkAnswer,
-    forceRegenerateExercise,
     state,
     markExerciseCompleted,
-    loadNextStaticWorksheet,
-    hasRemainingStaticWorksheets,
   } = useExercise();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [results, setResults] = useState<Record<string, ReturnType<typeof createExerciseResult>>>({});
   const [isChecking, setIsChecking] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
-  const [isGeneratingNext, setIsGeneratingNext] = useState(false);
   const inputRefs = useRef<Record<string, HTMLInputElement>>({});
 
   // Reset component state when exercise set changes (new exercise loaded)
@@ -266,24 +261,13 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
                 </div>
 
                 {state.currentSession?.isReviewMode && (
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">
-                      You&apos;re reviewing your previous answers. You can modify them and check again.
-                    </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setAnswers({});
-                        setResults({});
-                        setHasChecked(false);
-                      }}
-                      size="lg"
-                      className="mt-3 w-full sm:w-auto min-w-[160px] h-10"
-                    >
-                      Clear All Answers
-                    </Button>
-                  </div>
+                  <ReviewModeUI
+                    onClearAnswers={() => {
+                      setAnswers({});
+                      setResults({});
+                      setHasChecked(false);
+                    }}
+                  />
                 )}
               </form>
             ) : (
@@ -291,111 +275,18 @@ export function ParagraphExercise({ exerciseSet, exerciseType, onComplete, title
                 <div className="bg-muted/30 p-4 sm:p-6 lg:p-8 rounded-lg">{renderParagraphWithInputs()}</div>
 
                 <div className="space-y-4">
-                  <div className="text-center space-y-2">
-                    {state.currentSession?.isReviewMode ? (
-                      <>
-                        <p className="text-sm text-muted-foreground">
-                          Review complete! You can practice again or go back to see your results.
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                          <Button
-                            onClick={() => {
-                              setAnswers(state.currentSession?.previousAnswers || {});
-                              setResults({});
-                              setHasChecked(false);
-                            }}
-                            variant="outline"
-                            size="lg"
-                            className="w-full sm:w-auto min-w-[140px] h-12 text-base font-semibold"
-                          >
-                            Try Again
-                          </Button>
-                          <Button
-                            onClick={onComplete}
-                            size="lg"
-                            className="w-full sm:w-auto min-w-[140px] h-12 text-base font-semibold"
-                          >
-                            Back to Results
-                          </Button>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                        <Button
-                          onClick={() => {
-                            setAnswers(state.currentSession?.previousAnswers || {});
-                            setResults({});
-                            setHasChecked(false);
-                          }}
-                          variant="outline"
-                          size="lg"
-                          className="w-full sm:w-auto min-w-[140px] h-12 text-base font-semibold"
-                        >
-                          <RotateCcw className="h-4 w-4 mr-2" />
-                          Try Again
-                        </Button>
-
-                        <SignedIn>
-                          <Button
-                            onClick={async () => {
-                              setIsGeneratingNext(true);
-                              try {
-                                // First, check if there are remaining static worksheets
-                                const hasMoreStatic = hasRemainingStaticWorksheets(exerciseType);
-
-                                if (hasMoreStatic) {
-                                  // Load the next static worksheet
-                                  const success = loadNextStaticWorksheet(exerciseType);
-                                  if (success) {
-                                    // Start new session and navigate to exercise
-                                    dispatch({ type: "START_SESSION", payload: { exerciseType } });
-                                    router.push(`/exercise/${exerciseType}`);
-                                    return;
-                                  }
-                                }
-
-                                // If no static worksheets remain, generate a new exercise
-                                await forceRegenerateExercise(exerciseType);
-                                dispatch({ type: "START_SESSION", payload: { exerciseType } });
-                                router.push(`/exercise/${exerciseType}`);
-                              } catch (error) {
-                                console.error("Failed to load next exercise:", error);
-                                toast.error("Failed to generate new exercise. Please try again.");
-                              } finally {
-                                setIsGeneratingNext(false);
-                              }
-                            }}
-                            size="lg"
-                            disabled={isGeneratingNext}
-                            className="w-full sm:w-auto min-w-[140px] h-12 text-base font-semibold"
-                          >
-                            {isGeneratingNext ? (
-                              <>
-                                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                                Generating...
-                              </>
-                            ) : (
-                              <>
-                                <ArrowRight className="h-4 w-4 mr-2" />
-                                Next Exercise
-                              </>
-                            )}
-                          </Button>
-                        </SignedIn>
-                        <SignedOut>
-                          <SignInButton mode="modal">
-                            <Button
-                              size="lg"
-                              className="w-full sm:w-auto min-w-[140px] h-12 text-base font-semibold"
-                            >
-                              <ArrowRight className="h-4 w-4 mr-2" />
-                              Sign In for Next Exercise
-                            </Button>
-                          </SignInButton>
-                        </SignedOut>
-                      </div>
-                    )}
-                  </div>
+                  <ExerciseFooter
+                    exerciseType={exerciseType}
+                    correctAnswers={Object.values(results).filter((r) => r.correct).length}
+                    totalAnswers={exerciseSet.questions.length}
+                    isReviewMode={state.currentSession?.isReviewMode}
+                    onTryAgain={() => {
+                      setAnswers(state.currentSession?.previousAnswers || {});
+                      setResults({});
+                      setHasChecked(false);
+                    }}
+                    onComplete={onComplete}
+                  />
 
                   <div className="space-y-4">
                     <h3 className="font-semibold text-lg sm:text-xl">Explanations:</h3>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,11 +10,11 @@ import { useResetExerciseState } from "@/hooks/useResetExerciseState";
 import type { SentenceExercise, SentenceExerciseSet, ExerciseType } from "@/types/exercise";
 import { createExerciseResult, isStaticExercise } from "@/lib/exercise-utils";
 import { getExerciseSourceInfo } from "@/lib/exercise-source-utils";
-import { Check, X, RotateCcw, ArrowRight, AlertTriangle } from "lucide-react";
+import { Check, X, AlertTriangle } from "lucide-react";
 import { getExerciseDescription } from "@/lib/exercise-descriptions";
 import { ExerciseInfoButton } from "@/components/ExerciseInfoButton";
-import { toast } from "sonner";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import { ExerciseFooter } from "@/components/ExerciseFooter";
+import { ReviewModeUI } from "@/components/ReviewModeUI";
 
 interface SentenceExerciseProps {
   exerciseSet: SentenceExerciseSet;
@@ -25,21 +24,16 @@ interface SentenceExerciseProps {
 }
 
 export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title }: SentenceExerciseProps) {
-  const router = useRouter();
   const {
     dispatch,
     checkAnswer,
-    forceRegenerateExercise,
     state,
     markExerciseCompleted,
-    loadNextStaticWorksheet,
-    hasRemainingStaticWorksheets,
   } = useExercise();
   const [answers, setAnswers] = useState<Record<string | number, string>>({});
   const [results, setResults] = useState<Record<string | number, ReturnType<typeof createExerciseResult>>>({});
   const [isChecking, setIsChecking] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
-  const [isGeneratingNext, setIsGeneratingNext] = useState(false);
 
   // Extract exercises from the set
   const exercises = exerciseSet.exercises;
@@ -267,123 +261,28 @@ export function SentenceExercise({ exerciseSet, exerciseType, onComplete, title 
                     </div>
 
                     {state.currentSession?.isReviewMode && (
-                      <div className="text-center">
-                        <p className="text-sm text-muted-foreground">
-                          You&apos;re reviewing your previous answers. You can modify them and check again.
-                        </p>
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setAnswers({});
-                            setResults({});
-                            setHasChecked(false);
-                          }}
-                          size="sm"
-                          className="mt-2"
-                        >
-                          Clear All Answers
-                        </Button>
-                      </div>
+                      <ReviewModeUI
+                        onClearAnswers={() => {
+                          setAnswers({});
+                          setResults({});
+                          setHasChecked(false);
+                        }}
+                      />
                     )}
                   </div>
                 ) : (
-                  <div className="text-center space-y-4">
-                    {state.currentSession?.isReviewMode ? (
-                      <>
-                        <div className="text-lg font-semibold">
-                          Review Complete! Final Score: {correctAnswers}/{exercises.length} (
-                          {Math.round((correctAnswers / exercises.length) * 100)}%)
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          Review complete! You can practice again or go back to see your results.
-                        </p>
-                        <div className="flex justify-center gap-2">
-                          <Button
-                            onClick={() => {
-                              setAnswers(state.currentSession?.previousAnswers || {});
-                              setResults({});
-                              setHasChecked(false);
-                            }}
-                            variant="outline"
-                            size="lg"
-                          >
-                            Try Again
-                          </Button>
-                          <Button onClick={onComplete} size="lg">
-                            Back to Results
-                          </Button>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="space-y-3">
-                        <div className="text-lg font-semibold">
-                          Exercise Complete! Final Score: {correctAnswers}/{exercises.length} (
-                          {Math.round((correctAnswers / exercises.length) * 100)}%)
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                          <Button
-                            onClick={() => {
-                              setAnswers(state.currentSession?.previousAnswers || {});
-                              setResults({});
-                              setHasChecked(false);
-                            }}
-                            variant="outline"
-                            size="lg"
-                          >
-                            <RotateCcw className="h-4 w-4 mr-2" />
-                            Try Again
-                          </Button>
-
-                          <SignedIn>
-                            <Button
-                              onClick={async () => {
-                                setIsGeneratingNext(true);
-                                try {
-                                  // First, check if there are remaining static worksheets
-                                  const hasMoreStatic = hasRemainingStaticWorksheets(exerciseType);
-
-                                  if (hasMoreStatic) {
-                                    // Load the next static worksheet
-                                    const success = loadNextStaticWorksheet(exerciseType);
-                                    if (success) {
-                                      // Start new session and navigate to exercise
-                                      dispatch({ type: "START_SESSION", payload: { exerciseType } });
-                                      router.push(`/exercise/${exerciseType}`);
-                                      return;
-                                    }
-                                  }
-
-                                  // If no static worksheets remain, generate a new exercise
-                                  await forceRegenerateExercise(exerciseType);
-                                  dispatch({ type: "START_SESSION", payload: { exerciseType } });
-                                  router.push(`/exercise/${exerciseType}`);
-                                } catch (error) {
-                                  console.error("Failed to load next exercise:", error);
-                                  toast.error("Failed to generate new exercise. Please try again.");
-                                } finally {
-                                  setIsGeneratingNext(false);
-                                }
-                              }}
-                              size="lg"
-                              disabled={isGeneratingNext}
-                            >
-                              <ArrowRight className="h-4 w-4 mr-2" />
-                              {isGeneratingNext ? "Generating..." : "Next Exercise"}
-                            </Button>
-                          </SignedIn>
-                          <SignedOut>
-                            <SignInButton mode="modal">
-                              <Button size="lg">
-                                <ArrowRight className="h-4 w-4 mr-2" />
-                                Sign In for Next Exercise
-                              </Button>
-                            </SignInButton>
-                          </SignedOut>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <ExerciseFooter
+                    exerciseType={exerciseType}
+                    correctAnswers={correctAnswers}
+                    totalAnswers={exercises.length}
+                    isReviewMode={state.currentSession?.isReviewMode}
+                    onTryAgain={() => {
+                      setAnswers(state.currentSession?.previousAnswers || {});
+                      setResults({});
+                      setHasChecked(false);
+                    }}
+                    onComplete={onComplete}
+                  />
                 )}
               </div>
             </form>
